@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ExportCsvModal } from './ExportCsvModal';
 import { 
   ShoppingBag, 
   Search, 
@@ -38,6 +39,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<OrderStatus | ''>('');
+  const [isExportCsvOpen, setIsExportCsvOpen] = useState(false);
 
   const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
@@ -262,10 +264,10 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
           </div>
 
           <button
-            onClick={handleExportCsv}
-            disabled={filteredOrders.length === 0}
+            onClick={() => setIsExportCsvOpen(true)}
+            disabled={orders.length === 0}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
-            title="Download CSV of current orders list"
+            title="Download date-segmented CSV of sales orders"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -494,6 +496,28 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Date-Range Filter CSV Export Modal */}
+      <ExportCsvModal
+        isOpen={isExportCsvOpen}
+        onClose={() => setIsExportCsvOpen(false)}
+        title="Export Orders Transactions CSV"
+        items={orders}
+        getDate={(o) => o.createdAt}
+        headers={['Order Number', 'Customer Name', 'Customer Email', 'Items Count', 'Total Amount ($)', 'Payment Method', 'Status', 'Shipping Address', 'Created At']}
+        getRowData={(o) => [
+          o.orderNumber,
+          o.customerName,
+          o.customerEmail,
+          o.items.reduce((acc, item) => acc + item.quantity, 0),
+          o.totalAmount.toFixed(2),
+          o.paymentMethod,
+          o.status,
+          o.shippingAddress,
+          o.createdAt
+        ]}
+        filenamePrefix="orders_export"
+      />
     </div>
   );
 };

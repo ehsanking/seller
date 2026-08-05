@@ -1,4 +1,5 @@
 import React from 'react';
+import { ApiHealthWidget } from './ApiHealthWidget';
 import { 
   DollarSign, 
   ShoppingBag, 
@@ -264,6 +265,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* API Health & Developer Gateway Telemetry */}
+      <ApiHealthWidget />
     </div>
   );
 };

@@ -17,9 +17,12 @@ import {
   Square,
   AlertTriangle,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Globe
 } from 'lucide-react';
 import { Product, ProductStatus } from '../types';
+import { ExportCsvModal } from './ExportCsvModal';
+import { ProductSeoModal } from './ProductSeoModal';
 
 interface ProductsViewProps {
   products: Product[];
@@ -44,6 +47,8 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<ProductStatus | ''>('');
+  const [isExportCsvOpen, setIsExportCsvOpen] = useState(false);
+  const [seoProduct, setSeoProduct] = useState<Product | null>(null);
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -183,10 +188,10 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           </div>
 
           <button
-            onClick={handleExportCsv}
-            disabled={filteredProducts.length === 0}
+            onClick={() => setIsExportCsvOpen(true)}
+            disabled={products.length === 0}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
-            title="Download CSV of current products list"
+            title="Download date-segmented CSV of products dataset"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -319,6 +324,13 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                       <td className="py-3 px-4 font-semibold text-slate-700">{p.salesCount} sold</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setSeoProduct(p)}
+                            title="SEO Preview & Meta Title Optimizer"
+                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition cursor-pointer"
+                          >
+                            <Globe className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => setEditingProduct(p)}
                             title="Edit Product & Low Stock Limit"
@@ -457,6 +469,39 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Date-Range Filter CSV Export Modal */}
+      <ExportCsvModal
+        isOpen={isExportCsvOpen}
+        onClose={() => setIsExportCsvOpen(false)}
+        title="Export Products Inventory CSV"
+        items={products}
+        getDate={(p) => p.createdAt}
+        headers={['SKU', 'Title', 'Category', 'Price', 'Cost Price', 'Stock Quantity', 'Low Stock Limit', 'Status', 'Sales Count', 'Created At']}
+        getRowData={(p) => [
+          p.sku,
+          p.title,
+          p.category,
+          p.price.toFixed(2),
+          p.costPrice ? p.costPrice.toFixed(2) : '0.00',
+          p.stockQuantity,
+          p.lowStockThreshold ?? 10,
+          p.status,
+          p.salesCount,
+          p.createdAt
+        ]}
+        filenamePrefix="products_catalog"
+      />
+
+      {/* Dedicated SEO Preview & Metadata Optimizer Modal */}
+      <ProductSeoModal
+        isOpen={!!seoProduct}
+        onClose={() => setSeoProduct(null)}
+        product={seoProduct}
+        onSaveSeo={async (id, updates) => {
+          onUpdateProduct(id, updates);
+        }}
+      />
     </div>
   );
 };

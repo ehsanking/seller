@@ -7,6 +7,51 @@ const PORT = 3000;
 
 app.use(express.json());
 
+// API Request Telemetry Metrics Store
+interface ApiLogEntry {
+  id: string;
+  timestamp: string;
+  method: string;
+  path: string;
+  statusCode: number;
+  latencyMs: number;
+  clientIp: string;
+}
+
+let apiTelemetryLogs: ApiLogEntry[] = [
+  { id: 'log_p1', timestamp: new Date().toISOString(), method: 'GET', path: '/api/products', statusCode: 200, latencyMs: 18, clientIp: '127.0.0.1' },
+  { id: 'log_p2', timestamp: new Date(Date.now() - 5000).toISOString(), method: 'GET', path: '/api/orders', statusCode: 200, latencyMs: 24, clientIp: '127.0.0.1' },
+  { id: 'log_p3', timestamp: new Date(Date.now() - 12000).toISOString(), method: 'POST', path: '/api/webhooks', statusCode: 201, latencyMs: 35, clientIp: '127.0.0.1' },
+  { id: 'log_p4', timestamp: new Date(Date.now() - 25000).toISOString(), method: 'GET', path: '/api/analytics', statusCode: 200, latencyMs: 62, clientIp: '127.0.0.1' },
+  { id: 'log_p5', timestamp: new Date(Date.now() - 40000).toISOString(), method: 'PUT', path: '/api/settings', statusCode: 200, latencyMs: 28, clientIp: '127.0.0.1' },
+];
+
+let requestCounterWindow = 142; // Baseline throughput per min
+
+// Telemetry Express Middleware
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    const start = Date.now();
+    res.on('finish', () => {
+      const latencyMs = Date.now() - start;
+      requestCounterWindow++;
+      apiTelemetryLogs.unshift({
+        id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: new Date().toISOString(),
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        latencyMs,
+        clientIp: req.ip || '127.0.0.1'
+      });
+      if (apiTelemetryLogs.length > 25) {
+        apiTelemetryLogs.pop();
+      }
+    });
+  }
+  next();
+});
+
 // In-Memory Database Store for Seller Portal
 let products = [
   {
@@ -381,8 +426,26 @@ let plugins = [
   }
 ];
 
+interface StoreTemplateItem {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  framework: string;
+  author: string;
+  version: string;
+  isActive: boolean;
+  isCustom?: boolean;
+  previewImage: string;
+  repoUrl?: string;
+  demoUrl?: string;
+  features: string[];
+  cssCode?: string;
+  templateCode?: string;
+}
+
 // Initial Templates Store
-let templates = [
+let templates: StoreTemplateItem[] = [
   {
     id: 'tmpl_react_tailwind',
     slug: 'react-tailwind-starter',
@@ -444,6 +507,57 @@ let templates = [
 // Templates API
 app.get('/api/templates', (req, res) => {
   res.json(templates);
+});
+
+app.put('/api/templates/:id/css', (req, res) => {
+  const { id } = req.params;
+  const { cssCode } = req.body;
+  const target = templates.find(t => t.id === id);
+  if (!target) {
+    return res.status(404).json({ error: 'Template not found' });
+  }
+  target.cssCode = cssCode;
+  res.json(target);
+});
+
+// API Telemetry & Health Routes
+app.get('/api/health/metrics', (req, res) => {
+  const totalLogs = apiTelemetryLogs.length;
+  const errorCount = apiTelemetryLogs.filter(l => l.statusCode >= 400).length;
+  const errorRatePercent = totalLogs > 0 ? Number(((errorCount / totalLogs) * 100).toFixed(2)) : 0.18;
+  const avgLatencyMs = totalLogs > 0 
+    ? Math.round(apiTelemetryLogs.reduce((acc, l) => acc + l.latencyMs, 0) / totalLogs) 
+    : 28;
+
+  res.json({
+    throughputReqMin: requestCounterWindow,
+    errorRatePercent: errorRatePercent,
+    avgLatencyMs: avgLatencyMs,
+    rateLimit: {
+      limitPerMin: 1000,
+      currentUsed: requestCounterWindow,
+      remaining: Math.max(0, 1000 - requestCounterWindow),
+      resetSeconds: 32,
+      status: requestCounterWindow > 900 ? 'throttled' : 'healthy'
+    },
+    endpoints: [
+      { path: '/api/products', method: 'GET', avgLatencyMs: 18, requestsPerMin: 58, errorRatePercent: 0, status: 'optimal' },
+      { path: '/api/orders', method: 'GET', avgLatencyMs: 24, requestsPerMin: 34, errorRatePercent: 0, status: 'optimal' },
+      { path: '/api/analytics', method: 'GET', avgLatencyMs: 62, requestsPerMin: 22, errorRatePercent: 0, status: 'optimal' },
+      { path: '/api/webhooks', method: 'POST', avgLatencyMs: 32, requestsPerMin: 18, errorRatePercent: 0, status: 'optimal' },
+      { path: '/api/plugins', method: 'GET', avgLatencyMs: 15, requestsPerMin: 10, errorRatePercent: 0, status: 'optimal' },
+    ],
+    recentLogs: apiTelemetryLogs.slice(0, 8)
+  });
+});
+
+app.post('/api/health/ping', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'API Gateway connection active and responding',
+    timestamp: new Date().toISOString(),
+    latencyMs: Math.floor(12 + Math.random() * 15)
+  });
 });
 
 app.patch('/api/templates/:id/activate', (req, res) => {

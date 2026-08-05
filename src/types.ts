@@ -13,6 +13,9 @@ export interface Product {
   salesCount: number;
   image: string;
   createdAt: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  urlSlug?: string;
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -134,6 +137,42 @@ export interface StoreTemplate {
   demoUrl?: string;
   features?: string[];
   templateCode?: string;
+  cssCode?: string;
+  cssVariables?: Record<string, string>;
+}
+
+export interface ApiEndpointHealth {
+  path: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  avgLatencyMs: number;
+  requestsPerMin: number;
+  errorRatePercent: number;
+  status: 'optimal' | 'warning' | 'degraded';
+}
+
+export interface ApiRequestLog {
+  id: string;
+  timestamp: string;
+  method: string;
+  path: string;
+  statusCode: number;
+  latencyMs: number;
+  clientIp: string;
+}
+
+export interface ApiHealthMetrics {
+  throughputReqMin: number;
+  errorRatePercent: number;
+  avgLatencyMs: number;
+  rateLimit: {
+    limitPerMin: number;
+    currentUsed: number;
+    remaining: number;
+    resetSeconds: number;
+    status: 'healthy' | 'throttled' | 'exceeded';
+  };
+  endpoints: ApiEndpointHealth[];
+  recentLogs: ApiRequestLog[];
 }
 
 export interface WebhookEndpoint {

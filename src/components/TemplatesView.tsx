@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StoreTemplate, Product } from '../types';
+import { TemplateCssEditorModal } from './TemplateCssEditorModal';
 import { 
   Palette, 
   Upload, 
@@ -41,6 +42,7 @@ export function TemplatesView({
   const [selectedFramework, setSelectedFramework] = useState<string>('all');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<StoreTemplate | null>(null);
+  const [cssEditingTemplate, setCssEditingTemplate] = useState<StoreTemplate | null>(null);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
   // Upload Form State
@@ -275,10 +277,19 @@ export function TemplatesView({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPreviewTemplate(tmpl)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-indigo-400" />
                     Preview Demo
+                  </button>
+
+                  <button
+                    onClick={() => setCssEditingTemplate(tmpl)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-300 text-xs font-semibold transition-colors cursor-pointer"
+                    title="Live Code Editor for CSS Variables"
+                  >
+                    <Code2 className="w-3.5 h-3.5" />
+                    <span>Edit CSS</span>
                   </button>
 
                   {tmpl.repoUrl && (
@@ -596,6 +607,31 @@ export function TemplatesView({
           </div>
         </div>
       )}
+
+      {/* Code-Editor Component for Template CSS Variables */}
+      <TemplateCssEditorModal
+        isOpen={!!cssEditingTemplate}
+        onClose={() => setCssEditingTemplate(null)}
+        template={cssEditingTemplate}
+        products={products}
+        onSaveCss={async (templateId, cssCode) => {
+          try {
+            const res = await fetch(`/api/templates/${templateId}/css`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cssCode })
+            });
+            if (res.ok) {
+              const updated = await res.json();
+              if (cssEditingTemplate && cssEditingTemplate.id === templateId) {
+                setCssEditingTemplate({ ...cssEditingTemplate, cssCode });
+              }
+            }
+          } catch (err) {
+            console.error('Failed to save template CSS', err);
+          }
+        }}
+      />
     </div>
   );
 }
