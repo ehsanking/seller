@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StoreTemplate, Product } from '../types';
+import { StoreTemplate, Product, StoreSettings, Coupon } from '../types';
 import { TemplateCssEditorModal } from './TemplateCssEditorModal';
 import { StorefrontSandboxPreview } from './StorefrontSandboxPreview';
 import { 
@@ -28,6 +28,8 @@ import {
 interface TemplatesViewProps {
   templates: StoreTemplate[];
   products: Product[];
+  settings?: StoreSettings;
+  coupons?: Coupon[];
   onActivateTemplate: (id: string) => void;
   onUploadTemplate: (templateData: Partial<StoreTemplate>) => Promise<void>;
   onDeleteTemplate: (id: string) => void;
@@ -36,6 +38,8 @@ interface TemplatesViewProps {
 export function TemplatesView({
   templates,
   products,
+  settings,
+  coupons = [],
   onActivateTemplate,
   onUploadTemplate,
   onDeleteTemplate
@@ -557,6 +561,8 @@ export function TemplatesView({
                 products={products}
                 device={previewDevice}
                 onClose={() => setPreviewTemplate(null)}
+                settings={settings}
+                coupons={coupons}
               />
             </div>
           </div>

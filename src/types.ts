@@ -12,6 +12,9 @@ export interface Product {
   status: ProductStatus;
   salesCount: number;
   image: string;
+  gallery?: string[];
+  tags?: string[];
+  description?: string;
   createdAt: string;
   metaTitle?: string;
   metaDescription?: string;
@@ -86,6 +89,18 @@ export interface AnalyticsSummary {
   }[];
 }
 
+export interface StoreBranch {
+  id: string;
+  name: string;
+  nameFa?: string;
+  address: string;
+  addressFa?: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  isMain: boolean;
+}
+
 export interface StoreSettings {
   storeName: string;
   storeEmail: string;
@@ -96,6 +111,7 @@ export interface StoreSettings {
   lowStockThreshold: number;
   apiWebhookUrl: string;
   apiKey: string;
+  branches?: StoreBranch[];
   // Store-wide SEO Meta Tags
   metaTitle?: string;
   metaDescription?: string;
@@ -276,11 +292,13 @@ export type NavigationTab =
   | 'customers' 
   | 'analytics' 
   | 'settings' 
+  | 'branches'
   | 'plugins'
   | 'templates'
   | 'webhooks'
   | 'roles'
   | 'seo'
+  | 'coupons'
   | `plugin_${string}`;
 
 export interface StoreSection {
@@ -354,6 +372,20 @@ export interface StoreNotification {
   type: 'info' | 'success' | 'warning' | 'error';
   isRead: boolean;
   createdAt: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minOrderAmount: number;
+  usageLimit: number;
+  usedCount: number;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+  description?: string;
 }
 
 

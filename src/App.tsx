@@ -10,8 +10,10 @@ import { SettingsView } from './components/SettingsView';
 import { PluginsView } from './components/PluginsView';
 import { TemplatesView } from './components/TemplatesView';
 import { WebhooksView } from './components/WebhooksView';
+import { CouponsView } from './components/CouponsView';
 import { RolesManagementView } from './components/RolesManagementView';
 import { SeoWebmasterView } from './components/SeoWebmasterView';
+import { BranchesView } from './components/BranchesView';
 import { AdminProfileModal } from './components/AdminProfileModal';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
@@ -30,7 +32,8 @@ import {
   WebhookDeliveryLog,
   AdminProfile, 
   AdminRole, 
-  SeoWebmasterSettings 
+  SeoWebmasterSettings,
+  Coupon
 } from './types';
 
 export function App() {
@@ -40,6 +43,7 @@ export function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [plugins, setPlugins] = useState<Plugin[]>([]);
@@ -77,10 +81,11 @@ export function App() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes, whRes, admRes, rlsRes, seoRes] = await Promise.all([
+      const [prodRes, ordRes, custRes, coupRes, anaRes, setRes, plgRes, tmplRes, whRes, admRes, rlsRes, seoRes] = await Promise.all([
         fetchWithRetry('/api/products').then(r => r.json()),
         fetchWithRetry('/api/orders').then(r => r.json()),
         fetchWithRetry('/api/customers').then(r => r.json()),
+        fetchWithRetry('/api/coupons').then(r => r.json()).catch(() => []),
         fetchWithRetry('/api/analytics').then(r => r.json()),
         fetchWithRetry('/api/settings').then(r => r.json()),
         fetchWithRetry('/api/plugins').then(r => r.json()),
@@ -94,6 +99,7 @@ export function App() {
       setProducts(prodRes || []);
       setOrders(ordRes || []);
       setCustomers(custRes || []);
+      setCoupons(coupRes || []);
       setAnalytics(anaRes || null);
       setSettings(setRes || null);
       setPlugins(plgRes || []);
@@ -212,6 +218,53 @@ export function App() {
       setTemplates(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.error('Failed to delete template:', err);
+    }
+  };
+
+  // Coupon Handlers
+  const handleAddCoupon = async (couponData: Partial<Coupon>) => {
+    try {
+      const res = await fetch('/api/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(couponData),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to create coupon');
+      }
+      const newCoupon = await res.json();
+      setCoupons(prev => [newCoupon, ...prev]);
+    } catch (err) {
+      console.error('Failed to add coupon:', err);
+      throw err;
+    }
+  };
+
+  const handleUpdateCoupon = async (id: string, updates: Partial<Coupon>) => {
+    try {
+      const res = await fetch(`/api/coupons/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCoupons(prev => prev.map(c => c.id === id ? updated : c));
+      }
+    } catch (err) {
+      console.error('Failed to update coupon:', err);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    try {
+      const res = await fetch(`/api/coupons/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setCoupons(prev => prev.filter(c => c.id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete coupon:', err);
     }
   };
 
@@ -496,6 +549,13 @@ export function App() {
             />
           )}
 
+          {activeTab === 'branches' && (
+            <BranchesView
+              settings={settings}
+              onSaveSettings={handleSaveSettings}
+            />
+          )}
+
           {activeTab === 'roles' && (
             <RolesManagementView
               roles={roles}
@@ -560,9 +620,20 @@ export function App() {
             <TemplatesView
               templates={templates}
               products={products}
+              settings={settings}
+              coupons={coupons}
               onActivateTemplate={handleActivateTemplate}
               onUploadTemplate={handleUploadTemplate}
               onDeleteTemplate={handleDeleteTemplate}
+            />
+          )}
+
+          {activeTab === 'coupons' && (
+            <CouponsView
+              coupons={coupons}
+              onAddCoupon={handleAddCoupon}
+              onUpdateCoupon={handleUpdateCoupon}
+              onDeleteCoupon={handleDeleteCoupon}
             />
           )}
 

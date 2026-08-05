@@ -198,6 +198,61 @@ let orders = [
   }
 ];
 
+let coupons = [
+  {
+    id: 'coup_1',
+    code: 'EHSAN20',
+    type: 'percentage',
+    value: 20,
+    minOrderAmount: 0,
+    usageLimit: 100,
+    usedCount: 24,
+    isActive: true,
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    description: '20% off storewide - Standard Promo'
+  },
+  {
+    id: 'coup_2',
+    code: 'WELCOME10',
+    type: 'percentage',
+    value: 10,
+    minOrderAmount: 30,
+    usageLimit: 500,
+    usedCount: 142,
+    isActive: true,
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    description: '10% off for new customers on orders over $30'
+  },
+  {
+    id: 'coup_3',
+    code: 'SUPER50',
+    type: 'fixed',
+    value: 50,
+    minOrderAmount: 150,
+    usageLimit: 50,
+    usedCount: 8,
+    isActive: true,
+    startDate: '2026-05-01',
+    endDate: '2026-12-31',
+    description: 'Flat $50 off on high-value orders above $150'
+  },
+  {
+    id: 'coup_4',
+    code: 'EXPIRED15',
+    type: 'percentage',
+    value: 15,
+    minOrderAmount: 0,
+    usageLimit: 50,
+    usedCount: 50,
+    isActive: false,
+    startDate: '2026-01-01',
+    endDate: '2026-06-01',
+    description: 'Spring sale expired discount'
+  }
+];
+
 let customers = [
   {
     id: 'cust_1',
@@ -484,7 +539,42 @@ let settings = {
   canonicalUrl: 'https://ehsan-store.io',
   ogImageUrl: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=1200&q=80',
   keywords: 'headless commerce, ecommerce, mechanical keyboards, gaming mice, studio audio',
-  socialTwitterHandle: '@ehsanking'
+  socialTwitterHandle: '@ehsanking',
+  branches: [
+    {
+      id: 'branch_1',
+      name: 'Berlin Central Branch',
+      nameFa: 'شعبه مرکزی برلین',
+      address: 'Friedrichstraße 43, 10117 Berlin, Germany',
+      addressFa: 'آلمان، برلین، خیابان فریدریش، پلاک ۴۳',
+      phone: '+49 30 12345678',
+      latitude: 52.5072,
+      longitude: 13.3905,
+      isMain: true
+    },
+    {
+      id: 'branch_2',
+      name: 'Munich Branch',
+      nameFa: 'شعبه مونیخ',
+      address: 'Karlsplatz 5, 80335 München, Germany',
+      addressFa: 'آلمان، مونیخ، میدان کارلزپلاتس، پلاک ۵',
+      phone: '+49 89 87654321',
+      latitude: 48.1392,
+      longitude: 11.5656,
+      isMain: false
+    },
+    {
+      id: 'branch_3',
+      name: 'Frankfurt Branch',
+      nameFa: 'شعبه فرانکفورت',
+      address: 'Kaiserstraße 12, 60311 Frankfurt am Main, Germany',
+      addressFa: 'آلمان، فرانکفورت، خیابان کایزر، پلاک ۱۲',
+      phone: '+49 69 11223344',
+      latitude: 50.1098,
+      longitude: 8.6732,
+      isMain: false
+    }
+  ]
 };
 
 // Initial Plugins Store
@@ -2005,6 +2095,9 @@ app.post('/api/products', (req, res) => {
     status: req.body.status || 'active',
     salesCount: 0,
     image: req.body.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
+    gallery: Array.isArray(req.body.gallery) ? req.body.gallery : [],
+    tags: Array.isArray(req.body.tags) ? req.body.tags : [],
+    description: req.body.description || '',
     createdAt: new Date().toISOString().split('T')[0]
   };
   products.unshift(newProduct);
@@ -2394,6 +2487,122 @@ app.get('/api/seo', (req, res) => {
 app.put('/api/settings', (req, res) => {
   settings = { ...settings, ...req.body };
   res.json(settings);
+});
+
+// Coupons API
+app.get('/api/coupons', (req, res) => {
+  res.json(coupons);
+});
+
+app.post('/api/coupons', (req, res) => {
+  const { code, type, value, minOrderAmount = 0, usageLimit = 100, startDate, endDate, description } = req.body;
+  if (!code || !type || typeof value !== 'number') {
+    return res.status(400).json({ error: 'Code, type, and value are required.' });
+  }
+
+  const existing = coupons.find(c => c.code.toUpperCase() === code.toUpperCase());
+  if (existing) {
+    return res.status(400).json({ error: 'A coupon with this code already exists.' });
+  }
+
+  const newCoupon = {
+    id: `coup_${Date.now()}`,
+    code: code.toUpperCase(),
+    type,
+    value,
+    minOrderAmount: Number(minOrderAmount),
+    usageLimit: Number(usageLimit),
+    usedCount: 0,
+    isActive: true,
+    startDate: startDate || new Date().toISOString().split('T')[0],
+    endDate: endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    description: description || ''
+  };
+
+  coupons.unshift(newCoupon);
+  res.status(201).json(newCoupon);
+});
+
+app.patch('/api/coupons/:id', (req, res) => {
+  const { id } = req.params;
+  const coupon = coupons.find(c => c.id === id);
+  if (!coupon) {
+    return res.status(404).json({ error: 'Coupon not found.' });
+  }
+
+  const allowedUpdates = ['code', 'type', 'value', 'minOrderAmount', 'usageLimit', 'usedCount', 'isActive', 'startDate', 'endDate', 'description'];
+  allowedUpdates.forEach(field => {
+    if (req.body[field] !== undefined) {
+      if (field === 'code') {
+        coupon.code = req.body.code.toUpperCase();
+      } else if (field === 'value' || field === 'minOrderAmount' || field === 'usageLimit' || field === 'usedCount') {
+        (coupon as any)[field] = Number(req.body[field]);
+      } else {
+        (coupon as any)[field] = req.body[field];
+      }
+    }
+  });
+
+  res.json(coupon);
+});
+
+app.delete('/api/coupons/:id', (req, res) => {
+  const { id } = req.params;
+  const index = coupons.findIndex(c => c.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Coupon not found.' });
+  }
+  coupons.splice(index, 1);
+  res.json({ success: true });
+});
+
+// Coupon validation endpoint
+app.post('/api/coupons/validate', (req, res) => {
+  const { code, amount } = req.body;
+  if (!code) {
+    return res.status(400).json({ valid: false, message: 'Coupon code is required.' });
+  }
+
+  const coupon = coupons.find(c => c.code.toUpperCase() === code.trim().toUpperCase());
+  if (!coupon) {
+    return res.json({ valid: false, message: 'Invalid coupon code.' });
+  }
+
+  if (!coupon.isActive) {
+    return res.json({ valid: false, message: 'This coupon is inactive.' });
+  }
+
+  // Date checks
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (coupon.startDate && todayStr < coupon.startDate) {
+    return res.json({ valid: false, message: 'This coupon is not active yet.' });
+  }
+  if (coupon.endDate && todayStr > coupon.endDate) {
+    return res.json({ valid: false, message: 'This coupon has expired.' });
+  }
+
+  // Usage limit checks
+  if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) {
+    return res.json({ valid: false, message: 'This coupon has reached its usage limit.' });
+  }
+
+  // Minimum amount check
+  if (amount !== undefined && amount < coupon.minOrderAmount) {
+    return res.json({ 
+      valid: false, 
+      message: `Minimum order amount of $${coupon.minOrderAmount} is required for this coupon.` 
+    });
+  }
+
+  res.json({
+    valid: true,
+    coupon: {
+      id: coupon.id,
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value
+    }
+  });
 });
 
 async function startServer() {

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Mail, Phone, ShoppingBag, DollarSign, Calendar, Search, History, 
   MessageSquareText, Kanban, CheckSquare, LifeBuoy, Plus, Tag, Building2, 
-  Award, Clock, AlertCircle, CheckCircle2, ArrowRight, Filter, MoreVertical, Send, Check
+  Award, Clock, AlertCircle, CheckCircle2, ArrowRight, Filter, MoreVertical, Send, Check,
+  X
 } from 'lucide-react';
 import { Customer, CrmDeal, CrmTask, CrmTicket, DealStage } from '../types';
 import { CustomerActivityLog } from './CustomerActivityLog';
@@ -20,6 +21,19 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
   const [selectedSegment, setSelectedSegment] = useState<string>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
+
+  // Tag Manager State
+  const [selectedCustomerForTags, setSelectedCustomerForTags] = useState<Customer | null>(null);
+  const [editingTags, setEditingTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [isSavingTags, setIsSavingTags] = useState(false);
+  const [tagError, setTagError] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // Calculate unique tags in system
+  const allUniqueTags = Array.from(
+    new Set(customers.flatMap(c => c.tags || []))
+  ).filter(Boolean).sort();
 
   // CRM Deals state
   const [deals, setDeals] = useState<CrmDeal[]>([]);
@@ -73,8 +87,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
       c.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (c.company && c.company.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    if (selectedSegment === 'all') return matchesSearch;
-    return matchesSearch && c.segment === selectedSegment;
+    const matchesSegment = selectedSegment === 'all' || c.segment === selectedSegment;
+    const matchesTag = !selectedTag || (c.tags && c.tags.includes(selectedTag));
+    
+    return matchesSearch && matchesSegment && matchesTag;
   });
 
   // Deal handlers
@@ -200,6 +216,61 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
     }
   };
 
+  // Tag management handlers
+  const handleAddTag = (tagToAdd: string) => {
+    const trimmed = tagToAdd.trim();
+    if (!trimmed) return;
+    if (trimmed.length > 25) {
+      setTagError('Tag cannot be longer than 25 characters');
+      return;
+    }
+    if (editingTags.some(t => t.toLowerCase() === trimmed.toLowerCase())) {
+      setTagError('Tag already exists on this customer');
+      return;
+    }
+    setEditingTags([...editingTags, trimmed]);
+    setTagInput('');
+    setTagError(null);
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setEditingTags(editingTags.filter(t => t !== tagToRemove));
+    setTagError(null);
+  };
+
+  const handleToggleSuggestedTag = (tag: string) => {
+    if (editingTags.includes(tag)) {
+      handleRemoveTag(tag);
+    } else {
+      handleAddTag(tag);
+    }
+  };
+
+  const handleSaveTags = async () => {
+    if (!selectedCustomerForTags) return;
+    setIsSavingTags(true);
+    setTagError(null);
+    try {
+      const res = await fetch(`/api/customers/${selectedCustomerForTags.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: editingTags })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCustomers(customers.map(c => c.id === selectedCustomerForTags.id ? updated : c));
+        setSelectedCustomerForTags(null);
+      } else {
+        setTagError('Failed to update tags on the server');
+      }
+    } catch (err) {
+      console.error(err);
+      setTagError('An error occurred while saving tags');
+    } finally {
+      setIsSavingTags(false);
+    }
+  };
+
   // Calculations for CRM Metrics
   const totalPipelineValue = deals.filter(d => d.stage !== 'lost' && d.stage !== 'won').reduce((sum, d) => sum + d.value, 0);
   const wonDealsValue = deals.filter(d => d.stage === 'won').reduce((sum, d) => sum + d.value, 0);
@@ -305,31 +376,60 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
       {activeCrmTab === 'roster' && (
         <div className="space-y-4">
           {/* Segment Filter Chips */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500">Filter Segment:</span>
-              {[
-                { key: 'all', label: 'All Customers' },
-                { key: 'vip', label: 'VIP Buyers ⭐' },
-                { key: 'active', label: 'Active 🟢' },
-                { key: 'lead', label: 'Leads 🎯' },
-                { key: 'at_risk', label: 'At Risk ⚠️' }
-              ].map(seg => (
-                <button
-                  key={seg.key}
-                  onClick={() => setSelectedSegment(seg.key)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    selectedSegment === seg.key
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {seg.label}
-                </button>
-              ))}
+          <div className="flex items-center justify-between flex-wrap gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50 shadow-2xs">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-slate-500">Filter Segment:</span>
+                {[
+                  { key: 'all', label: 'All Customers' },
+                  { key: 'vip', label: 'VIP Buyers ⭐' },
+                  { key: 'active', label: 'Active 🟢' },
+                  { key: 'lead', label: 'Leads 🎯' },
+                  { key: 'at_risk', label: 'At Risk ⚠️' }
+                ].map(seg => (
+                  <button
+                    key={seg.key}
+                    onClick={() => setSelectedSegment(seg.key)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      selectedSegment === seg.key
+                        ? 'bg-indigo-600 text-white shadow-2xs'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {seg.label}
+                  </button>
+                ))}
+              </div>
+
+              {allUniqueTags.length > 0 && (
+                <div className="flex items-center gap-2 border-r border-slate-200/80 pr-4 pl-2">
+                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5 text-slate-400" />
+                    Tag Filter:
+                  </span>
+                  <select
+                    value={selectedTag || ''}
+                    onChange={(e) => setSelectedTag(e.target.value || null)}
+                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="">All Custom Tags ({allUniqueTags.length})</option>
+                    {allUniqueTags.map(tag => (
+                      <option key={tag} value={tag}>#{tag}</option>
+                    ))}
+                  </select>
+                  {selectedTag && (
+                    <button
+                      onClick={() => setSelectedTag(null)}
+                      className="text-[10px] text-rose-500 hover:underline font-extrabold cursor-pointer"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-slate-500 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200/60 font-medium">
               Showing <span className="font-bold text-slate-800">{filteredCustomers.length}</span> customers
             </div>
           </div>
@@ -393,15 +493,32 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
                 </div>
 
                 {/* Tags & Lead Score */}
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100/60">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {c.tags && c.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-semibold border border-slate-200">
-                        #{tag}
-                      </span>
-                    ))}
+                    {c.tags && c.tags.length > 0 ? (
+                      c.tags.map((tag, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-slate-50 text-indigo-600 rounded-md text-[10px] font-bold border border-indigo-100/80">
+                          #{tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-slate-400 italic">No tags</span>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSelectedCustomerForTags(c);
+                        setEditingTags(c.tags || []);
+                        setTagInput('');
+                        setTagError(null);
+                      }}
+                      className="p-1 rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer flex items-center gap-0.5"
+                      title="Manage Tags"
+                    >
+                      <Tag className="w-3.5 h-3.5" />
+                      <span className="text-[9px] font-bold">Tags</span>
+                    </button>
                   </div>
-                  <div className="flex items-center gap-1 text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg">
+                  <div className="flex items-center gap-1 text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg shrink-0">
                     <Award className="w-3.5 h-3.5" />
                     <span>Lead Score: {c.leadScore || 75}</span>
                   </div>
@@ -627,6 +744,146 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
         isOpen={isActivityOpen}
         onClose={() => setIsActivityOpen(false)}
       />
+
+      {/* MODAL: MANAGE TAGS */}
+      {selectedCustomerForTags && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+                <Tag className="w-4.5 h-4.5 text-indigo-600" />
+                <span>Manage Customer Tags</span>
+              </h3>
+              <button 
+                onClick={() => setSelectedCustomerForTags(null)}
+                className="text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-slate-800">{selectedCustomerForTags.name}</p>
+              <p className="text-xs text-slate-500">{selectedCustomerForTags.email} • {selectedCustomerForTags.company || 'No Company'}</p>
+            </div>
+
+            {tagError && (
+              <div className="bg-rose-50 text-rose-700 text-xs p-2.5 rounded-xl border border-rose-100 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                <span>{tagError}</span>
+              </div>
+            )}
+
+            {/* Active Tags */}
+            <div className="space-y-2">
+              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Tags ({editingTags.length})</span>
+              <div className="min-h-12 p-3 bg-slate-50 rounded-xl border border-slate-200/60 flex flex-wrap gap-1.5 items-center">
+                {editingTags.length > 0 ? (
+                  editingTags.map((tag) => (
+                    <span 
+                      key={tag} 
+                      className="inline-flex items-center gap-1 pl-1.5 pr-1 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100"
+                    >
+                      <span>#{tag}</span>
+                      <button 
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="p-0.5 rounded-md hover:bg-indigo-100 text-indigo-500 hover:text-indigo-800 transition cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-400 italic">No tags assigned. Type below or select suggestions to add tags.</span>
+                )}
+              </div>
+            </div>
+
+            {/* Add Tag Input */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Add Custom Tag</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => {
+                    setTagInput(e.target.value);
+                    if (tagError) setTagError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag(tagInput);
+                    }
+                  }}
+                  placeholder="Type tag name and press Enter..."
+                  className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-semibold"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddTag(tagInput)}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {/* Suggestions / Unique Tags in the System */}
+            {allUniqueTags.length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Suggested / Other Existing Tags</span>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                  {allUniqueTags.map((tag) => {
+                    const isSelected = editingTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handleToggleSuggestedTag(tag)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
+                          isSelected 
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' 
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        #{tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSelectedCustomerForTags(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSavingTags}
+                onClick={handleSaveTags}
+                className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isSavingTags ? (
+                  <span>Saving...</span>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Save Changes</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: NEW DEAL */}
       {isAddDealOpen && (

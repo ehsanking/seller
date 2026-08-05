@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   Globe,
   UserCheck,
-  Lock
+  Lock,
+  Ticket
 } from 'lucide-react';
 import { NavigationTab, Plugin } from '../types';
 
@@ -47,6 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'analytics', label: 'Sales & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Store Settings', icon: Settings },
+    { id: 'branches', label: 'Store Branches', icon: Store, badge: 'Map' },
+    { id: 'coupons', label: 'Discount Coupons', icon: Ticket, badge: 'Promo' },
     { id: 'roles', label: 'Roles & Access', icon: ShieldCheck, badge: 'RBAC' },
     { id: 'seo', label: 'SEO & Webmaster', icon: Globe, badge: 'Google' },
     { id: 'plugins', label: 'Plugins & Add-ons', icon: Blocks, badge: plugins.filter(p => p.isActive).length ? `${plugins.filter(p => p.isActive).length} Active` : 'Hub' },

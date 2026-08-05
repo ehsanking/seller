@@ -139,6 +139,8 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const getTabTitle = (tab: NavigationTab) => {
+    if (tab === 'branches') return 'Branches & Store Locations';
+    if (tab === 'coupons') return 'Discount Coupons & Promotional Rules';
     if (tab === 'plugins') return 'Plugins & Extension Center';
     if (tab === 'templates') return 'Storefront Themes & Templates';
     if (tab === 'webhooks') return 'Webhook Management & Developer API';
