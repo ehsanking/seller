@@ -6,11 +6,11 @@
   <img src="./src/assets/images/seller_logo_1785927209652.jpg" alt="SELLER Logo" width="130" height="130" style="border-radius: 24px;" />
 </p>
 
-<h1 align="center">SELLER Core — Enterprise Headless E-Commerce Platform</h1>
+<h1 align="center">SELLER Core — Enterprise Headless E-Commerce Engine</h1>
 
 <p align="center">
-  <strong>The Ultimate High-Performance, Modular, Open-Source E-Commerce Engine</strong><br>
-  Empowering small businesses, creators, and developers worldwide with enterprise-grade headless technology — <strong>100% Free Forever</strong>.
+  <strong>The Ultimate High-Performance, Modular, Open-Source Headless Commerce Infrastructure</strong><br>
+  Empowering small businesses, independent merchants, and software engineers worldwide — <strong>100% Free Forever</strong>.
 </p>
 
 <p align="center">
@@ -23,21 +23,21 @@
 
 ---
 
-## 🌐 Mission & Vision: Democratic Commerce for Everyone
+## 🌐 Mission & Vision: Democratic Commerce Without Software Tax
 
-In today’s e-commerce landscape, small business owners and independent entrepreneurs are choked by escalating monthly SaaS subscription fees, transaction cut percentages, locked-in proprietary ecosystems, and forced platform migrations.
+In today’s digital economy, small business owners and independent entrepreneurs are burdened by escalating monthly SaaS subscription fees, transaction cut percentages, forced cloud migrations, and locked-in proprietary vendor ecosystems.
 
-**SELLER Core** was architected from the ground up by **EHSANKiNG** to break these barriers permanently. 
+**SELLER Core** was architected from the ground up by **EHSANKiNG** to dismantle these financial barriers permanently.
 
-> ### 📢 Our Immutable Guarantee:
-> **SELLER Core is, and will forever remain, 100% Free and Open-Source.** 
-> No feature lock-outs, no monthly licensing fees, no transactional commission cuts, and zero vendor lock-in. You own your data, your infrastructure, your codebase, and your destiny.
+> ### 📢 Our Immutable Commitment:
+> **SELLER Core is, and will forever remain, 100% Free and Open-Source.**
+> There are no hidden paywalls, no monthly subscription tiers, no transaction cuts, and zero vendor lock-in. You own your data, your infrastructure, your storefront codebase, and your business destiny.
 
 ---
 
 ## ⚡ One-Line Automatic Installation
 
-Deploy the complete SELLER Headless Core environment on any Linux server, Cloud VM, or Docker container with a single command:
+Deploy the complete SELLER Headless Core engine on any Linux server, Cloud VM, or Docker container with a single terminal command:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/ehsanking/seller/main/install.sh | bash
@@ -50,40 +50,145 @@ docker run -d -p 3000:3000 --name seller-core ehsanking/seller:latest
 
 ---
 
-## 🎨 Universal Multi-Framework Storefront Engines
+## 🎨 Storefront Template Engine & Multi-Framework Support
 
-SELLER Core is a **true headless platform**. Its high-speed RESTful JSON API layer decouples backend management from frontend presentation, allowing you to connect **any** frontend technology stack seamlessly. 
+SELLER Core is built upon a **100% Decoupled Headless Architecture**. The core application serves high-speed RESTful JSON APIs, enabling complete freedom in choosing your frontend technology stack.
 
-We provide official pre-built starter storefront templates in the `/storefronts` repository directory:
+We support and provide starter storefront implementations across major modern web frameworks:
 
 ```
 ├── storefronts/
 │   ├── react-tailwind/        # React 18 + Vite + Tailwind CSS Storefront
 │   ├── vue-tailwind/          # Vue 3 Composition API + Pinia Storefront
-│   ├── bootstrap5/            # Pure HTML5 + Bootstrap 5 Lightweight Theme
-│   └── nextjs-app-router/     # Next.js 14 App Router + Server Components
+│   ├── bootstrap5/            # Zero-Build HTML5 + Bootstrap 5 Lightweight Theme
+│   └── nextjs-app-router/     # Next.js 14 App Router + Server Actions + ISR
 ```
-
-### 1. React + Tailwind CSS Starter
-```bash
-cd storefronts/react-tailwind
-npm install && npm run dev
-```
-
-### 2. Vue 3 + Tailwind CSS Starter
-```bash
-cd storefronts/vue-tailwind
-npm install && npm run dev
-```
-
-### 3. Bootstrap 5 Zero-Build HTML5 Template
-Simply open `storefronts/bootstrap5/index.html` in any web browser or serve it directly via Nginx/Apache.
 
 ---
 
-## 🧩 Dynamic Extension & Plugin Architecture
+## 🛠️ Comprehensive Developer Tutorial: Building Custom Storefront Templates
 
-SELLER Core features an extensible plugin lifecycle. Plugins can hook into core application events, extend admin navigation menus, inject payment gateways, and trigger third-party API webhooks automatically.
+SELLER Core makes creating and uploading custom storefront themes effortless. Any frontend developer can craft a custom theme using their preferred framework and register it in the SELLER Control Panel.
+
+### 1. Storefront Manifest Format (`template.json`)
+Create a `template.json` file inside your storefront root folder or upload it through the Admin Control Panel:
+
+```json
+{
+  "name": "Cyberpunk Neon Headless Theme",
+  "slug": "cyberpunk-neon-theme",
+  "description": "A high-contrast, dark luxury e-commerce theme designed for electronics and modern gadgets.",
+  "framework": "React",
+  "author": "EHSANKiNG",
+  "version": "1.0.0",
+  "previewImage": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80",
+  "repoUrl": "https://github.com/ehsanking/seller-cyberpunk-theme",
+  "demoUrl": "https://cyberpunk-demo.ehsan-store.io",
+  "features": [
+    "Dark Luxury Theme",
+    "Cart Drawer Animation",
+    "Instant Stripe Webhooks",
+    "Responsive Grid"
+  ]
+}
+```
+
+---
+
+### 2. Framework Integration Tutorials
+
+#### 🅰️ Building a React 18 + Tailwind Storefront
+In React, use standard `fetch` or `axios` to query SELLER REST endpoints:
+
+```tsx
+// src/hooks/useSellerProducts.ts
+import { useEffect, useState } from 'react';
+
+export function useSellerProducts() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(console.error);
+  }, []);
+
+  return { products };
+}
+```
+
+#### 🅱️ Building a Vue 3 + Pinia Storefront
+In Vue 3 Composition API, create a reactive Pinia store:
+
+```ts
+// stores/catalog.ts
+import { defineStore } from 'pinia';
+
+export const useCatalogStore = defineStore('catalog', {
+  state: () => ({ products: [] }),
+  actions: {
+    async fetchProducts() {
+      const res = await fetch('http://localhost:3000/api/products');
+      this.products = await res.json();
+    }
+  }
+});
+```
+
+#### Ⓒ Building a Bootstrap 5 Zero-Build Storefront
+For instant zero-npm setup, embed vanilla JavaScript in HTML:
+
+```html
+<script>
+  async function renderStore() {
+    const res = await fetch('http://localhost:3000/api/products');
+    const products = await res.json();
+    document.getElementById('catalog').innerHTML = products.map(p => `
+      <div class="col-md-4">
+        <div class="card h-100 p-3">
+          <h5>${p.title}</h5>
+          <p class="text-primary font-weight-bold">$${p.price}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderStore();
+</script>
+```
+
+#### Ⓓ Building a Next.js 14 App Router Storefront
+Use Next.js Server Components with automatic revalidation:
+
+```tsx
+// app/page.tsx
+export default async function HomePage() {
+  const res = await fetch('http://localhost:3000/api/products', {
+    next: { revalidate: 60 } // Incremental Static Regeneration (ISR)
+  });
+  const products = await res.json();
+
+  return (
+    <main className="max-w-7xl mx-auto p-8">
+      <h1 className="text-3xl font-bold">Featured Catalog</h1>
+      <div className="grid grid-cols-3 gap-6 mt-6">
+        {products.map((p: any) => (
+          <div key={p.id} className="border p-4 rounded-xl">
+            <h3 className="font-bold">{p.title}</h3>
+            <p className="text-indigo-600 font-extrabold">${p.price}</p>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}
+```
+
+---
+
+## 🧩 Extension & Plugin System
+
+SELLER Core provides an event-driven plugin architecture that allows developers to extend payment gateways, logistics services, and AI automation tools without touching core backend source files.
 
 ```
                   ┌─────────────────────────────────────────┐
@@ -99,70 +204,35 @@ SELLER Core features an extensible plugin lifecycle. Plugins can hook into core 
 └──────────────────┘         └──────────────────┘         └──────────────────┘
 ```
 
-### Included Out-of-the-Box Plugins:
-1. **Stripe Gateway Integration**: Credit cards, Apple Pay, Google Pay, and webhook event listeners (`payment_intent.succeeded`, `charge.refunded`).
-2. **PayPal Commerce Platform**: Express Checkout, Pay Later, and global debit/credit processing.
-3. **DHL Express Logistics**: Live real-time shipping rate calculator, zip code distance mapping, and automatic commercial waybill/packing slip printing.
-4. **Popular Multi-AI Commerce Copilot**: Built-in adapter for **Google Gemini 2.5 Flash**, **OpenAI GPT-4o**, and **Anthropic Claude 3.5** to generate SEO product titles, automated descriptions, and customer support responses.
+### Pre-Installed Production Plugins:
+1. **Stripe Gateway Integration**: Credit Cards, Apple Pay, Google Pay, and real-time webhook listeners (`payment_intent.succeeded`).
+2. **PayPal Commerce Platform**: Express Checkout, Pay Later, and global debit/credit card processing.
+3. **DHL Express Logistics**: Live real-time shipping rate calculator, postal zone mapping, and automated waybill printing.
+4. **Popular Multi-AI Copilot**: Built-in adapter for **Google Gemini 2.5 Flash**, **OpenAI GPT-4o**, and **Anthropic Claude 3.5** to generate product SEO titles, automated descriptions, and customer support responses.
 
 ---
 
-## 💻 Developer Guide: Building Custom Plugins
+## 🏛️ System Architecture & Technology Stack
 
-Developing custom plugins for **SELLER Core** requires no core code modifications. Simply create a manifest file (`plugin.json`) or upload it directly through the **Plugin Library UI**:
-
-### Plugin Manifest Specification (`plugin.json`)
-```json
-{
-  "name": "Crypto & Web3 Payment Gateway",
-  "slug": "crypto-payment",
-  "description": "Accept Bitcoin, Ethereum, and USDT TRC20 with instant webhook confirmation.",
-  "author": "EHSANKiNG",
-  "version": "1.0.0",
-  "category": "payment",
-  "iconName": "CreditCard",
-  "menuTitle": "Crypto Payments",
-  "config": {
-    "usdtWalletAddress": "TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU",
-    "network": "TRC20",
-    "autoConfirmWebhooks": true
-  },
-  "hooks": [
-    "OrderPlaced",
-    "PaymentCaptured"
-  ]
-}
-```
-
-### Event Hooks Lifecycle
-- `OrderPlaced`: Dispatched immediately when a customer initiates checkout.
-- `PaymentProcessed`: Executed upon payment provider verification.
-- `OrderShipped`: Invokes shipping label generation and parcel tracking dispatch.
-- `ProductCreated`: Fires AI metadata auto-enrichment processes.
-
----
-
-## 🏛️ Technical Stack & Architectural Standards
-
-| Tier | Technology | Key Architectural Benefits |
+| Tier | Stack | Key Architectural Benefits |
 | :--- | :--- | :--- |
-| **Backend Core** | **Laravel 11 (PHP 8.2+)** | Repository-Service Pattern, PSR-12, Strict Static Typing |
-| **Database Engine** | **PostgreSQL** | JSONB Dynamic Attribute Storage for zero-migration product custom fields |
-| **API Transport** | **RESTful JSON Resources** | Sub-30ms response times, CORS secured, API Rate Limited |
-| **Admin Control Panel** | **React 18 + Vite + Tailwind** | Responsive design, real-time metrics, CSV exporter, invoice printer |
+| **Backend Framework** | **Laravel 11 (PHP 8.2+)** | Service-Repository Pattern, PSR-12, Strict Static Typing |
+| **Database Engine** | **PostgreSQL** | JSONB Dynamic Attributes for zero-migration product custom fields |
+| **API Transport** | **RESTful JSON Resources** | Sub-30ms response times, CORS secured, Rate Limited |
+| **Admin Control Panel** | **React 18 + Vite + Tailwind** | Real-time metrics, CSV exporter, commercial invoice printer |
 
 ---
 
-## ☕ Support the Free Software Movement / Donations
+## ☕ Support Open Source & Free Software / Donations
 
-SELLER Core is developed and maintained independently by **EHSANKiNG** with the goal of keeping enterprise commerce accessible to every human being for free. 
+SELLER Core is developed and maintained independently by **EHSANKiNG** with the sole mission of keeping enterprise-grade commerce technology accessible to every human being for free.
 
-If SELLER Core saved you thousands of dollars in SaaS fees and helped launch your business, consider supporting ongoing development with a crypto donation:
+If SELLER Core saved your business thousands of dollars in SaaS fees, consider supporting ongoing development with a crypto donation:
 
 <p align="center">
   <table>
     <tr>
-      <th>Network / Asset</th>
+      <th>Network / Crypto Asset</th>
       <th>Wallet Address</th>
     </tr>
     <tr>
@@ -178,7 +248,7 @@ If SELLER Core saved you thousands of dollars in SaaS fees and helped launch you
 
 ---
 
-## ⚖️ Legal Disclaimer & Terms of Use
+## ⚖️ Legal Disclaimer & Terms of Service
 
 ```text
 LEGAL DISCLAIMER OF WARRANTY AND LIMITATION OF LIABILITY:
@@ -191,18 +261,18 @@ IN NO EVENT SHALL THE AUTHOR ("EHSANKiNG") OR COPYRIGHT HOLDERS BE LIABLE FOR AN
 DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-STORE MANAGERS, DEVELOPERS, AND MERCHANTS ARE SOLELY RESPONSIBLE FOR COMPLYING WITH ALL
+MERCHANTS, DEVELOPERS, AND STORE OPERATORS ARE SOLELY RESPONSIBLE FOR COMPLYING WITH ALL
 APPLICABLE LOCAL E-COMMERCE LAWS, TAXATION STATUTES, CONSUMER PROTECTION ACTS, AND PAYMENT
 CARD INDUSTRY DATA SECURITY STANDARDS (PCI-DSS) WITHIN THEIR RESPECTIVE JURISDICTIONS.
 ```
 
 ---
 
-## 📜 License & Community
+## 📜 License & Author
 
-- **Creator & Principal Maintainer**: **EHSANKiNG** ([GitHub Profile](https://github.com/ehsanking))
+- **Creator & Principal Maintainer**: **EHSANKiNG** ([GitHub: @ehsanking](https://github.com/ehsanking))
 - **Official Repository**: [ehsanking/seller](https://github.com/ehsanking/seller)
-- **License**: MIT License — Free for commercial and private use forever.
+- **License**: MIT License — Open-Source and Free Forever.
 
 <p align="center">
   <sub>Built with passion for the global open-source community by <strong>EHSANKiNG</strong>.</sub>

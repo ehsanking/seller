@@ -297,6 +297,129 @@ let plugins = [
   }
 ];
 
+// Initial Templates Store
+let templates = [
+  {
+    id: 'tmpl_react_tailwind',
+    slug: 'react-tailwind-starter',
+    name: 'React 18 + Tailwind Modern Storefront',
+    description: 'Hyper-fast, responsive Vite + React storefront with seamless cart management, smooth drawer animations, and direct REST API client.',
+    framework: 'React',
+    author: 'EHSANKiNG',
+    version: '2.1.0',
+    isActive: true,
+    previewImage: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/react-tailwind',
+    demoUrl: 'https://seller-react-demo.ehsan-store.io',
+    features: ['Vite 5 Lightning HMR', 'Tailwind Utility Design System', 'Cart Persistence', 'Instant Checkout Webhooks']
+  },
+  {
+    id: 'tmpl_vue_tailwind',
+    slug: 'vue-pinia-storefront',
+    name: 'Vue 3 + Pinia Enterprise Storefront',
+    description: 'Composition API storefront built with Vue 3, Pinia reactive state engine, and automated product catalog caching.',
+    framework: 'Vue',
+    author: 'EHSANKiNG',
+    version: '1.9.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/vue-tailwind',
+    demoUrl: 'https://seller-vue-demo.ehsan-store.io',
+    features: ['Vue 3 Composition API', 'Pinia Store State', 'Automated Filter Query Params', 'Tailwind CSS']
+  },
+  {
+    id: 'tmpl_bootstrap5',
+    slug: 'bootstrap5-classic',
+    name: 'Bootstrap 5 Classic Zero-Build Storefront',
+    description: 'Pure HTML5 + Bootstrap 5 lightweight template with CDN assets and zero npm compilation required. Perfect for instant deployment on static hosts.',
+    framework: 'Bootstrap 5',
+    author: 'EHSANKiNG',
+    version: '1.5.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/bootstrap5',
+    demoUrl: 'https://seller-bootstrap-demo.ehsan-store.io',
+    features: ['Zero Build Step (No Node.js needed)', 'CDN Bootstrap 5.3', 'Vanila JS REST Client', 'Instant Load (<100ms)']
+  },
+  {
+    id: 'tmpl_nextjs',
+    slug: 'nextjs-app-router',
+    name: 'Next.js 14 App Router Ultra Storefront',
+    description: 'Server-Side Rendered (SSR) & Incremental Static Regeneration (ISR) storefront with SEO supremacy and edge image optimization.',
+    framework: 'Next.js',
+    author: 'EHSANKiNG',
+    version: '3.0.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/nextjs-app-router',
+    demoUrl: 'https://seller-nextjs-demo.ehsan-store.io',
+    features: ['Next.js 14 App Router', 'Server Actions', 'Edge Caching & ISR', 'OpenGraph Auto-Generation']
+  }
+];
+
+// Templates API
+app.get('/api/templates', (req, res) => {
+  res.json(templates);
+});
+
+app.patch('/api/templates/:id/activate', (req, res) => {
+  const { id } = req.params;
+  const target = templates.find(t => t.id === id);
+  if (!target) {
+    return res.status(404).json({ error: 'Template not found' });
+  }
+
+  // Deactivate all others and activate target
+  templates.forEach(t => {
+    t.isActive = (t.id === id);
+  });
+
+  res.json(target);
+});
+
+app.post('/api/templates/upload', (req, res) => {
+  const { name, slug, description, framework, author, version, previewImage, repoUrl, demoUrl, features, templateCode } = req.body;
+
+  if (!name || !slug) {
+    return res.status(400).json({ error: 'Template name and slug are required' });
+  }
+
+  const existing = templates.find(t => t.slug === slug);
+  if (existing) {
+    return res.status(400).json({ error: `Template with slug "${slug}" already exists` });
+  }
+
+  const newTemplate = {
+    id: `tmpl_custom_${Date.now()}`,
+    slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+    name,
+    description: description || 'Custom storefront template uploaded by merchant',
+    framework: framework || 'React',
+    author: author || 'EHSANKiNG',
+    version: version || '1.0.0',
+    isActive: false,
+    isCustom: true,
+    previewImage: previewImage || 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80',
+    repoUrl: repoUrl || '',
+    demoUrl: demoUrl || '',
+    features: features || ['Custom Storefront Layout', 'Headless REST API Sync'],
+    templateCode: templateCode || ''
+  };
+
+  templates.push(newTemplate);
+  res.status(201).json(newTemplate);
+});
+
+app.delete('/api/templates/:id', (req, res) => {
+  const { id } = req.params;
+  const index = templates.findIndex(t => t.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Template not found' });
+  }
+  const deleted = templates.splice(index, 1)[0];
+  res.json({ success: true, template: deleted });
+});
+
 // Plugins API
 app.get('/api/plugins', (req, res) => {
   res.json(plugins);

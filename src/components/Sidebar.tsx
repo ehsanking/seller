@@ -8,6 +8,7 @@ import {
   Settings, 
   Store,
   Blocks,
+  Palette,
   CreditCard,
   Wallet,
   Truck,
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, store
     { id: 'analytics', label: 'Sales & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Store Settings', icon: Settings },
     { id: 'plugins', label: 'Plugins & Add-ons', icon: Blocks, badge: plugins.filter(p => p.isActive).length ? `${plugins.filter(p => p.isActive).length} Active` : 'Hub' },
+    { id: 'templates', label: 'Storefront Themes', icon: Palette, badge: 'Themes' },
   ];
 
   const getPluginIcon = (iconName: string) => {

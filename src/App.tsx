@@ -8,9 +8,10 @@ import { CustomersView } from './components/CustomersView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsView } from './components/SettingsView';
 import { PluginsView } from './components/PluginsView';
+import { TemplatesView } from './components/TemplatesView';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
-import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus, Plugin } from './types';
+import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus, Plugin, StoreTemplate } from './types';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
@@ -22,6 +23,7 @@ export function App() {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [plugins, setPlugins] = useState<Plugin[]>([]);
+  const [templates, setTemplates] = useState<StoreTemplate[]>([]);
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
@@ -31,13 +33,14 @@ export function App() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes] = await Promise.all([
+      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes] = await Promise.all([
         fetch('/api/products').then(r => r.json()),
         fetch('/api/orders').then(r => r.json()),
         fetch('/api/customers').then(r => r.json()),
         fetch('/api/analytics').then(r => r.json()),
         fetch('/api/settings').then(r => r.json()),
         fetch('/api/plugins').then(r => r.json()),
+        fetch('/api/templates').then(r => r.json()),
       ]);
 
       setProducts(prodRes);
@@ -46,6 +49,7 @@ export function App() {
       setAnalytics(anaRes);
       setSettings(setRes);
       setPlugins(plgRes);
+      setTemplates(tmplRes);
     } catch (err) {
       console.error('Error loading data from server:', err);
     } finally {
@@ -56,6 +60,45 @@ export function App() {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  // Template Handlers
+  const handleActivateTemplate = async (id: string) => {
+    try {
+      const res = await fetch(`/api/templates/${id}/activate`, { method: 'PATCH' });
+      const updated = await res.json();
+      setTemplates(prev => prev.map(t => ({ ...t, isActive: t.id === id })));
+    } catch (err) {
+      console.error('Failed to activate template:', err);
+    }
+  };
+
+  const handleUploadTemplate = async (templateData: Partial<StoreTemplate>) => {
+    try {
+      const res = await fetch('/api/templates/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(templateData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+      const newTmpl = await res.json();
+      setTemplates(prev => [...prev, newTmpl]);
+    } catch (err) {
+      console.error('Failed to upload template:', err);
+      throw err;
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    try {
+      await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+      setTemplates(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      console.error('Failed to delete template:', err);
+    }
+  };
 
   // Plugin Handlers
   const handleTogglePlugin = async (id: string) => {
@@ -293,6 +336,16 @@ export function App() {
                   setActiveTab('plugins');
                 }
               }}
+            />
+          )}
+
+          {activeTab === 'templates' && (
+            <TemplatesView
+              templates={templates}
+              products={products}
+              onActivateTemplate={handleActivateTemplate}
+              onUploadTemplate={handleUploadTemplate}
+              onDeleteTemplate={handleDeleteTemplate}
             />
           )}
         </main>

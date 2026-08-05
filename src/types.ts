@@ -97,6 +97,23 @@ export interface Plugin {
   hooks?: string[];
 }
 
+export interface StoreTemplate {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  framework: 'React' | 'Vue' | 'Bootstrap 5' | 'Next.js' | 'HTML5';
+  author: string;
+  version: string;
+  isActive: boolean;
+  previewImage?: string;
+  isCustom?: boolean;
+  repoUrl?: string;
+  demoUrl?: string;
+  features?: string[];
+  templateCode?: string;
+}
+
 export type NavigationTab = 
   | 'dashboard' 
   | 'products' 
@@ -105,5 +122,7 @@ export type NavigationTab =
   | 'analytics' 
   | 'settings' 
   | 'plugins'
+  | 'templates'
   | `plugin_${string}`;
+
 
