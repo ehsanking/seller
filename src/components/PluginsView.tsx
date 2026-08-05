@@ -27,7 +27,8 @@ import {
   ChevronRight,
   Info,
   Layers,
-  Cpu
+  Cpu,
+  BarChart3
 } from 'lucide-react';
 import { Plugin } from '../types';
 
@@ -50,7 +51,7 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
   selectedPluginTab,
   onSelectPluginTab
 }) => {
-  const [activeCategory, setActiveCategory] = useState<'all' | 'payment' | 'shipping' | 'ai' | 'custom'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'cdn' | 'payment' | 'shipping' | 'ai' | 'security' | 'api' | 'analytics' | 'custom'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [configuringPlugin, setConfiguringPlugin] = useState<Plugin | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -77,17 +78,23 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
   const [dhlRates, setDhlRates] = useState<any>(null);
   const [isDhlLoading, setIsDhlLoading] = useState(false);
 
+  // CDN Operations State
+  const [cdnLog, setCdnLog] = useState<string>('');
+  const [isCdnLoading, setIsCdnLoading] = useState<boolean>(false);
+  const [fastlySurrogateKey, setFastlySurrogateKey] = useState<string>('global-product-catalog');
+  const [cloudfrontPath, setCloudfrontPath] = useState<string>('/*');
+
   // Custom Upload Form State
   const [customForm, setCustomForm] = useState({
     name: '',
     slug: '',
     description: '',
-    category: 'custom' as 'payment' | 'shipping' | 'ai' | 'marketing' | 'custom',
+    category: 'cdn' as 'payment' | 'shipping' | 'ai' | 'marketing' | 'security' | 'api' | 'analytics' | 'cdn' | 'custom',
     author: 'EHSANKiNG',
     version: '1.0.0',
-    iconName: 'Code',
+    iconName: 'Globe',
     menuTitle: '',
-    configJson: '{\n  "apiKey": "custom_key_12345",\n  "enableWebhook": true\n}'
+    configJson: '{\n  "cdnDomain": "cdn.ehsan-store.io",\n  "purgeKey": "purge_secret_88192038",\n  "enableEdgeWebp": true\n}'
   });
   const [uploadError, setUploadError] = useState('');
 
@@ -98,7 +105,114 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
       case 'Truck': return Truck;
       case 'Sparkles': return Sparkles;
       case 'Code': return Code;
+      case 'Globe': return Globe;
+      case 'Zap': return Zap;
+      case 'Layers': return Layers;
+      case 'Cpu': return Cpu;
+      case 'ShieldCheck': return ShieldCheck;
+      case 'ShieldAlert': return ShieldCheck;
+      case 'Lock': return ShieldCheck;
+      case 'BarChart3': return Sliders;
       default: return Blocks;
+    }
+  };
+
+  // CDN Action Handlers
+  const handleCloudflarePurge = async (plugin: Plugin) => {
+    try {
+      setIsCdnLoading(true);
+      const res = await fetch('/api/plugins/cdn/cloudflare/purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zoneId: plugin.config.zoneId, purgeEverything: true })
+      });
+      const data = await res.json();
+      setCdnLog(`[Cloudflare CDN] ${data.message} (${data.purgedAt})`);
+    } catch (err) {
+      setCdnLog('[Cloudflare CDN] Error purging cache.');
+    } finally {
+      setIsCdnLoading(false);
+    }
+  };
+
+  const handleCloudflareStats = async () => {
+    try {
+      setIsCdnLoading(true);
+      const res = await fetch('/api/plugins/cdn/cloudflare/stats');
+      const data = await res.json();
+      setCdnLog(`[Cloudflare Analytics] Cache Hit Ratio: ${data.cacheHitRatio} | Bandwidth Saved: ${data.bandwidthSavedGb} GB | Requests Served: ${data.requestsServed.toLocaleString()}`);
+    } catch (err) {
+      setCdnLog('[Cloudflare Analytics] Error loading analytics.');
+    } finally {
+      setIsCdnLoading(false);
+    }
+  };
+
+  const handleFastlyPurge = async (plugin: Plugin) => {
+    try {
+      setIsCdnLoading(true);
+      const res = await fetch('/api/plugins/cdn/fastly/purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ surrogateKey: fastlySurrogateKey, serviceId: plugin.config.serviceId })
+      });
+      const data = await res.json();
+      setCdnLog(`[Fastly Edge] ${data.message}`);
+    } catch (err) {
+      setCdnLog('[Fastly Edge] Error purging surrogate key.');
+    } finally {
+      setIsCdnLoading(false);
+    }
+  };
+
+  const handleBunnyPurge = async (plugin: Plugin) => {
+    try {
+      setIsCdnLoading(true);
+      const res = await fetch('/api/plugins/cdn/bunny/purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pullZoneName: plugin.config.pullZoneName })
+      });
+      const data = await res.json();
+      setCdnLog(`[Bunny.net CDN] ${data.message}`);
+    } catch (err) {
+      setCdnLog('[Bunny.net CDN] Error purging pull zone.');
+    } finally {
+      setIsCdnLoading(false);
+    }
+  };
+
+  const handleBunnySyncStorage = async (plugin: Plugin) => {
+    try {
+      setIsCdnLoading(true);
+      const res = await fetch('/api/plugins/cdn/bunny/sync-storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storageZoneName: plugin.config.storageZoneName })
+      });
+      const data = await res.json();
+      setCdnLog(`[Bunny.net Storage] ${data.message} (${data.syncedFilesCount} files, ${(data.totalBytesSynced / (1024*1024)).toFixed(1)} MB)`);
+    } catch (err) {
+      setCdnLog('[Bunny.net Storage] Error syncing storage.');
+    } finally {
+      setIsCdnLoading(false);
+    }
+  };
+
+  const handleCloudfrontInvalidate = async (plugin: Plugin) => {
+    try {
+      setIsCdnLoading(true);
+      const res = await fetch('/api/plugins/cdn/cloudfront/invalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ distributionId: plugin.config.distributionId, invalidationPath: cloudfrontPath })
+      });
+      const data = await res.json();
+      setCdnLog(`[AWS CloudFront] ${data.message} (ID: ${data.invalidationId}, Status: ${data.status})`);
+    } catch (err) {
+      setCdnLog('[AWS CloudFront] Error creating invalidation.');
+    } finally {
+      setIsCdnLoading(false);
     }
   };
 
@@ -711,6 +825,372 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
             </div>
           )}
 
+          {/* Cloudflare Edge CDN Control Panel */}
+          {selectedPluginForSubView.slug === 'cloudflare-cdn' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-amber-500" /> Cloudflare Edge CDN Settings
+                    </h3>
+                    <p className="text-xs text-slate-500">Configure global zone caching, edge purges, and WebP asset optimization.</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">
+                    Status: Active Edge
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Zone ID</label>
+                    <input
+                      type="text"
+                      value={selectedPluginForSubView.config.zoneId || ''}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, zoneId: e.target.value })}
+                      className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">API Token</label>
+                    <input
+                      type="password"
+                      value={selectedPluginForSubView.config.apiToken || ''}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, apiToken: e.target.value })}
+                      className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Primary Domain</label>
+                    <input
+                      type="text"
+                      value={selectedPluginForSubView.config.domain || 'ehsan-store.io'}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, domain: e.target.value })}
+                      className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Cache Level</label>
+                    <select
+                      value={selectedPluginForSubView.config.cacheLevel || 'aggressive'}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, cacheLevel: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="aggressive">Aggressive (Cache Static + HTML)</option>
+                      <option value="basic">Basic (Cache Images &amp; Assets)</option>
+                      <option value="bypass">Bypass Cache (Development)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200 space-y-3">
+                  <h4 className="text-xs font-bold text-amber-900 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-600" /> Cloudflare Edge Actions &amp; Cache Purge
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleCloudflarePurge(selectedPluginForSubView)}
+                      disabled={isCdnLoading}
+                      className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isCdnLoading ? 'animate-spin' : ''}`} />
+                      Purge Everything
+                    </button>
+                    <button
+                      onClick={handleCloudflareStats}
+                      disabled={isCdnLoading}
+                      className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-xs rounded-lg transition flex items-center gap-1.5"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" />
+                      Fetch Edge Analytics
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 border border-slate-800 space-y-4">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-amber-400" /> Edge Performance &amp; Logs
+                </h4>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between p-2.5 bg-slate-800/80 rounded-lg">
+                    <span className="text-slate-300">Auto-Purge on Product Update</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedPluginForSubView.config.autoPurgeOnProductUpdate ?? true}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, autoPurgeOnProductUpdate: e.target.checked })}
+                      className="rounded text-amber-500"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-slate-800/80 rounded-lg">
+                    <span className="text-slate-300">Auto WebP Image Conversion</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedPluginForSubView.config.enableWebpOptimization ?? true}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableWebpOptimization: e.target.checked })}
+                      className="rounded text-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {cdnLog && (
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-amber-400 font-mono text-[11px] leading-relaxed">
+                    {cdnLog}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Fastly Edge CDN Control Panel */}
+          {selectedPluginForSubView.slug === 'fastly-cdn' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-red-600" /> Fastly Edge Purge &amp; VCL Engine
+                  </h3>
+                  <p className="text-xs text-slate-500">Instant sub-millisecond cache purges by Surrogate Keys and Fastly VCL routing.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-red-50 text-red-700 border border-red-200">
+                  Fastly VCL 12ms
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Service ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.serviceId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, serviceId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">API Token</label>
+                  <input
+                    type="password"
+                    value={selectedPluginForSubView.config.apiToken || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, apiToken: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-red-50/50 p-4 rounded-xl border border-red-200 space-y-3">
+                <h4 className="text-xs font-bold text-red-900">Instant Fastly Purge by Surrogate Key</h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={fastlySurrogateKey}
+                    onChange={(e) => setFastlySurrogateKey(e.target.value)}
+                    placeholder="e.g. product-cat-882"
+                    className="flex-1 text-xs font-mono px-3 py-2 bg-white border border-slate-200 rounded-lg"
+                  />
+                  <button
+                    onClick={() => handleFastlyPurge(selectedPluginForSubView)}
+                    disabled={isCdnLoading}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg transition"
+                  >
+                    Purge Surrogate Key
+                  </button>
+                </div>
+              </div>
+
+              {cdnLog && (
+                <div className="p-3 bg-slate-900 text-red-400 font-mono text-[11px] rounded-xl border border-slate-800">
+                  {cdnLog}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bunny.net CDN Control Panel */}
+          {selectedPluginForSubView.slug === 'bunny-cdn' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-orange-500" /> Bunny.net Global CDN &amp; Edge Storage
+                  </h3>
+                  <p className="text-xs text-slate-500">Accelerate media galleries and sync product assets across Bunny edge storage zones.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                  Pull Zone: Active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Pull Zone Name</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.pullZoneName || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, pullZoneName: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Storage Zone Name</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.storageZoneName || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, storageZoneName: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => handleBunnyPurge(selectedPluginForSubView)}
+                  disabled={isCdnLoading}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-lg transition"
+                >
+                  Purge Bunny Pull Zone
+                </button>
+                <button
+                  onClick={() => handleBunnySyncStorage(selectedPluginForSubView)}
+                  disabled={isCdnLoading}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-orange-400 font-bold text-xs rounded-lg transition"
+                >
+                  Sync Media Storage Zone
+                </button>
+              </div>
+
+              {cdnLog && (
+                <div className="p-3 bg-slate-950 text-orange-400 font-mono text-[11px] rounded-xl border border-slate-800">
+                  {cdnLog}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* AWS CloudFront Control Panel */}
+          {selectedPluginForSubView.slug === 'aws-cloudfront-cdn' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Cpu className="w-5 h-5 text-blue-600" /> AWS CloudFront Invalidation Engine
+                  </h3>
+                  <p className="text-xs text-slate-500">Manage Amazon CloudFront edge distributions and trigger path invalidations.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  AWS CloudFront
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Distribution ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.distributionId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, distributionId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">AWS Region</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.awsRegion || 'us-east-1'}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, awsRegion: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-200 space-y-3">
+                <h4 className="text-xs font-bold text-blue-900">Create AWS CloudFront Invalidation Path</h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={cloudfrontPath}
+                    onChange={(e) => setCloudfrontPath(e.target.value)}
+                    placeholder="e.g. /* or /products/*"
+                    className="flex-1 text-xs font-mono px-3 py-2 bg-white border border-slate-200 rounded-lg"
+                  />
+                  <button
+                    onClick={() => handleCloudfrontInvalidate(selectedPluginForSubView)}
+                    disabled={isCdnLoading}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition"
+                  >
+                    Create Invalidation
+                  </button>
+                </div>
+              </div>
+
+              {cdnLog && (
+                <div className="p-3 bg-slate-900 text-blue-400 font-mono text-[11px] rounded-xl border border-slate-800">
+                  {cdnLog}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* jsDelivr & cdnjs Vendor Assets Control Panel */}
+          {selectedPluginForSubView.slug === 'jsdelivr-cdnjs-vendor-cdn' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Code className="w-5 h-5 text-indigo-600" /> Open Source Vendor CDN Delivery
+                  </h3>
+                  <p className="text-xs text-slate-500">Injects fast multi-CDN JS/CSS vendor libraries, Google Fonts, and Lucide icons.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  jsDelivr &amp; cdnjs
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Preferred Vendor CDN</label>
+                  <select
+                    value={selectedPluginForSubView.config.preferredVendorCdn || 'jsdelivr'}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, preferredVendorCdn: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  >
+                    <option value="jsdelivr">jsDelivr (Fastest Global Anycast)</option>
+                    <option value="cdnjs">cdnjs (Cloudflare Powered)</option>
+                    <option value="unpkg">unpkg (npm package direct)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Auto-inject preconnect headers for Google Fonts &amp; CDNs</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableFontPreconnect ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableFontPreconnect: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Enable DNS Prefetch for ultra-low latency assets</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableDnsPrefetch ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableDnsPrefetch: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Custom Uploaded Plugins Generic Control Panel */}
           {selectedPluginForSubView.isCustom && (
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
@@ -754,7 +1234,7 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
           {/* Search & Category Filter Navigation */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
             <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-              {(['all', 'payment', 'shipping', 'ai', 'custom'] as const).map((cat) => (
+              {(['all', 'cdn', 'payment', 'shipping', 'ai', 'security', 'api', 'analytics', 'custom'] as const).map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
@@ -764,7 +1244,7 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  {cat === 'all' ? 'All Plugins' : cat === 'ai' ? 'Popular AI' : `${cat} Plugins`}
+                  {cat === 'all' ? 'All Plugins' : cat === 'cdn' ? '⚡ CDN & Edge' : cat === 'ai' ? 'Popular AI' : `${cat} Plugins`}
                 </button>
               ))}
             </div>
@@ -798,8 +1278,9 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold ${
+                          plugin.category === 'cdn' ? 'bg-amber-50 text-amber-600' :
                           plugin.category === 'payment' ? 'bg-indigo-50 text-indigo-600' :
-                          plugin.category === 'shipping' ? 'bg-amber-50 text-amber-600' :
+                          plugin.category === 'shipping' ? 'bg-blue-50 text-blue-600' :
                           plugin.category === 'ai' ? 'bg-purple-50 text-purple-600' :
                           'bg-emerald-50 text-emerald-600'
                         }`}>
@@ -962,11 +1443,15 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
                     onChange={(e) => setCustomForm({ ...customForm, category: e.target.value as any })}
                     className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
                   >
-                    <option value="payment">Payment</option>
-                    <option value="shipping">Shipping</option>
-                    <option value="ai">AI Tool</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="custom">Custom</option>
+                    <option value="cdn">CDN &amp; Edge Network</option>
+                    <option value="payment">Payment Gateway</option>
+                    <option value="shipping">Shipping &amp; Logistics</option>
+                    <option value="ai">AI Commerce Tool</option>
+                    <option value="marketing">Marketing Automation</option>
+                    <option value="security">Security &amp; WAF</option>
+                    <option value="api">API &amp; Channel Sync</option>
+                    <option value="analytics">Analytics &amp; Tracking</option>
+                    <option value="custom">Custom Extension</option>
                   </select>
                 </div>
 

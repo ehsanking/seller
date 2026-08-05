@@ -1,6 +1,6 @@
 import React from 'react';
-import { Search, Bell, Plus, ExternalLink, RefreshCw, Layers, Keyboard } from 'lucide-react';
-import { NavigationTab } from '../types';
+import { Search, Bell, Plus, RefreshCw, Keyboard, User, ShieldCheck } from 'lucide-react';
+import { NavigationTab, AdminProfile } from '../types';
 
 interface HeaderProps {
   activeTab: NavigationTab;
@@ -9,6 +9,8 @@ interface HeaderProps {
   onOpenAddProductModal: () => void;
   onOpenAddOrderModal: () => void;
   onOpenShortcutsModal?: () => void;
+  onOpenAdminProfileModal?: () => void;
+  adminProfile?: AdminProfile | null;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
 }
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddProductModal,
   onOpenAddOrderModal,
   onOpenShortcutsModal,
+  onOpenAdminProfileModal,
+  adminProfile,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -27,6 +31,8 @@ export const Header: React.FC<HeaderProps> = ({
     if (tab === 'plugins') return 'Plugins & Extension Center';
     if (tab === 'templates') return 'Storefront Themes & Templates';
     if (tab === 'webhooks') return 'Webhook Management & Developer API';
+    if (tab === 'roles') return 'Team Roles & Access Control';
+    if (tab === 'seo') return 'Search Engine Webmaster Center';
     if (tab.startsWith('plugin_')) {
       const slug = tab.replace('plugin_', '').replace(/-/g, ' ');
       return `Plugin: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
@@ -91,6 +97,23 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+        </button>
+
+        {/* Admin Profile Button */}
+        <button
+          onClick={onOpenAdminProfileModal}
+          className="flex items-center gap-2 pl-2 pr-3 py-1 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl transition cursor-pointer"
+          title="Edit Admin Profile & Credentials"
+        >
+          <img 
+            src={adminProfile?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80'} 
+            alt="Admin"
+            className="w-7 h-7 rounded-lg object-cover ring-1 ring-slate-300"
+          />
+          <div className="text-left hidden lg:block">
+            <div className="text-xs font-bold text-slate-900 leading-tight">{adminProfile?.fullName || 'Ehsan King'}</div>
+            <div className="text-[10px] font-semibold text-indigo-600 leading-tight">{adminProfile?.roleName || 'Super Admin'}</div>
+          </div>
         </button>
 
         {/* Action Button */}

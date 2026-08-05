@@ -65,7 +65,7 @@ let products = [
     lowStockThreshold: 15,
     status: 'active',
     salesCount: 184,
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80',
+    image: '/src/assets/images/store_product_asset_1785936700399.jpg',
     createdAt: '2026-01-15'
   },
   {
@@ -379,6 +379,133 @@ let plugins = [
     hooks: ['OrderPlaced', 'PaymentCaptured']
   },
   {
+    id: 'plg_security_2fa',
+    slug: '2fa-mfa-security-shield',
+    name: '2FA Authenticator & Session Sentinel',
+    description: 'Enforce Time-based One-Time Password (TOTP 2FA), admin IP whitelisting, session timeout locks, and login brute-force shielding.',
+    author: 'EHSANKiNG Security',
+    version: '3.0.0',
+    category: 'security',
+    iconName: 'ShieldCheck',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: '2FA & Security Guard',
+    config: {
+      enforce2FA: true,
+      allowedIps: '127.0.0.1, 192.168.1.1/24',
+      maxFailedLogins: 5,
+      lockoutDurationMinutes: 15,
+      sessionTimeoutMinutes: 30,
+      notifySuspiciousActivity: true
+    },
+    hooks: ['AdminLogin', 'FailedLoginAttempt', 'PasswordReset']
+  },
+  {
+    id: 'plg_fraud_shield',
+    slug: 'fraud-risk-score-api',
+    name: 'MaxMind Fraud Detection & Risk Shield API',
+    description: 'Analyze incoming checkout orders in real-time. Calculates fraud risk scores, verifies billing address match, detects proxy/VPN IPs, and flags high-risk transactions.',
+    author: 'EHSANKiNG Security',
+    version: '2.2.1',
+    category: 'security',
+    iconName: 'ShieldAlert',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Anti-Fraud Shield',
+    config: {
+      maxMindApiKey: 'mm_live_8819203810a99',
+      riskThresholdToBlock: 75,
+      riskThresholdToReview: 40,
+      blockProxyVpn: true,
+      verifyEmailDomain: true,
+      autoCancelHighRisk: false
+    },
+    hooks: ['OrderPlaced', 'PaymentPreCheck', 'RiskScored']
+  },
+  {
+    id: 'plg_waf_guard',
+    slug: 'waf-rate-limiting-firewall',
+    name: 'WAF & Rate-Limiting Firewall Guard',
+    description: 'Web Application Firewall providing DDoS attack mitigation, SQL Injection (SQLi) & Cross-Site Scripting (XSS) request filtering, and automated API throttling.',
+    author: 'EHSANKiNG Security',
+    version: '1.5.0',
+    category: 'security',
+    iconName: 'Lock',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'WAF Firewall Settings',
+    config: {
+      rateLimitRequestsPerMin: 1000,
+      enableSqliFilter: true,
+      enableXssFilter: true,
+      blockBadUserAgents: true,
+      ipBlacklist: '198.51.100.4, 203.0.113.19'
+    },
+    hooks: ['ApiRequest', 'WafBlockTriggered']
+  },
+  {
+    id: 'plg_google_merchant',
+    slug: 'google-merchant-center-api',
+    name: 'Google Shopping & Merchant Center API',
+    description: 'Automates product catalog submission to Google Shopping. Generates Google Content API feeds, updates stock prices dynamically, and resolves Google feed disapproval errors.',
+    author: 'EHSANKiNG Integrations',
+    version: '2.8.0',
+    category: 'api',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Google Shopping Sync',
+    config: {
+      merchantId: 'GMC-881920391',
+      targetCountry: 'US',
+      targetLanguage: 'en',
+      autoSyncIntervalHours: 6,
+      includeOutofStock: false,
+      feedUrl: 'https://ehsan-store.io/api/feeds/google-shopping.xml'
+    },
+    hooks: ['ProductCreated', 'ProductUpdated', 'StockChanged']
+  },
+  {
+    id: 'plg_bing_merchant',
+    slug: 'bing-merchant-center-sync',
+    name: 'Microsoft Bing Shopping & IndexNow Sync',
+    description: 'Syncs store inventory directly to Bing Merchant Center while utilizing Microsoft IndexNow API for instant URL indexing in Bing search results.',
+    author: 'EHSANKiNG Integrations',
+    version: '1.4.0',
+    category: 'api',
+    iconName: 'Search',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Bing Merchant & IndexNow',
+    config: {
+      bingStoreId: 'BING-STORE-9921',
+      indexNowApiKey: 'idx_now_key_882910382910',
+      autoPingIndexNowOnPublish: true,
+      feedUrl: 'https://ehsan-store.io/api/feeds/bing-shopping.xml'
+    },
+    hooks: ['ProductCreated', 'ProductUpdated', 'SeoUpdated']
+  },
+  {
+    id: 'plg_ga4_analytics',
+    slug: 'google-analytics-ga4-gtag',
+    name: 'Google Analytics 4 & GTAG Commerce API',
+    description: 'Sends real-time e-commerce measurement events (view_item, add_to_cart, begin_checkout, purchase) to GA4 and Google Tag Manager.',
+    author: 'EHSANKiNG Integrations',
+    version: '2.1.0',
+    category: 'analytics',
+    iconName: 'BarChart3',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'GA4 Measurement',
+    config: {
+      measurementId: 'G-EHSANKING2026',
+      gtmContainerId: 'GTM-EHSAN992',
+      sendRefundEvents: true,
+      enhancedEcommerce: true
+    },
+    hooks: ['PageView', 'AddToCart', 'OrderPlaced', 'RefundIssued']
+  },
+  {
     id: 'plg_dhl',
     slug: 'dhl-express-shipping',
     name: 'DHL Express Logistics',
@@ -402,6 +529,26 @@ let plugins = [
     hooks: ['OrderShipped', 'RateCalculated', 'LabelGenerated']
   },
   {
+    id: 'plg_klaviyo',
+    slug: 'klaviyo-marketing-automation',
+    name: 'Klaviyo Marketing & Cart Recovery API',
+    description: 'Triggers automated abandoned cart email sequences, customer post-purchase follow-ups, and SMS discount codes.',
+    author: 'EHSANKiNG Integrations',
+    version: '1.9.0',
+    category: 'marketing',
+    iconName: 'Mail',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Klaviyo Automation',
+    config: {
+      publicKey: 'pk_klaviyo_live_99218',
+      privateKey: 'pk_klaviyo_secret_882190',
+      abandonedCartDelayMinutes: 60,
+      trackProductViews: true
+    },
+    hooks: ['CartAbandoned', 'CustomerRegistered', 'OrderPlaced']
+  },
+  {
     id: 'plg_ai',
     slug: 'ai-commerce-assistant',
     name: 'Popular AI Commerce Suite (Gemini / OpenAI / Claude)',
@@ -414,7 +561,7 @@ let plugins = [
     isActive: true,
     menuTitle: 'AI Copilot Studio',
     config: {
-      provider: 'gemini', // 'gemini' | 'openai' | 'claude'
+      provider: 'gemini',
       modelName: 'gemini-2.5-flash',
       apiKey: process.env.GEMINI_API_KEY || 'AIzaSy_EHSANKiNG_Default_Key',
       autoEnhanceTitles: true,
@@ -423,6 +570,115 @@ let plugins = [
       creativityLevel: 0.7
     },
     hooks: ['ProductCreated', 'CustomerInquiry', 'OrderAnalyzed']
+  },
+  {
+    id: 'plg_cloudflare_cdn',
+    slug: 'cloudflare-cdn',
+    name: 'Cloudflare Edge CDN & Cache Purge API',
+    description: 'Enterprise global edge network caching, instant cache purge on product catalog updates, WebP/AVIF image acceleration, and Cloudflare Workers edge rules.',
+    author: 'Cloudflare / EHSANKiNG',
+    version: '3.4.0',
+    category: 'cdn',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Cloudflare CDN Guard',
+    config: {
+      zoneId: '023e105f4ecef8ad9ca31a8372d0c353',
+      apiToken: 'cfl_live_tok_99812038',
+      domain: 'ehsan-store.io',
+      autoPurgeOnProductUpdate: true,
+      enableWebpOptimization: true,
+      minifyAssets: true,
+      edgeTtlSeconds: 86400,
+      cacheLevel: 'aggressive'
+    },
+    hooks: ['ProductCreated', 'ProductUpdated', 'ProductDeleted', 'CachePurged']
+  },
+  {
+    id: 'plg_fastly_cdn',
+    slug: 'fastly-cdn',
+    name: 'Fastly Instant Purge & Image Optimizer CDN',
+    description: 'Sub-millisecond instant cache purge by Surrogate Keys, Fastly VCL edge routing rules, and real-time streaming edge performance metrics.',
+    author: 'Fastly / EHSANKiNG',
+    version: '2.1.0',
+    category: 'cdn',
+    iconName: 'Zap',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Fastly Edge Purge',
+    config: {
+      serviceId: 'fastly_srv_998123',
+      apiToken: 'fst_token_8829103829',
+      domain: 'cdn.ehsan-store.io',
+      autoPurgeSurrogateKeys: true,
+      imageOptimizerEnabled: true,
+      defaultTtlSeconds: 3600
+    },
+    hooks: ['ProductUpdated', 'CategoryUpdated', 'SurrogateKeyPurged']
+  },
+  {
+    id: 'plg_bunny_cdn',
+    slug: 'bunny-cdn',
+    name: 'Bunny.net Global CDN & Storage Zone Sync',
+    description: 'Ultra-fast global pull zone asset acceleration, lossy/lossless automatic image optimizer, and Edge Storage sync for product media galleries.',
+    author: 'Bunny.net / EHSANKiNG',
+    version: '1.8.0',
+    category: 'cdn',
+    iconName: 'Layers',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Bunny CDN & Storage',
+    config: {
+      pullZoneName: 'ehsan-store-cdn',
+      apiKey: 'bny_api_key_8829103810',
+      storageZoneName: 'ehsan-media-storage',
+      storageApiKey: 'bny_stg_key_99182',
+      customDomain: 'media.ehsan-store.io',
+      autoSyncMedia: true
+    },
+    hooks: ['ProductImageUploaded', 'PullZonePurged', 'MediaSynced']
+  },
+  {
+    id: 'plg_cloudfront_cdn',
+    slug: 'aws-cloudfront-cdn',
+    name: 'AWS CloudFront Edge Distribution Engine',
+    description: 'Amazon CloudFront edge distribution management, Origin Shield configuration, and batch invalidation path creation for instant product catalog sync.',
+    author: 'Amazon Web Services / EHSANKiNG',
+    version: '2.5.0',
+    category: 'cdn',
+    iconName: 'Cpu',
+    isInstalled: true,
+    isActive: false,
+    menuTitle: 'AWS CloudFront Manager',
+    config: {
+      distributionId: 'E2A1B3C4D5E6F7',
+      awsAccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+      awsSecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+      awsRegion: 'us-east-1',
+      autoInvalidatePaths: '/*, /products/*'
+    },
+    hooks: ['ProductUpdated', 'InvalidationCreated']
+  },
+  {
+    id: 'plg_jsdelivr_cdn',
+    slug: 'jsdelivr-cdnjs-vendor-cdn',
+    name: 'jsDelivr & cdnjs Open Vendor Assets CDN',
+    description: 'Delivers open-source frontend JS/CSS vendor libraries, Google Display Fonts, and Lucide Icon SVGs directly via ultra-fast global edge nodes.',
+    author: 'jsDelivr / cdnjs',
+    version: '1.2.0',
+    category: 'cdn',
+    iconName: 'Code',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Open Vendor CDN',
+    config: {
+      autoInjectVendorLibraries: true,
+      preferredVendorCdn: 'jsdelivr',
+      enableFontPreconnect: true,
+      enableDnsPrefetch: true
+    },
+    hooks: ['VendorAssetInjected']
   }
 ];
 
@@ -501,6 +757,62 @@ let templates: StoreTemplateItem[] = [
     repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/nextjs-app-router',
     demoUrl: 'https://seller-nextjs-demo.ehsan-store.io',
     features: ['Next.js 14 App Router', 'Server Actions', 'Edge Caching & ISR', 'OpenGraph Auto-Generation']
+  },
+  {
+    id: 'tmpl_react_luxury',
+    slug: 'react-luxury-boutique',
+    name: 'React 18 Luxury Glassmorphic & Minimalist Boutique',
+    description: 'High-end luxury boutique React storefront featuring Hero Slider, Glassmorphic Floating Header, Category Spotlights, Customer Testimonials, Trust Badges, and Cart Drawer.',
+    framework: 'React',
+    author: 'EHSANKiNG',
+    version: '2.4.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/react-luxury',
+    demoUrl: 'https://seller-luxury-demo.ehsan-store.io',
+    features: ['Glassmorphic Design', 'Interactive Quick View Modal', 'Customer Reviews & Ratings', 'Trust Badges & Newsletter']
+  },
+  {
+    id: 'tmpl_react_hyper_supermarket',
+    slug: 'react-megastore-hypermarket',
+    name: 'React 18 MegaStore & HyperMarket Engine',
+    description: 'Feature-rich multi-category React storefront for high-inventory catalogs, flash deals countdown timers, quick add-to-cart, category sidebars, customer review scorecards, and FAQ accordion.',
+    framework: 'React',
+    author: 'EHSANKiNG',
+    version: '1.8.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/react-megastore',
+    demoUrl: 'https://seller-megastore-demo.ehsan-store.io',
+    features: ['Flash Deals Countdown', 'Multi-Category Sidebars', 'Customer Review Scorecard', 'Express Shipping Badges']
+  },
+  {
+    id: 'tmpl_react_gadgets_dark',
+    slug: 'react-cybertech-gadgets',
+    name: 'React 18 CyberTech & Dark Neo Gaming Storefront',
+    description: 'Sleek dark-mode React 18 template tailored for digital hardware and electronics. Features technical spec sheets, instant live search, star ratings, and floating cart drawer.',
+    framework: 'React',
+    author: 'EHSANKiNG',
+    version: '2.2.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/react-cybertech',
+    demoUrl: 'https://seller-cybertech-demo.ehsan-store.io',
+    features: ['Neo-Dark Tech Aesthetic', 'Technical Specs Sheet', 'Real-time Cart Drawer', 'Star Rating Showcase']
+  },
+  {
+    id: 'tmpl_react_organic_grocery',
+    slug: 'react-fresh-organic-eco',
+    name: 'React 18 Fresh Organic & Eco-Market Store',
+    description: 'Vibrant eco-friendly React store template for organic goods, fresh groceries, and sustainable items. Includes eco trust badges, subscription options, and customer testimonial sliders.',
+    framework: 'React',
+    author: 'EHSANKiNG',
+    version: '1.6.0',
+    isActive: false,
+    previewImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
+    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/react-organic',
+    demoUrl: 'https://seller-organic-demo.ehsan-store.io',
+    features: ['Eco-Friendly Palette', 'Sustainable Badges', 'Customer Testimonial Slider', 'Subscription & Recipe Widget']
   }
 ];
 
@@ -743,6 +1055,81 @@ app.post('/api/plugins/ai/generate', async (req, res) => {
   }
 });
 
+// CDN Plugins API Endpoints
+app.post('/api/plugins/cdn/cloudflare/purge', (req, res) => {
+  const { zoneId, purgeEverything = true, urls = [] } = req.body;
+  res.json({
+    success: true,
+    provider: 'Cloudflare CDN',
+    zoneId: zoneId || '023e105f4ecef8ad9ca31a8372d0c353',
+    purgedAt: new Date().toISOString(),
+    message: purgeEverything ? 'Entire Zone Cache purged across 320+ Cloudflare Edge Data Centers.' : `Purged ${urls.length} target URLs from Cloudflare Edge.`,
+    status: '200 OK'
+  });
+});
+
+app.get('/api/plugins/cdn/cloudflare/stats', (req, res) => {
+  res.json({
+    cacheHitRatio: '98.6%',
+    bandwidthSavedGb: 1420.5,
+    requestsServed: 8912040,
+    edgeLocationCount: 320,
+    activeWorkers: ['seo-canonical-redirects', 'image-webp-auto-convert'],
+    status: 'Optimal'
+  });
+});
+
+app.post('/api/plugins/cdn/fastly/purge', (req, res) => {
+  const { surrogateKey, serviceId } = req.body;
+  res.json({
+    success: true,
+    provider: 'Fastly Edge CDN',
+    serviceId: serviceId || 'fastly_srv_998123',
+    surrogateKey: surrogateKey || 'global-product-catalog',
+    purgedMs: 12,
+    message: `Instant Fastly purge completed in 12ms for Surrogate Key: "${surrogateKey || 'global-product-catalog'}"`,
+    status: '200 OK'
+  });
+});
+
+app.post('/api/plugins/cdn/bunny/purge', (req, res) => {
+  const { pullZoneName } = req.body;
+  res.json({
+    success: true,
+    provider: 'Bunny.net CDN',
+    pullZone: pullZoneName || 'ehsan-store-cdn',
+    purgedAt: new Date().toISOString(),
+    message: 'Bunny.net pull zone cache cleared successfully.',
+    status: '200 OK'
+  });
+});
+
+app.post('/api/plugins/cdn/bunny/sync-storage', (req, res) => {
+  const { storageZoneName } = req.body;
+  res.json({
+    success: true,
+    provider: 'Bunny.net Storage',
+    storageZone: storageZoneName || 'ehsan-media-storage',
+    syncedFilesCount: 24,
+    totalBytesSynced: 48912030,
+    message: 'All product media gallery images synced to Bunny Storage Zone.',
+    status: '200 OK'
+  });
+});
+
+app.post('/api/plugins/cdn/cloudfront/invalidate', (req, res) => {
+  const { distributionId, invalidationPath = '/*' } = req.body;
+  res.json({
+    success: true,
+    provider: 'AWS CloudFront',
+    distributionId: distributionId || 'E2A1B3C4D5E6F7',
+    invalidationId: `I${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+    status: 'InProgress',
+    path: invalidationPath,
+    message: `CloudFront invalidation created for path: "${invalidationPath}"`
+  });
+});
+
 
 // Initial Webhooks Store
 let webhooks = [
@@ -923,6 +1310,196 @@ app.delete('/api/webhooks/:id', (req, res) => {
   }
   const deleted = webhooks.splice(index, 1)[0];
   res.json({ success: true, webhook: deleted });
+});
+
+// Admin Profile Data Store & REST Routes
+let adminProfile = {
+  id: 'admin_ehsan_01',
+  fullName: 'Ehsan King',
+  email: 'ehsankingehsan@gmail.com',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+  roleId: 'role_superadmin',
+  roleName: 'Super Admin',
+  phoneNumber: '+1 (555) 019-2831',
+  bio: 'Lead Store Administrator & E-Commerce Systems Architect overseeing multi-channel fulfillment.',
+  timezone: 'UTC-07:00 (Pacific Time)',
+  preferredLanguage: 'fa-IR',
+  twoFactorEnabled: true,
+  theme: 'light',
+  apiKey: 'slr_admin_live_992a88bf0138cd912e7a',
+  createdAt: '2026-01-10T08:00:00Z',
+  lastLoginAt: new Date().toISOString()
+};
+
+app.get('/api/admin/profile', (req, res) => {
+  res.json(adminProfile);
+});
+
+app.put('/api/admin/profile', (req, res) => {
+  adminProfile = { ...adminProfile, ...req.body, lastLoginAt: new Date().toISOString() };
+  res.json(adminProfile);
+});
+
+// Admin Roles Data Store & REST Routes
+let adminRoles = [
+  {
+    id: 'role_superadmin',
+    name: 'Super Admin',
+    description: 'Full unrestricted access to store configuration, finance, plugins, roles, and database APIs.',
+    isSystemRole: true,
+    permissions: ['view_dashboard', 'manage_products', 'manage_orders', 'manage_customers', 'manage_analytics', 'manage_plugins', 'manage_templates', 'manage_webhooks', 'manage_settings', 'manage_roles', 'export_data', 'api_access'],
+    userCount: 1,
+    color: 'indigo'
+  },
+  {
+    id: 'role_store_manager',
+    name: 'Store Manager',
+    description: 'Can manage product listings, inventory stock levels, order fulfillments, and customer communications.',
+    isSystemRole: false,
+    permissions: ['view_dashboard', 'manage_products', 'manage_orders', 'manage_customers', 'manage_analytics', 'export_data'],
+    userCount: 2,
+    color: 'emerald'
+  },
+  {
+    id: 'role_fulfillment',
+    name: 'Order Fulfillment Agent',
+    description: 'Restricted to viewing orders, printing packing slips, updating shipping tracking numbers, and issuing status updates.',
+    isSystemRole: false,
+    permissions: ['view_dashboard', 'manage_orders', 'export_data'],
+    userCount: 3,
+    color: 'blue'
+  },
+  {
+    id: 'role_inventory',
+    name: 'Inventory Specialist',
+    description: 'Focused on stock quantity updates, low-stock threshold monitoring, and supplier SKU management.',
+    isSystemRole: false,
+    permissions: ['view_dashboard', 'manage_products'],
+    userCount: 1,
+    color: 'amber'
+  },
+  {
+    id: 'role_developer',
+    name: 'Integration Developer',
+    description: 'Access to API webhooks, plugin configurations, custom template CSS editing, and telemetry monitoring.',
+    isSystemRole: false,
+    permissions: ['view_dashboard', 'manage_plugins', 'manage_templates', 'manage_webhooks', 'api_access'],
+    userCount: 2,
+    color: 'purple'
+  }
+];
+
+app.get('/api/admin/roles', (req, res) => {
+  res.json(adminRoles);
+});
+
+app.post('/api/admin/roles', (req, res) => {
+  const { name, description, permissions, color } = req.body;
+  if (!name) return res.status(400).json({ error: 'Role name is required' });
+  const newRole = {
+    id: `role_${Date.now()}`,
+    name,
+    description: description || '',
+    isSystemRole: false,
+    permissions: permissions || ['view_dashboard'],
+    userCount: 0,
+    color: color || 'indigo'
+  };
+  adminRoles.push(newRole);
+  res.status(201).json(newRole);
+});
+
+app.put('/api/admin/roles/:id', (req, res) => {
+  const { id } = req.params;
+  const target = adminRoles.find(r => r.id === id);
+  if (!target) return res.status(404).json({ error: 'Role not found' });
+  Object.assign(target, req.body);
+  res.json(target);
+});
+
+app.delete('/api/admin/roles/:id', (req, res) => {
+  const { id } = req.params;
+  const target = adminRoles.find(r => r.id === id);
+  if (!target) return res.status(404).json({ error: 'Role not found' });
+  if (target.isSystemRole) return res.status(400).json({ error: 'Cannot delete system roles' });
+  adminRoles = adminRoles.filter(r => r.id !== id);
+  res.json({ success: true });
+});
+
+// SEO & Search Engine Webmaster Store & REST Routes
+let seoSettings = {
+  siteTitle: 'Ehsan Seller Store — Enterprise Headless E-Commerce Engine',
+  titleTemplate: '%s | Ehsan Seller Store',
+  metaDescription: 'Discover top-rated ergonomic keyboards, precision gaming mice, studio audio equipment, and sleek desk accessories with instant global express shipping.',
+  keywords: ['headless commerce', 'ecommerce', 'mechanical keyboards', 'gaming mice', 'studio audio', 'ehsan store'],
+  googleSiteVerification: 'google-site-verification=EHSANKiNG_GSC_Verification_Hash_992180',
+  bingSiteVerification: 'bing-site-verification=BING_WEBMASTER_EHSAN_881920',
+  indexNowApiKey: 'idx_now_key_882910382910',
+  robotsTxtContent: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nSitemap: https://ehsan-store.io/sitemap.xml`,
+  enableAutoSitemap: true,
+  sitemapUrl: 'https://ehsan-store.io/sitemap.xml',
+  organizationName: 'Ehsan Global E-Commerce Technologies Inc.',
+  organizationLogo: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=300&q=80',
+  defaultOgImage: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=1200&q=80',
+  canonicalUrl: 'https://ehsan-store.io',
+  twitterHandle: '@ehsanking'
+};
+
+app.get('/api/seo', (req, res) => {
+  res.json(seoSettings);
+});
+
+app.put('/api/seo', (req, res) => {
+  seoSettings = { ...seoSettings, ...req.body };
+  res.json(seoSettings);
+});
+
+// Public XML Sitemap for Google & Bing Indexing
+app.get('/sitemap.xml', (req, res) => {
+  const baseUrl = seoSettings.canonicalUrl || 'https://ehsan-store.io';
+  const lastMod = new Date().toISOString().split('T')[0];
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n`;
+  xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+  xml += `  <url>\n    <loc>${baseUrl}/products</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>hourly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+
+  products.forEach(p => {
+    xml += `  <url>\n`;
+    xml += `    <loc>${baseUrl}/products/${p.id}</loc>\n`;
+    xml += `    <lastmod>${(p as any).updatedAt ? (p as any).updatedAt.split('T')[0] : (p as any).createdAt ? (p as any).createdAt.split('T')[0] : lastMod}</lastmod>\n`;
+    xml += `    <changefreq>weekly</changefreq>\n`;
+    xml += `    <priority>0.8</priority>\n`;
+    const imgUrl = (p as any).image || ((p as any).images && (p as any).images[0]);
+    if (imgUrl) {
+      const cleanTitle = (p.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      xml += `    <image:image>\n      <image:loc>${imgUrl}</image:loc>\n      <image:title>${cleanTitle}</image:title>\n    </image:image>\n`;
+    }
+    xml += `  </url>\n`;
+  });
+
+  xml += `</urlset>`;
+
+  res.header('Content-Type', 'text/xml');
+  res.send(xml);
+});
+
+// Public Robots.txt
+app.get('/robots.txt', (req, res) => {
+  res.header('Content-Type', 'text/plain');
+  res.send(seoSettings.robotsTxtContent);
+});
+
+// IndexNow Instant Ping Endpoint
+app.post('/api/seo/ping-index', (req, res) => {
+  const { urlList } = req.body;
+  res.json({
+    status: 'success',
+    message: 'IndexNow notification transmitted to Google & Bing Search engine crawler endpoints',
+    urlsSubmitted: urlList || [seoSettings.canonicalUrl],
+    timestamp: new Date().toISOString(),
+    indexNowResponseCode: 200
+  });
 });
 
 // Products API

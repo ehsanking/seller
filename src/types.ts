@@ -112,7 +112,7 @@ export interface Plugin {
   description: string;
   author: string;
   version: string;
-  category: 'payment' | 'shipping' | 'ai' | 'marketing' | 'custom';
+  category: 'payment' | 'shipping' | 'ai' | 'marketing' | 'security' | 'api' | 'analytics' | 'cdn' | 'custom';
   iconName: string;
   isInstalled: boolean;
   isActive: boolean;
@@ -209,6 +209,66 @@ export interface WebhookDeliveryLog {
   status: 'success' | 'failed';
 }
 
+export interface AdminProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string;
+  roleId: string;
+  roleName: string;
+  phoneNumber: string;
+  bio: string;
+  timezone: string;
+  preferredLanguage: string;
+  twoFactorEnabled: boolean;
+  theme: 'light' | 'dark' | 'system';
+  apiKey: string;
+  createdAt: string;
+  lastLoginAt: string;
+}
+
+export type PermissionType = 
+  | 'view_dashboard'
+  | 'manage_products'
+  | 'manage_orders'
+  | 'manage_customers'
+  | 'manage_analytics'
+  | 'manage_plugins'
+  | 'manage_templates'
+  | 'manage_webhooks'
+  | 'manage_settings'
+  | 'manage_roles'
+  | 'export_data'
+  | 'api_access';
+
+export interface AdminRole {
+  id: string;
+  name: string;
+  description: string;
+  isSystemRole: boolean;
+  permissions: PermissionType[];
+  userCount: number;
+  color: string;
+}
+
+export interface SeoWebmasterSettings {
+  siteTitle: string;
+  titleTemplate: string;
+  metaDescription: string;
+  keywords: string[];
+  googleSiteVerification: string;
+  bingSiteVerification: string;
+  indexNowApiKey: string;
+  robotsTxtContent: string;
+  enableAutoSitemap: boolean;
+  sitemapUrl: string;
+  organizationName: string;
+  organizationLogo: string;
+  defaultOgImage: string;
+  canonicalUrl: string;
+  twitterHandle: string;
+}
+
 export type NavigationTab = 
   | 'dashboard' 
   | 'products' 
@@ -219,6 +279,17 @@ export type NavigationTab =
   | 'plugins'
   | 'templates'
   | 'webhooks'
+  | 'roles'
+  | 'seo'
   | `plugin_${string}`;
+
+export interface StoreSection {
+  id: string;
+  name: string;
+  enabled: boolean;
+  type: 'announcement' | 'header' | 'hero' | 'categories' | 'products' | 'promo' | 'testimonials' | 'faq' | 'footer';
+  settings?: Record<string, any>;
+}
+
 
 

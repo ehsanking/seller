@@ -2,14 +2,14 @@
 
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Space Mono', monospace;
   }
-  h1, h2, h3, .font-display {
-    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: 'Oswald', sans-serif;
   }
 }
 
-/* Custom scrollbar styling for high-density tables and panels */
+/* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -18,9 +18,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #333338;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #FFD700;
 }

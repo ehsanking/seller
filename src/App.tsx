@@ -10,10 +10,28 @@ import { SettingsView } from './components/SettingsView';
 import { PluginsView } from './components/PluginsView';
 import { TemplatesView } from './components/TemplatesView';
 import { WebhooksView } from './components/WebhooksView';
+import { RolesManagementView } from './components/RolesManagementView';
+import { SeoWebmasterView } from './components/SeoWebmasterView';
+import { AdminProfileModal } from './components/AdminProfileModal';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
-import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus, Plugin, StoreTemplate, WebhookEndpoint, WebhookDeliveryLog } from './types';
+import { 
+  NavigationTab, 
+  Product, 
+  Order, 
+  Customer, 
+  AnalyticsSummary, 
+  StoreSettings, 
+  OrderStatus, 
+  Plugin, 
+  StoreTemplate, 
+  WebhookEndpoint, 
+  WebhookDeliveryLog,
+  AdminProfile, 
+  AdminRole, 
+  SeoWebmasterSettings 
+} from './types';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
@@ -27,17 +45,21 @@ export function App() {
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [templates, setTemplates] = useState<StoreTemplate[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([]);
+  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
+  const [roles, setRoles] = useState<AdminRole[]>([]);
+  const [seoSettings, setSeoSettings] = useState<SeoWebmasterSettings | null>(null);
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isAdminProfileOpen, setIsAdminProfileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Fetch data from Express API
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes, whRes] = await Promise.all([
+      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes, whRes, admRes, rlsRes, seoRes] = await Promise.all([
         fetch('/api/products').then(r => r.json()),
         fetch('/api/orders').then(r => r.json()),
         fetch('/api/customers').then(r => r.json()),
@@ -46,16 +68,22 @@ export function App() {
         fetch('/api/plugins').then(r => r.json()),
         fetch('/api/templates').then(r => r.json()),
         fetch('/api/webhooks').then(r => r.json()),
+        fetch('/api/admin/profile').then(r => r.json()).catch(() => null),
+        fetch('/api/admin/roles').then(r => r.json()).catch(() => []),
+        fetch('/api/seo/settings').then(r => r.json()).catch(() => null),
       ]);
 
-      setProducts(prodRes);
-      setOrders(ordRes);
-      setCustomers(custRes);
-      setAnalytics(anaRes);
-      setSettings(setRes);
-      setPlugins(plgRes);
-      setTemplates(tmplRes);
-      setWebhooks(whRes);
+      setProducts(prodRes || []);
+      setOrders(ordRes || []);
+      setCustomers(custRes || []);
+      setAnalytics(anaRes || null);
+      setSettings(setRes || null);
+      setPlugins(plgRes || []);
+      setTemplates(tmplRes || []);
+      setWebhooks(whRes || []);
+      if (admRes) setAdminProfile(admRes);
+      if (rlsRes) setRoles(rlsRes);
+      if (seoRes) setSeoSettings(seoRes);
     } catch (err) {
       console.error('Error loading data from server:', err);
     } finally {
@@ -377,6 +405,7 @@ export function App() {
         setActiveTab={setActiveTab}
         storeName={settings.storeName}
         plugins={plugins}
+        onOpenAdminProfileModal={() => setIsAdminProfileOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -388,6 +417,8 @@ export function App() {
           onOpenAddProductModal={() => setIsAddProductOpen(true)}
           onOpenAddOrderModal={() => setIsAddOrderOpen(true)}
           onOpenShortcutsModal={() => setIsShortcutsOpen(true)}
+          onOpenAdminProfileModal={() => setIsAdminProfileOpen(true)}
+          adminProfile={adminProfile}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
@@ -447,6 +478,48 @@ export function App() {
             />
           )}
 
+          {activeTab === 'roles' && (
+            <RolesManagementView
+              roles={roles}
+              onSaveRole={async (roleData) => {
+                const method = roleData.id ? 'PUT' : 'POST';
+                const url = roleData.id ? `/api/admin/roles/${roleData.id}` : '/api/admin/roles';
+                const res = await fetch(url, {
+                  method,
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(roleData)
+                });
+                if (res.ok) {
+                  const updatedRoles = await fetch('/api/admin/roles').then(r => r.json());
+                  setRoles(updatedRoles);
+                }
+              }}
+              onDeleteRole={async (roleId) => {
+                const res = await fetch(`/api/admin/roles/${roleId}`, { method: 'DELETE' });
+                if (res.ok) {
+                  setRoles(prev => prev.filter(r => r.id !== roleId));
+                }
+              }}
+            />
+          )}
+
+          {activeTab === 'seo' && (
+            <SeoWebmasterView
+              seoSettings={seoSettings}
+              onSaveSeoSettings={async (updated) => {
+                const res = await fetch('/api/seo/settings', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(updated)
+                });
+                if (res.ok) {
+                  const saved = await res.json();
+                  setSeoSettings(saved);
+                }
+              }}
+            />
+          )}
+
           {(activeTab === 'plugins' || activeTab.startsWith('plugin_')) && (
             <PluginsView
               plugins={plugins}
@@ -486,6 +559,24 @@ export function App() {
           )}
         </main>
       </div>
+
+      {/* Admin Profile Modal */}
+      <AdminProfileModal
+        isOpen={isAdminProfileOpen}
+        onClose={() => setIsAdminProfileOpen(false)}
+        profile={adminProfile}
+        onSaveProfile={async (updated) => {
+          const res = await fetch('/api/admin/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated)
+          });
+          if (res.ok) {
+            const saved = await res.json();
+            setAdminProfile(saved);
+          }
+        }}
+      />
 
       {/* Global Keyboard Shortcuts Hotkeys Manager & Listener */}
       <KeyboardShortcutsModal

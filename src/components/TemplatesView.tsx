@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StoreTemplate, Product } from '../types';
 import { TemplateCssEditorModal } from './TemplateCssEditorModal';
+import { StorefrontSandboxPreview } from './StorefrontSandboxPreview';
 import { 
   Palette, 
   Upload, 
@@ -548,61 +549,15 @@ export function TemplatesView({
           <div className="flex-1 overflow-y-auto py-6 flex justify-center items-start">
             <div
               className={`transition-all duration-300 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden ${
-                previewDevice === 'mobile' ? 'w-[380px] min-h-[680px]' : 'w-full max-w-5xl min-h-[600px]'
+                previewDevice === 'mobile' ? 'w-[380px] min-h-[680px]' : 'w-full max-w-5xl min-h-[650px]'
               }`}
             >
-              {/* Simulated Storefront Header */}
-              <div className="bg-slate-900 text-white p-4 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-indigo-500" />
-                  <span className="font-extrabold text-sm tracking-wider uppercase">
-                    SELLER <span className="text-indigo-400">{previewTemplate.framework} Store</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="bg-slate-800 px-2.5 py-1 rounded-full text-slate-300">
-                    Cart (3)
-                  </span>
-                </div>
-              </div>
-
-              {/* Simulated Storefront Hero Banner */}
-              <div className="p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white text-center space-y-3">
-                <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30">
-                  Powered by SELLER Core API (Laravel 11)
-                </span>
-                <h2 className="text-2xl font-bold tracking-tight">Enterprise Headless Shopping Experience</h2>
-                <p className="text-xs text-slate-300 max-w-lg mx-auto">
-                  This preview fetches live product data directly from <code>/api/products</code>.
-                </p>
-              </div>
-
-              {/* Live Products Grid */}
-              <div className="p-6">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
-                  Live Catalog Stream ({products.length} Products)
-                </h3>
-
-                <div className={`grid gap-4 ${previewDevice === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'}`}>
-                  {products.map(p => (
-                    <div key={p.id} className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col justify-between space-y-2 bg-slate-50 dark:bg-slate-900/50">
-                      <div className="h-28 rounded-lg bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                        <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-indigo-500 font-semibold uppercase">{p.category}</span>
-                        <h4 className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">{p.title}</h4>
-                      </div>
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
-                        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">${p.price.toFixed(2)}</span>
-                        <button className="px-2.5 py-1 rounded bg-indigo-600 text-white text-[10px] font-bold">
-                          Add to Cart
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <StorefrontSandboxPreview
+                template={previewTemplate}
+                products={products}
+                device={previewDevice}
+                onClose={() => setPreviewTemplate(null)}
+              />
             </div>
           </div>
         </div>
