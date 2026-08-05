@@ -1,0 +1,6 @@
+{
+  "name": "Seller Hub",
+  "description": "E-commerce seller dashboard for managing inventory, tracking sales, processing orders, and monitoring store analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
