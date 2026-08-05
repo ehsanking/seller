@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+
+const content = `import React, { useState, useEffect } from 'react';
 import { Product, StoreTemplate, StoreSettings, Coupon } from '../types';
 import { 
   ShoppingBag, Search, X, Star, ShieldCheck, Truck, RefreshCw, 
@@ -148,7 +150,7 @@ export function StorefrontSandboxPreview({
             </div>
           </div>
         );
-      case 'products': {
+      case 'products':
         const filtered = selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory);
         return (
           <div key={section.id} className="max-w-7xl mx-auto px-4 py-16">
@@ -159,7 +161,7 @@ export function StorefrontSandboxPreview({
               {filtered.map(product => (
                 <div key={product.id} className="bg-white rounded-2xl border p-4 group hover:shadow-xl transition">
                   <div className="aspect-square rounded-xl bg-slate-100 mb-4 overflow-hidden relative">
-                    <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                     <button 
                       onClick={() => handleAddToCart(product)}
                       className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-900 hover:bg-indigo-600 hover:text-white transition"
@@ -167,7 +169,7 @@ export function StorefrontSandboxPreview({
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
-                  <h3 className="font-bold text-slate-900 truncate">{product.title}</h3>
+                  <h3 className="font-bold text-slate-900 truncate">{product.name}</h3>
                   <p className="text-sm text-slate-500 mb-2 truncate">{product.category}</p>
                   <div className="font-black text-lg">${product.price.toFixed(2)}</div>
                 </div>
@@ -175,7 +177,6 @@ export function StorefrontSandboxPreview({
             </div>
           </div>
         );
-      }
       case 'promo':
         return (
           <div key={section.id} className="max-w-7xl mx-auto px-4 py-16">
@@ -347,10 +348,10 @@ export function StorefrontSandboxPreview({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center">
-      <div className={`bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-3xl shadow-2xl flex overflow-hidden ${device === 'mobile' ? 'max-w-[400px]' : ''}`}>
+      <div className={\`bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-3xl shadow-2xl flex overflow-hidden \${device === 'mobile' ? 'max-w-[400px]' : ''}\`}>
         
         {/* Editor Sidebar */}
-        <div className={`w-80 border-r bg-slate-50 flex flex-col ${device === 'mobile' ? 'hidden' : 'flex'}`}>
+        <div className={\`w-80 border-r bg-slate-50 flex flex-col \${device === 'mobile' ? 'hidden' : 'flex'}\`}>
           <div className="p-4 border-b bg-white flex items-center justify-between">
             <h3 className="font-bold text-slate-900">Page Sections</h3>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition">
@@ -360,11 +361,11 @@ export function StorefrontSandboxPreview({
           
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {sections.map((section, index) => (
-              <div key={section.id} className={`p-3 bg-white border rounded-xl flex items-center justify-between group ${!section.enabled ? 'opacity-50' : ''}`}>
+              <div key={section.id} className={\`p-3 bg-white border rounded-xl flex items-center justify-between group \${!section.enabled ? 'opacity-50' : ''}\`}>
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => toggleSection(section.id)}
-                    className={`w-5 h-5 rounded flex items-center justify-center border ${section.enabled ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'}`}
+                    className={\`w-5 h-5 rounded flex items-center justify-center border \${section.enabled ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'}\`}
                   >
                     {section.enabled && <Check className="w-3 h-3" />}
                   </button>
@@ -430,11 +431,11 @@ export function StorefrontSandboxPreview({
                   cart.map(item => (
                     <div key={item.product.id} className="flex gap-4">
                       <div className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden shrink-0">
-                        <img src={item.product.image} alt={item.product.title} className="w-full h-full object-cover" />
+                        <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-slate-900 line-clamp-1">{item.product.title}</h4>
+                          <h4 className="font-bold text-slate-900 line-clamp-1">{item.product.name}</h4>
                           <button onClick={() => removeFromCart(item.product.id)} className="text-slate-400 hover:text-red-500">
                             <X className="w-4 h-4" />
                           </button>
@@ -490,3 +491,6 @@ export function StorefrontSandboxPreview({
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/components/StorefrontSandboxPreview.tsx', content);

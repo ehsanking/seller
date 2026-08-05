@@ -33,6 +33,7 @@ interface TemplatesViewProps {
   onActivateTemplate: (id: string) => void;
   onUploadTemplate: (templateData: Partial<StoreTemplate>) => Promise<void>;
   onDeleteTemplate: (id: string) => void;
+  onGoToBuilder?: () => void;
 }
 
 export function TemplatesView({
@@ -42,7 +43,8 @@ export function TemplatesView({
   coupons = [],
   onActivateTemplate,
   onUploadTemplate,
-  onDeleteTemplate
+  onDeleteTemplate,
+  onGoToBuilder
 }: TemplatesViewProps) {
   const [selectedFramework, setSelectedFramework] = useState<string>('all');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -296,6 +298,16 @@ export function TemplatesView({
                     <Code2 className="w-3.5 h-3.5" />
                     <span>Edit CSS</span>
                   </button>
+                  {onGoToBuilder && (
+                    <button
+                      onClick={onGoToBuilder}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/50 text-emerald-300 text-xs font-semibold transition-colors cursor-pointer"
+                      title="Visual Page Builder"
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Builder</span>
+                    </button>
+                  )}
 
                   {tmpl.repoUrl && (
                     <a

@@ -14,7 +14,8 @@ import {
   Info, 
   X, 
   BellRing, 
-  Sparkles 
+  Sparkles,
+  Type 
 } from 'lucide-react';
 import { NavigationTab, AdminProfile, StoreNotification } from '../types';
 
@@ -29,6 +30,8 @@ interface HeaderProps {
   adminProfile?: AdminProfile | null;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  dashboardFont?: string;
+  onChangeFont?: (font: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,10 +45,18 @@ export const Header: React.FC<HeaderProps> = ({
   adminProfile,
   searchQuery,
   setSearchQuery,
+  dashboardFont = 'Inter',
+  onChangeFont,
 }) => {
   const [notifications, setNotifications] = useState<StoreNotification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isNotifAnimating, setIsNotifAnimating] = useState(false);
+  const [isFontMenuOpen, setIsFontMenuOpen] = useState(false);
+
+  const trendingFonts = [
+    'Inter', 'Roboto', 'Open Sans', 'Poppins', 'Montserrat', 
+    'Lato', 'Nunito', 'Vazirmatn', 'Playfair Display', 'Fira Code'
+  ];
 
   // Helper for resilient fetching during dev server restarts
   const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3, delay = 1000): Promise<Response> => {
@@ -143,6 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (tab === 'coupons') return 'Discount Coupons & Promotional Rules';
     if (tab === 'plugins') return 'Plugins & Extension Center';
     if (tab === 'templates') return 'Storefront Themes & Templates';
+    if (tab === 'builder') return 'Visual Landing Page Builder';
     if (tab === 'webhooks') return 'Webhook Management & Developer API';
     if (tab === 'roles') return 'Team Roles & Access Control';
     if (tab === 'seo') return 'Search Engine Webmaster Center';
@@ -211,6 +223,46 @@ export const Header: React.FC<HeaderProps> = ({
           <Keyboard className="w-4 h-4 text-indigo-600" />
           <kbd className="hidden md:inline px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white text-slate-700 rounded border border-slate-300">?</kbd>
         </button>
+
+        {/* Font Selector Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setIsFontMenuOpen(!isFontMenuOpen)}
+            title="Dashboard Font"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
+          >
+            <Type className="w-4 h-4 text-indigo-600" />
+            <span className="hidden md:inline">{dashboardFont}</span>
+          </button>
+
+          {isFontMenuOpen && (
+            <div className="absolute right-0 mt-3 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+              <div className="p-3 bg-slate-50 border-b border-slate-100">
+                <h4 className="font-bold text-xs text-slate-800">Dashboard Font</h4>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+                {trendingFonts.map(font => (
+                  <button
+                    key={font}
+                    onClick={() => {
+                      onChangeFont?.(font);
+                      setIsFontMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                      dashboardFont === font
+                        ? 'bg-indigo-50 text-indigo-700 font-bold'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                    style={{ fontFamily: `"${font}", sans-serif` }}
+                  >
+                    {font}
+                    {dashboardFont === font && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Refresh button */}
         <button

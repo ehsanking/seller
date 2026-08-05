@@ -1,0 +1,68 @@
+
+> seller@1.0.0 lint
+> tsc --noEmit
+
+src/components/StorefrontSandboxPreview.tsx(263,108): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(263,122): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(265,154): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(265,168): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(266,85): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(266,99): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(267,91): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(267,105): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(268,110): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(268,124): error TS1005: ',' expected.
+src/components/StorefrontSandboxPreview.tsx(351,7): error TS1005: ':' expected.
+src/components/StorefrontSandboxPreview.tsx(355,35): error TS1005: ':' expected.
+src/components/StorefrontSandboxPreview.tsx(364,9): error TS1005: ':' expected.
+src/components/StorefrontSandboxPreview.tsx(375,7): error TS1005: ':' expected.
+src/components/StorefrontSandboxPreview.tsx(508,11): error TS2657: JSX expressions must have one parent element.
+src/components/StorefrontSandboxPreview.tsx(516,91): error TS1005: '}' expected.
+src/components/StorefrontSandboxPreview.tsx(517,21): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(517,23): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(518,19): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/StorefrontSandboxPreview.tsx(520,21): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/components/StorefrontSandboxPreview.tsx(521,19): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(578,11): error TS1005: ')' expected.
+src/components/StorefrontSandboxPreview.tsx(579,9): error TS1109: Expression expected.
+src/components/StorefrontSandboxPreview.tsx(581,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(581,19): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(622,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(622,26): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(630,72): error TS1005: '}' expected.
+src/components/StorefrontSandboxPreview.tsx(630,138): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(672,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(672,17): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(709,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(709,22): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(806,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(806,20): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(870,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(870,18): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(897,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(897,25): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(905,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(905,14): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(908,3): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(1150,135): error TS1005: '}' expected.
+src/components/StorefrontSandboxPreview.tsx(1151,25): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(1151,27): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(1152,23): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/StorefrontSandboxPreview.tsx(1154,25): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/components/StorefrontSandboxPreview.tsx(1155,23): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(1168,133): error TS1005: '}' expected.
+src/components/StorefrontSandboxPreview.tsx(1169,25): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(1169,27): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(1170,23): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/components/StorefrontSandboxPreview.tsx(1172,25): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/components/StorefrontSandboxPreview.tsx(1173,23): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/components/StorefrontSandboxPreview.tsx(1187,13): error TS1005: ')' expected.
+src/components/StorefrontSandboxPreview.tsx(1189,11): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(1191,10): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(1192,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(1195,12): error TS1005: ';' expected.
+src/components/StorefrontSandboxPreview.tsx(1196,9): error TS2657: JSX expressions must have one parent element.
+src/components/StorefrontSandboxPreview.tsx(1215,7): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(1403,5): error TS1128: Declaration or statement expected.
+src/components/StorefrontSandboxPreview.tsx(1404,3): error TS1109: Expression expected.
+src/components/StorefrontSandboxPreview.tsx(1405,1): error TS1128: Declaration or statement expected.

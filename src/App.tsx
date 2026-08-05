@@ -14,6 +14,7 @@ import { CouponsView } from './components/CouponsView';
 import { RolesManagementView } from './components/RolesManagementView';
 import { SeoWebmasterView } from './components/SeoWebmasterView';
 import { BranchesView } from './components/BranchesView';
+import { PageBuilderView } from './components/PageBuilderView';
 import { AdminProfileModal } from './components/AdminProfileModal';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
@@ -58,6 +59,14 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isAdminProfileOpen, setIsAdminProfileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dashboardFont, setDashboardFont] = useState(() => {
+    return localStorage.getItem('dashboardFont') || 'Inter';
+  });
+
+  const handleFontChange = (font: string) => {
+    setDashboardFont(font);
+    localStorage.setItem('dashboardFont', font);
+  };
 
   // Helper for resilient fetching during dev server restarts
   const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3, delay = 1000): Promise<Response> => {
@@ -469,7 +478,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen bg-slate-50 text-slate-900" style={{ fontFamily: `"${dashboardFont}", sans-serif` }}>
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -492,6 +501,8 @@ export function App() {
           adminProfile={adminProfile}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          dashboardFont={dashboardFont}
+          onChangeFont={handleFontChange}
         />
 
         <main className="p-6 flex-1 overflow-y-auto">
@@ -625,6 +636,14 @@ export function App() {
               onActivateTemplate={handleActivateTemplate}
               onUploadTemplate={handleUploadTemplate}
               onDeleteTemplate={handleDeleteTemplate}
+              onGoToBuilder={() => setActiveTab('builder')}
+            />
+          )}
+
+          {activeTab === 'builder' && (
+            <PageBuilderView
+              products={products}
+              settings={settings}
             />
           )}
 

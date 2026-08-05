@@ -323,3 +323,12 @@ CARD INDUSTRY DATA SECURITY STANDARDS (PCI-DSS) WITHIN THEIR RESPECTIVE JURISDIC
 <p align="center">
   <sub>Built with passion for the global open-source community by <strong>EHSANKiNG</strong>.</sub>
 </p>
+
+## 🎨 Visual Page Builder (Craft.js)
+SELLER Core now features a powerful, drag-and-drop Visual Page Builder powered by **Craft.js**. It allows store owners to dynamically compose custom storefront pages, landing pages, and blog layouts without writing a single line of code.
+
+### Features
+- **Drag-and-Drop Editor**: Visually organize layout nodes.
+- **Custom Pages & Blogs**: Create standalone promotional pages or blog sections.
+- **JSON Serialization**: Save and load layouts dynamically from the REST API.
+- **Variable & Downloadable Products**: Fully supported throughout the ecosystem.

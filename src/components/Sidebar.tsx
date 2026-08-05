@@ -54,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'seo', label: 'SEO & Webmaster', icon: Globe, badge: 'Google' },
     { id: 'plugins', label: 'Plugins & Add-ons', icon: Blocks, badge: plugins.filter(p => p.isActive).length ? `${plugins.filter(p => p.isActive).length} Active` : 'Hub' },
     { id: 'templates', label: 'Storefront Themes', icon: Palette, badge: 'Themes' },
+    { id: 'builder', label: 'Visual Page Builder', icon: Sparkles, badge: 'Craft.js' },
     { id: 'webhooks', label: 'Webhook Engine', icon: Webhook, badge: 'API' },
   ];
 
@@ -189,6 +190,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <p className="text-[11px] text-slate-500 truncate text-left">Pro Merchant</p>
           </div>
         </div>
+      </div>
+      <div className="p-3 bg-slate-950/60 border-t border-slate-800/80 text-center text-xs">
+        <a href="https://github.com/ehsanking/seller" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors flex justify-center items-center gap-1.5">
+          <span className="opacity-60">Engineered with</span>
+          <span className="font-bold text-indigo-400">SELLER Core</span>
+        </a>
       </div>
     </aside>
   );

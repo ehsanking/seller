@@ -1,5 +1,16 @@
 export type ProductStatus = 'active' | 'draft' | 'out_of_stock';
 
+export type ProductType = 'simple' | 'variable';
+
+export interface ProductVariation {
+  id: string;
+  sku: string;
+  name: string;
+  price: number;
+  stockQuantity: number;
+  attributes: Record<string, string>;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -19,6 +30,12 @@ export interface Product {
   metaTitle?: string;
   metaDescription?: string;
   urlSlug?: string;
+  
+  // New features
+  productType?: ProductType;
+  variations?: ProductVariation[];
+  isDownloadable?: boolean;
+  downloadUrl?: string;
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -299,14 +316,16 @@ export type NavigationTab =
   | 'roles'
   | 'seo'
   | 'coupons'
+  | 'builder'
   | `plugin_${string}`;
 
 export interface StoreSection {
   id: string;
   name: string;
   enabled: boolean;
-  type: 'announcement' | 'header' | 'hero' | 'categories' | 'products' | 'promo' | 'testimonials' | 'faq' | 'footer';
+  type: 'announcement' | 'header' | 'hero' | 'categories' | 'products' | 'promo' | 'testimonials' | 'faq' | 'footer' | 'blog' | 'custom_page';
   settings?: Record<string, any>;
+  props?: Record<string, any>; // Add props property to resolve TypeScript error
 }
 
 export type CustomerSegment = 'vip' | 'active' | 'at_risk' | 'lead';
