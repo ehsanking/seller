@@ -212,6 +212,48 @@ SELLER Core provides an event-driven plugin architecture that allows developers 
 
 ---
 
+## 🔔 Real-Time Webhook Engine & Event Dispatcher
+
+SELLER Core includes an event-driven webhook management system for developers. External endpoints can register to receive real-time HTTP POST JSON payloads secured by HMAC SHA-256 signatures (`X-Seller-Signature`).
+
+### Core Event Triggers:
+- `order_placed`: Triggered automatically whenever a customer completes an order.
+- `order_status_updated`: Fired when fulfillment changes (e.g., `pending` -> `shipped` -> `delivered`).
+- `stock_updated`: Dispatched instantly upon inventory adjustments.
+- `product_created`: Dispatched when new catalog items are created.
+- `payment_processed`: Fired upon successful credit card / wallet payment capture.
+- `customer_created`: Dispatched when new buyer profiles register.
+
+### Webhook API Endpoints:
+```http
+GET    /api/webhooks           # List registered webhook listeners
+POST   /api/webhooks           # Register a new webhook endpoint
+PATCH  /api/webhooks/:id/toggle # Enable or disable a webhook listener
+POST   /api/webhooks/:id/test  # Send a test ping event payload
+DELETE /api/webhooks/:id       # Unregister a webhook endpoint
+GET    /api/webhooks/logs      # Query real-time HTTP delivery logs
+```
+
+---
+
+## 🔍 Store-Wide SEO & Search Engine Optimization Engine
+
+SELLER Core provides an interactive SEO management interface in `SettingsView` and a dedicated public API endpoint (`GET /api/seo`) for headless storefronts and search engine indexing.
+
+### SEO Features:
+- **Live Google SERP Snippet Preview**: Real-time visual preview of how your store listing appears on search result pages.
+- **Title & Description Character Counters**: Real-time feedback with 60-character title and 160-character description benchmarks to avoid Google SERP truncation.
+- **Canonical & OpenGraph Metadata**: Configure canonical store URLs, OpenGraph social share banners (`og:image`), meta keywords, and Twitter/X handles.
+- **AI Auto-Craft SEO**: One-click AI meta title and description generation using Gemini 2.5 Flash.
+- **Headless HTML `<head>` Code Generator**: Instant `<head>` meta tag snippet generator with one-click clipboard copy.
+
+### Public SEO API Endpoint:
+```http
+GET /api/seo   # Serves store-wide meta tags, canonical URL, OG image, and keywords
+```
+
+---
+
 ## 🏛️ System Architecture & Technology Stack
 
 | Tier | Stack | Key Architectural Benefits |

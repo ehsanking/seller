@@ -9,9 +9,11 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsView } from './components/SettingsView';
 import { PluginsView } from './components/PluginsView';
 import { TemplatesView } from './components/TemplatesView';
+import { WebhooksView } from './components/WebhooksView';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
-import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus, Plugin, StoreTemplate } from './types';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus, Plugin, StoreTemplate, WebhookEndpoint, WebhookDeliveryLog } from './types';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
@@ -24,16 +26,18 @@ export function App() {
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [templates, setTemplates] = useState<StoreTemplate[]>([]);
+  const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([]);
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Fetch data from Express API
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes] = await Promise.all([
+      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes, whRes] = await Promise.all([
         fetch('/api/products').then(r => r.json()),
         fetch('/api/orders').then(r => r.json()),
         fetch('/api/customers').then(r => r.json()),
@@ -41,6 +45,7 @@ export function App() {
         fetch('/api/settings').then(r => r.json()),
         fetch('/api/plugins').then(r => r.json()),
         fetch('/api/templates').then(r => r.json()),
+        fetch('/api/webhooks').then(r => r.json()),
       ]);
 
       setProducts(prodRes);
@@ -50,6 +55,7 @@ export function App() {
       setSettings(setRes);
       setPlugins(plgRes);
       setTemplates(tmplRes);
+      setWebhooks(whRes);
     } catch (err) {
       console.error('Error loading data from server:', err);
     } finally {
@@ -61,11 +67,74 @@ export function App() {
     fetchAllData();
   }, []);
 
+  // Bulk Product Operations
+  const handleBulkDeleteProducts = async (ids: string[]) => {
+    try {
+      const res = await fetch('/api/products/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        setProducts(prev => prev.filter(p => !ids.includes(p.id)));
+      }
+    } catch (err) {
+      console.error('Bulk delete products failed:', err);
+    }
+  };
+
+  const handleBulkUpdateProducts = async (ids: string[], updates: Partial<Product>) => {
+    try {
+      const res = await fetch('/api/products/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, updates }),
+      });
+      const data = await res.json();
+      if (data.products) {
+        setProducts(data.products);
+      }
+    } catch (err) {
+      console.error('Bulk update products failed:', err);
+    }
+  };
+
+  // Bulk Order Operations
+  const handleBulkDeleteOrders = async (ids: string[]) => {
+    try {
+      const res = await fetch('/api/orders/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        setOrders(prev => prev.filter(o => !ids.includes(o.id)));
+      }
+    } catch (err) {
+      console.error('Bulk delete orders failed:', err);
+    }
+  };
+
+  const handleBulkUpdateOrderStatus = async (ids: string[], status: OrderStatus) => {
+    try {
+      const res = await fetch('/api/orders/bulk-update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status }),
+      });
+      const data = await res.json();
+      if (data.orders) {
+        setOrders(data.orders);
+      }
+    } catch (err) {
+      console.error('Bulk update orders status failed:', err);
+    }
+  };
+
   // Template Handlers
   const handleActivateTemplate = async (id: string) => {
     try {
-      const res = await fetch(`/api/templates/${id}/activate`, { method: 'PATCH' });
-      const updated = await res.json();
+      await fetch(`/api/templates/${id}/activate`, { method: 'PATCH' });
       setTemplates(prev => prev.map(t => ({ ...t, isActive: t.id === id })));
     } catch (err) {
       console.error('Failed to activate template:', err);
@@ -97,6 +166,59 @@ export function App() {
       setTemplates(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.error('Failed to delete template:', err);
+    }
+  };
+
+  // Webhook Handlers
+  const handleAddWebhook = async (webhookData: Partial<WebhookEndpoint>) => {
+    try {
+      const res = await fetch('/api/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to add webhook');
+      }
+      const newWh = await res.json();
+      setWebhooks(prev => [...prev, newWh]);
+    } catch (err) {
+      console.error('Failed to add webhook:', err);
+      throw err;
+    }
+  };
+
+  const handleToggleWebhook = async (id: string) => {
+    try {
+      const res = await fetch(`/api/webhooks/${id}/toggle`, { method: 'PATCH' });
+      const updated = await res.json();
+      setWebhooks(prev => prev.map(w => w.id === id ? updated : w));
+    } catch (err) {
+      console.error('Failed to toggle webhook:', err);
+    }
+  };
+
+  const handleTestWebhook = async (id: string): Promise<WebhookDeliveryLog> => {
+    try {
+      const res = await fetch(`/api/webhooks/${id}/test`, { method: 'POST' });
+      const data = await res.json();
+      if (data.webhook) {
+        setWebhooks(prev => prev.map(w => w.id === id ? data.webhook : w));
+      }
+      return data.log;
+    } catch (err) {
+      console.error('Failed to test webhook:', err);
+      throw err;
+    }
+  };
+
+  const handleDeleteWebhook = async (id: string) => {
+    try {
+      await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });
+      setWebhooks(prev => prev.filter(w => w.id !== id));
+    } catch (err) {
+      console.error('Failed to delete webhook:', err);
     }
   };
 
@@ -155,7 +277,6 @@ export function App() {
       console.error('Failed to delete plugin:', err);
     }
   };
-
 
   // Product CRUD
   const handleAddProduct = async (productData: Partial<Product>) => {
@@ -266,6 +387,7 @@ export function App() {
           onRefreshData={fetchAllData}
           onOpenAddProductModal={() => setIsAddProductOpen(true)}
           onOpenAddOrderModal={() => setIsAddOrderOpen(true)}
+          onOpenShortcutsModal={() => setIsShortcutsOpen(true)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
@@ -288,6 +410,8 @@ export function App() {
               onAddProduct={handleAddProduct}
               onUpdateProduct={handleUpdateProduct}
               onDeleteProduct={handleDeleteProduct}
+              onBulkDeleteProducts={handleBulkDeleteProducts}
+              onBulkUpdateProducts={handleBulkUpdateProducts}
               searchQuery={searchQuery}
             />
           )}
@@ -296,6 +420,8 @@ export function App() {
             <OrdersView
               orders={orders}
               onUpdateOrderStatus={handleUpdateOrderStatus}
+              onBulkDeleteOrders={handleBulkDeleteOrders}
+              onBulkUpdateOrderStatus={handleBulkUpdateOrderStatus}
               searchQuery={searchQuery}
             />
           )}
@@ -348,8 +474,27 @@ export function App() {
               onDeleteTemplate={handleDeleteTemplate}
             />
           )}
+
+          {activeTab === 'webhooks' && (
+            <WebhooksView
+              webhooks={webhooks}
+              onAddWebhook={handleAddWebhook}
+              onToggleWebhook={handleToggleWebhook}
+              onTestWebhook={handleTestWebhook}
+              onDeleteWebhook={handleDeleteWebhook}
+            />
+          )}
         </main>
       </div>
+
+      {/* Global Keyboard Shortcuts Hotkeys Manager & Listener */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+        onNavigate={(tab) => setActiveTab(tab)}
+        onOpenAddProduct={() => setIsAddProductOpen(true)}
+        onOpenAddOrder={() => setIsAddOrderOpen(true)}
+      />
 
       {/* Modals */}
       <AddProductModal

@@ -1,6 +1,7 @@
-import React from 'react';
-import { Users, Mail, Phone, ShoppingBag, DollarSign, Calendar, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, Mail, Phone, ShoppingBag, DollarSign, Calendar, Search, History, MessageSquareText } from 'lucide-react';
 import { Customer } from '../types';
+import { CustomerActivityLog } from './CustomerActivityLog';
 
 interface CustomersViewProps {
   customers: Customer[];
@@ -8,22 +9,30 @@ interface CustomersViewProps {
 }
 
 export const CustomersView: React.FC<CustomersViewProps> = ({ customers, searchQuery }) => {
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.phone.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleOpenActivity = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsActivityOpen(true);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-display font-bold text-base text-slate-900">Customer Roster</h3>
-            <p className="text-xs text-slate-500">Track buyer lifetime value and order frequency</p>
+            <h3 className="font-display font-bold text-base text-slate-900">Customer Roster & Timeline</h3>
+            <p className="text-xs text-slate-500">Track buyer lifetime value, support interactions, and order activity history</p>
           </div>
         </div>
         <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
@@ -46,6 +55,14 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, searchQ
                   </span>
                 </div>
               </div>
+
+              <button
+                onClick={() => handleOpenActivity(c)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 transition shadow-2xs cursor-pointer"
+              >
+                <History className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Activity Log</span>
+              </button>
             </div>
 
             <div className="space-y-1.5 text-xs text-slate-600 border-t border-b border-slate-100 py-3">
@@ -76,6 +93,13 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers, searchQ
           </div>
         ))}
       </div>
+
+      {/* Customer Activity Log Drawer */}
+      <CustomerActivityLog
+        customer={selectedCustomer}
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+      />
     </div>
   );
 };

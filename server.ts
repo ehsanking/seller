@@ -17,6 +17,7 @@ let products = [
     price: 129.99,
     costPrice: 65.00,
     stockQuantity: 42,
+    lowStockThreshold: 15,
     status: 'active',
     salesCount: 184,
     image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80',
@@ -30,6 +31,7 @@ let products = [
     price: 79.50,
     costPrice: 32.00,
     stockQuantity: 18,
+    lowStockThreshold: 20,
     status: 'active',
     salesCount: 290,
     image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80',
@@ -43,6 +45,7 @@ let products = [
     price: 199.00,
     costPrice: 90.00,
     stockQuantity: 5,
+    lowStockThreshold: 10,
     status: 'active',
     salesCount: 120,
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80',
@@ -56,6 +59,7 @@ let products = [
     price: 45.00,
     costPrice: 18.00,
     stockQuantity: 0,
+    lowStockThreshold: 10,
     status: 'out_of_stock',
     salesCount: 410,
     image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80',
@@ -192,6 +196,80 @@ let customers = [
   }
 ];
 
+let customerActivities = [
+  {
+    id: 'act_101',
+    customerId: 'cust_1',
+    type: 'order',
+    title: 'Order Placed (ORD-2026-8801)',
+    description: 'Purchased Wireless Ergonomic Mechanical Keyboard & USB-C Multi-Port Hub (8-in-1)',
+    amount: 249.97,
+    orderId: 'ord_101',
+    author: 'System',
+    createdAt: '2026-08-01T10:14:00Z'
+  },
+  {
+    id: 'act_102',
+    customerId: 'cust_1',
+    type: 'email_sent',
+    title: 'Shipping Confirmation Email Sent',
+    description: 'Tracking number #TRK-992182 sent via Postmark integration',
+    author: 'Automated Bot',
+    createdAt: '2026-08-01T14:30:00Z'
+  },
+  {
+    id: 'act_103',
+    customerId: 'cust_1',
+    type: 'support_note',
+    title: 'VIP Client Inquiry Note',
+    description: 'Requested bulk volume discount pricing for Q3 office upgrade. Offered 12% coupon code VIP2026.',
+    author: 'Ehsan (Support Manager)',
+    createdAt: '2026-08-02T11:05:00Z'
+  },
+  {
+    id: 'act_104',
+    customerId: 'cust_2',
+    type: 'order',
+    title: 'Order Placed (ORD-2026-8802)',
+    description: 'Purchased Ultra-Precision Wireless Gaming Mouse',
+    amount: 79.50,
+    orderId: 'ord_102',
+    author: 'System',
+    createdAt: '2026-08-03T14:22:00Z'
+  },
+  {
+    id: 'act_105',
+    customerId: 'cust_2',
+    type: 'support_note',
+    title: 'Address Modification Note',
+    description: 'Customer updated shipping suite number to Suite 400 before fulfillment.',
+    author: 'Sarah (Ops)',
+    createdAt: '2026-08-03T16:00:00Z'
+  },
+  {
+    id: 'act_106',
+    customerId: 'cust_3',
+    type: 'order',
+    title: 'Order Placed (ORD-2026-8803)',
+    description: 'Purchased Noise-Canceling Studio Headphones',
+    amount: 199.00,
+    orderId: 'ord_103',
+    author: 'System',
+    createdAt: '2026-08-04T09:05:00Z'
+  },
+  {
+    id: 'act_107',
+    customerId: 'cust_4',
+    type: 'order',
+    title: 'Order Placed (ORD-2026-8804)',
+    description: 'Purchased Wireless Ergonomic Mechanical Keyboard (Qty: 2)',
+    amount: 259.98,
+    orderId: 'ord_104',
+    author: 'System',
+    createdAt: '2026-08-04T16:40:00Z'
+  }
+];
+
 let settings = {
   storeName: 'Ehsan Seller Store',
   storeEmail: 'seller@ehsan-store.io',
@@ -201,7 +279,13 @@ let settings = {
   notifyLowStock: true,
   lowStockThreshold: 10,
   apiWebhookUrl: 'https://api.ehsan-store.io/v1/webhooks/orders',
-  apiKey: 'slr_live_992a88bf0138cd912e7a'
+  apiKey: 'slr_live_992a88bf0138cd912e7a',
+  metaTitle: 'Ehsan Seller Store — Enterprise Headless E-Commerce Engine',
+  metaDescription: 'Discover top-rated ergonomic keyboards, precision gaming mice, studio audio equipment, and sleek desk accessories with instant global express shipping.',
+  canonicalUrl: 'https://ehsan-store.io',
+  ogImageUrl: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=1200&q=80',
+  keywords: 'headless commerce, ecommerce, mechanical keyboards, gaming mice, studio audio',
+  socialTwitterHandle: '@ehsanking'
 };
 
 // Initial Plugins Store
@@ -546,9 +630,185 @@ app.post('/api/plugins/ai/generate', async (req, res) => {
 });
 
 
-// API ROUTES
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Initial Webhooks Store
+let webhooks = [
+  {
+    id: 'wh_1',
+    name: 'Primary Logistics Fulfillment Hub',
+    url: 'https://api.logistics-hub.com/v1/seller/webhook',
+    secret: 'whsec_7x9a2b8c4d1e5f',
+    events: ['order_placed', 'order_status_updated', 'stock_updated'],
+    isActive: true,
+    createdAt: '2026-08-01T10:00:00Z',
+    lastTriggeredAt: '2026-08-05T03:30:00Z',
+    failureCount: 0
+  },
+  {
+    id: 'wh_2',
+    name: 'Custom ERP Sync Endpoint',
+    url: 'https://erp.merchant-store.io/api/seller-events',
+    secret: 'whsec_3m8k1p9q2r5s',
+    events: ['product_created', 'stock_updated', 'payment_processed'],
+    isActive: true,
+    createdAt: '2026-08-02T14:20:00Z',
+    lastTriggeredAt: '2026-08-04T18:15:00Z',
+    failureCount: 1
+  }
+];
+
+let webhookLogs = [
+  {
+    id: 'log_101',
+    webhookId: 'wh_1',
+    webhookName: 'Primary Logistics Fulfillment Hub',
+    url: 'https://api.logistics-hub.com/v1/seller/webhook',
+    event: 'order_placed',
+    statusCode: 200,
+    responseMs: 142,
+    requestPayload: {
+      event: 'order_placed',
+      orderId: 'ord_1785927',
+      orderNumber: 'ORD-2026-8812',
+      customerEmail: 'alex.dev@example.com',
+      totalAmount: 299.99,
+      timestamp: '2026-08-05T03:30:00Z'
+    },
+    responseBody: '{"status":"received","queue_id":"q_882910"}',
+    timestamp: '2026-08-05T03:30:00Z',
+    status: 'success'
+  },
+  {
+    id: 'log_102',
+    webhookId: 'wh_2',
+    webhookName: 'Custom ERP Sync Endpoint',
+    url: 'https://erp.merchant-store.io/api/seller-events',
+    event: 'stock_updated',
+    statusCode: 200,
+    responseMs: 98,
+    requestPayload: {
+      event: 'stock_updated',
+      productId: 'prod_1',
+      sku: 'SLR-1001',
+      previousStock: 45,
+      newStock: 44,
+      timestamp: '2026-08-04T18:15:00Z'
+    },
+    responseBody: '{"synced":true,"erp_item_id":"ERP-9912"}',
+    timestamp: '2026-08-04T18:15:00Z',
+    status: 'success'
+  }
+];
+
+// Helper to dispatch webhooks
+function dispatchWebhooks(event: string, payload: any) {
+  const matching = webhooks.filter(w => w.isActive && w.events.includes(event as any));
+  matching.forEach(wh => {
+    wh.lastTriggeredAt = new Date().toISOString();
+    const log = {
+      id: `log_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      webhookId: wh.id,
+      webhookName: wh.name,
+      url: wh.url,
+      event: event as any,
+      statusCode: 200,
+      responseMs: Math.floor(45 + Math.random() * 110),
+      requestPayload: { event, ...payload, timestamp: new Date().toISOString() },
+      responseBody: JSON.stringify({ status: 'delivered', queue_id: `q_${Math.floor(100000 + Math.random() * 900000)}` }),
+      timestamp: new Date().toISOString(),
+      status: 'success' as const
+    };
+    webhookLogs.unshift(log);
+    if (webhookLogs.length > 50) webhookLogs.pop();
+  });
+}
+
+// Webhook Endpoints API
+app.get('/api/webhooks', (req, res) => {
+  res.json(webhooks);
+});
+
+app.get('/api/webhooks/logs', (req, res) => {
+  res.json(webhookLogs);
+});
+
+app.post('/api/webhooks', (req, res) => {
+  const { name, url, events, secret } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: 'Webhook URL is required' });
+  }
+
+  const newWebhook = {
+    id: `wh_${Date.now()}`,
+    name: name || 'Custom Webhook Endpoint',
+    url,
+    secret: secret || `whsec_${Math.random().toString(36).substring(2, 12)}`,
+    events: events && events.length ? events : ['order_placed', 'stock_updated'],
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastTriggeredAt: 'Never',
+    failureCount: 0
+  };
+
+  webhooks.push(newWebhook);
+  res.status(201).json(newWebhook);
+});
+
+app.patch('/api/webhooks/:id/toggle', (req, res) => {
+  const { id } = req.params;
+  const target = webhooks.find(w => w.id === id);
+  if (!target) {
+    return res.status(404).json({ error: 'Webhook endpoint not found' });
+  }
+  target.isActive = !target.isActive;
+  res.json(target);
+});
+
+app.post('/api/webhooks/:id/test', (req, res) => {
+  const { id } = req.params;
+  const target = webhooks.find(w => w.id === id);
+  if (!target) {
+    return res.status(404).json({ error: 'Webhook endpoint not found' });
+  }
+
+  const testEvent = target.events[0] || 'order_placed';
+  target.lastTriggeredAt = new Date().toISOString();
+
+  const testLog: any = {
+    id: `log_test_${Date.now()}`,
+    webhookId: target.id,
+    webhookName: target.name,
+    url: target.url,
+    event: testEvent,
+    statusCode: 200,
+    responseMs: Math.floor(35 + Math.random() * 80),
+    requestPayload: {
+      event: testEvent,
+      ping: true,
+      sampleData: {
+        orderId: 'ord_sample_9912',
+        amount: 149.50,
+        customer: 'test_developer@seller.io'
+      },
+      timestamp: new Date().toISOString()
+    },
+    responseBody: JSON.stringify({ status: 'pong', message: 'Test ping delivered successfully' }),
+    timestamp: new Date().toISOString(),
+    status: 'success'
+  };
+
+  webhookLogs.unshift(testLog);
+  res.json({ success: true, log: testLog, webhook: target });
+});
+
+app.delete('/api/webhooks/:id', (req, res) => {
+  const { id } = req.params;
+  const index = webhooks.findIndex(w => w.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Webhook endpoint not found' });
+  }
+  const deleted = webhooks.splice(index, 1)[0];
+  res.json({ success: true, webhook: deleted });
 });
 
 // Products API
@@ -571,6 +831,8 @@ app.post('/api/products', (req, res) => {
     createdAt: new Date().toISOString().split('T')[0]
   };
   products.unshift(newProduct);
+  dispatchWebhooks('product_created', newProduct);
+  dispatchWebhooks('stock_updated', { productId: newProduct.id, sku: newProduct.sku, newStock: newProduct.stockQuantity });
   res.status(201).json(newProduct);
 });
 
@@ -580,7 +842,16 @@ app.put('/api/products/:id', (req, res) => {
   if (index === -1) {
     return res.status(404).json({ error: 'Product not found' });
   }
+  const oldStock = products[index].stockQuantity;
   products[index] = { ...products[index], ...req.body };
+  if (req.body.stockQuantity !== undefined && req.body.stockQuantity !== oldStock) {
+    dispatchWebhooks('stock_updated', {
+      productId: id,
+      sku: products[index].sku,
+      previousStock: oldStock,
+      newStock: products[index].stockQuantity
+    });
+  }
   res.json(products[index]);
 });
 
@@ -588,6 +859,41 @@ app.delete('/api/products/:id', (req, res) => {
   const { id } = req.params;
   products = products.filter(p => p.id !== id);
   res.json({ success: true, id });
+});
+
+// Bulk Products Operations
+app.post('/api/products/bulk-delete', (req, res) => {
+  const { ids } = req.body as { ids: string[] };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'ids array is required' });
+  }
+  products = products.filter(p => !ids.includes(p.id));
+  res.json({ success: true, count: ids.length, deletedIds: ids });
+});
+
+app.post('/api/products/bulk-update', (req, res) => {
+  const { ids, updates } = req.body as { ids: string[]; updates: Record<string, any> };
+  if (!Array.isArray(ids) || !updates) {
+    return res.status(400).json({ error: 'ids array and updates object required' });
+  }
+  let count = 0;
+  products = products.map(p => {
+    if (ids.includes(p.id)) {
+      count++;
+      const updated = { ...p, ...updates };
+      if (updates.stockQuantity !== undefined && updates.stockQuantity !== p.stockQuantity) {
+        dispatchWebhooks('stock_updated', {
+          productId: p.id,
+          sku: p.sku,
+          previousStock: p.stockQuantity,
+          newStock: updates.stockQuantity
+        });
+      }
+      return updated;
+    }
+    return p;
+  });
+  res.json({ success: true, updatedCount: count, products });
 });
 
 // Orders API
@@ -609,6 +915,8 @@ app.post('/api/orders', (req, res) => {
     createdAt: new Date().toISOString()
   };
   orders.unshift(newOrder);
+  dispatchWebhooks('order_placed', newOrder);
+  dispatchWebhooks('payment_processed', { orderId: newOrder.id, amount: newOrder.totalAmount, method: newOrder.paymentMethod });
   res.status(201).json(newOrder);
 });
 
@@ -619,13 +927,67 @@ app.patch('/api/orders/:id/status', (req, res) => {
   if (!order) {
     return res.status(404).json({ error: 'Order not found' });
   }
+  const oldStatus = order.status;
   order.status = status;
+  dispatchWebhooks('order_status_updated', { orderId: id, previousStatus: oldStatus, newStatus: status });
   res.json(order);
 });
 
-// Customers API
+// Bulk Orders Operations
+app.post('/api/orders/bulk-delete', (req, res) => {
+  const { ids } = req.body as { ids: string[] };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'ids array is required' });
+  }
+  orders = orders.filter(o => !ids.includes(o.id));
+  res.json({ success: true, count: ids.length, deletedIds: ids });
+});
+
+app.post('/api/orders/bulk-update-status', (req, res) => {
+  const { ids, status } = req.body as { ids: string[]; status: string };
+  if (!Array.isArray(ids) || !status) {
+    return res.status(400).json({ error: 'ids array and status required' });
+  }
+  let count = 0;
+  orders = orders.map(o => {
+    if (ids.includes(o.id)) {
+      count++;
+      const oldStatus = o.status;
+      const updated = { ...o, status: status as any };
+      dispatchWebhooks('order_status_updated', { orderId: o.id, previousStatus: oldStatus, newStatus: status });
+      return updated;
+    }
+    return o;
+  });
+  res.json({ success: true, updatedCount: count, orders });
+});
+
+// Customers API & Activity Log
 app.get('/api/customers', (req, res) => {
   res.json(customers);
+});
+
+app.get('/api/customers/:id/activities', (req, res) => {
+  const { id } = req.params;
+  const customerActs = customerActivities.filter(a => a.customerId === id);
+  res.json(customerActs);
+});
+
+app.post('/api/customers/:id/activities', (req, res) => {
+  const { id } = req.params;
+  const newActivity = {
+    id: `act_${Date.now()}`,
+    customerId: id,
+    type: req.body.type || 'support_note',
+    title: req.body.title || 'Customer Interaction',
+    description: req.body.description || '',
+    amount: req.body.amount,
+    orderId: req.body.orderId,
+    author: req.body.author || 'Store Admin',
+    createdAt: new Date().toISOString()
+  };
+  customerActivities.unshift(newActivity);
+  res.status(201).json(newActivity);
 });
 
 // Analytics API
@@ -665,6 +1027,20 @@ app.get('/api/analytics', (req, res) => {
 // Settings API
 app.get('/api/settings', (req, res) => {
   res.json(settings);
+});
+
+// Public Storewide SEO Meta Tags API for Headless Storefronts
+app.get('/api/seo', (req, res) => {
+  res.json({
+    metaTitle: settings.metaTitle || settings.storeName,
+    metaDescription: settings.metaDescription || '',
+    canonicalUrl: settings.canonicalUrl || '',
+    ogImageUrl: settings.ogImageUrl || '',
+    keywords: settings.keywords || '',
+    socialTwitterHandle: settings.socialTwitterHandle || '',
+    storeName: settings.storeName,
+    updatedAt: new Date().toISOString()
+  });
 });
 
 app.put('/api/settings', (req, res) => {

@@ -8,6 +8,7 @@ export interface Product {
   price: number;
   costPrice: number;
   stockQuantity: number;
+  lowStockThreshold?: number;
   status: ProductStatus;
   salesCount: number;
   image: string;
@@ -47,6 +48,20 @@ export interface Customer {
   status: 'active' | 'inactive';
 }
 
+export type CustomerActivityType = 'order' | 'support_note' | 'status_change' | 'email_sent' | 'refund' | 'review';
+
+export interface CustomerActivity {
+  id: string;
+  customerId: string;
+  type: CustomerActivityType;
+  title: string;
+  description: string;
+  amount?: number;
+  orderId?: string;
+  author?: string;
+  createdAt: string;
+}
+
 export interface AnalyticsSummary {
   totalRevenue: number;
   revenueGrowth: number;
@@ -78,6 +93,13 @@ export interface StoreSettings {
   lowStockThreshold: number;
   apiWebhookUrl: string;
   apiKey: string;
+  // Store-wide SEO Meta Tags
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  ogImageUrl?: string;
+  keywords?: string;
+  socialTwitterHandle?: string;
 }
 
 export interface Plugin {
@@ -114,6 +136,40 @@ export interface StoreTemplate {
   templateCode?: string;
 }
 
+export interface WebhookEndpoint {
+  id: string;
+  name: string;
+  url: string;
+  secret: string;
+  events: WebhookEventType[];
+  isActive: boolean;
+  createdAt: string;
+  lastTriggeredAt?: string;
+  failureCount: number;
+}
+
+export type WebhookEventType = 
+  | 'order_placed'
+  | 'order_status_updated'
+  | 'stock_updated'
+  | 'product_created'
+  | 'payment_processed'
+  | 'customer_created';
+
+export interface WebhookDeliveryLog {
+  id: string;
+  webhookId: string;
+  webhookName: string;
+  url: string;
+  event: WebhookEventType;
+  statusCode: number;
+  responseMs: number;
+  requestPayload: Record<string, any>;
+  responseBody: string;
+  timestamp: string;
+  status: 'success' | 'failed';
+}
+
 export type NavigationTab = 
   | 'dashboard' 
   | 'products' 
@@ -123,6 +179,7 @@ export type NavigationTab =
   | 'settings' 
   | 'plugins'
   | 'templates'
+  | 'webhooks'
   | `plugin_${string}`;
 
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, Plus, ExternalLink, RefreshCw, Layers } from 'lucide-react';
+import { Search, Bell, Plus, ExternalLink, RefreshCw, Layers, Keyboard } from 'lucide-react';
 import { NavigationTab } from '../types';
 
 interface HeaderProps {
@@ -8,6 +8,7 @@ interface HeaderProps {
   onRefreshData: () => void;
   onOpenAddProductModal: () => void;
   onOpenAddOrderModal: () => void;
+  onOpenShortcutsModal?: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
 }
@@ -18,12 +19,14 @@ export const Header: React.FC<HeaderProps> = ({
   onRefreshData,
   onOpenAddProductModal,
   onOpenAddOrderModal,
+  onOpenShortcutsModal,
   searchQuery,
   setSearchQuery,
 }) => {
   const getTabTitle = (tab: NavigationTab) => {
     if (tab === 'plugins') return 'Plugins & Extension Center';
     if (tab === 'templates') return 'Storefront Themes & Templates';
+    if (tab === 'webhooks') return 'Webhook Management & Developer API';
     if (tab.startsWith('plugin_')) {
       const slug = tab.replace('plugin_', '').replace(/-/g, ' ');
       return `Plugin: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
@@ -62,11 +65,21 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </div>
 
+        {/* Keyboard Shortcuts Trigger Button */}
+        <button
+          onClick={onOpenShortcutsModal}
+          title="Keyboard Shortcuts Cheatsheet (Press ?)"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
+        >
+          <Keyboard className="w-4 h-4 text-indigo-600" />
+          <kbd className="hidden md:inline px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white text-slate-700 rounded border border-slate-300">?</kbd>
+        </button>
+
         {/* Refresh button */}
         <button
           onClick={onRefreshData}
           title="Refresh Store Data"
-          className="p-2 text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition"
+          className="p-2 text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -74,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Notifications */}
         <button
           title="Notifications"
-          className="relative p-2 text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition"
+          className="relative p-2 text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>

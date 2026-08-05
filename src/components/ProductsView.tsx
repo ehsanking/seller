@@ -12,7 +12,12 @@ import {
   DollarSign,
   Package,
   Layers,
-  Download
+  Download,
+  CheckSquare,
+  Square,
+  AlertTriangle,
+  Settings,
+  ShieldAlert
 } from 'lucide-react';
 import { Product, ProductStatus } from '../types';
 
@@ -21,6 +26,8 @@ interface ProductsViewProps {
   onAddProduct: (productData: Partial<Product>) => void;
   onUpdateProduct: (id: string, productData: Partial<Product>) => void;
   onDeleteProduct: (id: string) => void;
+  onBulkDeleteProducts?: (ids: string[]) => void;
+  onBulkUpdateProducts?: (ids: string[], updates: Partial<Product>) => void;
   searchQuery: string;
 }
 
@@ -29,10 +36,14 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
+  onBulkDeleteProducts,
+  onBulkUpdateProducts,
   searchQuery,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<ProductStatus | ''>('');
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -44,8 +55,49 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     return matchesSearch && matchesCategory;
   });
 
+  const isAllSelected = filteredProducts.length > 0 && filteredProducts.every(p => selectedIds.includes(p.id));
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredProducts.map(p => p.id));
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(i => i !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleExecuteBulkDelete = () => {
+    if (!selectedIds.length) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} selected products?`)) {
+      if (onBulkDeleteProducts) {
+        onBulkDeleteProducts(selectedIds);
+      } else {
+        selectedIds.forEach(id => onDeleteProduct(id));
+      }
+      setSelectedIds([]);
+    }
+  };
+
+  const handleExecuteBulkStatus = (status: ProductStatus) => {
+    if (!selectedIds.length || !status) return;
+    if (onBulkUpdateProducts) {
+      onBulkUpdateProducts(selectedIds, { status });
+    } else {
+      selectedIds.forEach(id => onUpdateProduct(id, { status }));
+    }
+    setSelectedIds([]);
+    setBulkStatus('');
+  };
+
   const handleExportCsv = () => {
-    const headers = ['SKU', 'Title', 'Category', 'Price', 'Cost Price', 'Stock Quantity', 'Status', 'Sales Count', 'Created At'];
+    const headers = ['SKU', 'Title', 'Category', 'Price', 'Cost Price', 'Stock Quantity', 'Low Stock Limit', 'Status', 'Sales Count', 'Created At'];
     const rows = filteredProducts.map(p => [
       p.sku,
       p.title,
@@ -53,6 +105,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
       p.price.toFixed(2),
       p.costPrice ? p.costPrice.toFixed(2) : '0.00',
       p.stockQuantity,
+      p.lowStockThreshold ?? 10,
       p.status,
       p.salesCount,
       p.createdAt
@@ -81,7 +134,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     document.body.removeChild(link);
   };
 
-  const getStatusBadge = (status: ProductStatus, stock: number) => {
+  const getStatusBadge = (status: ProductStatus, stock: number, threshold: number = 10) => {
     if (stock <= 0 || status === 'out_of_stock') {
       return (
         <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
@@ -104,7 +157,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Filters Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
@@ -113,7 +166,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition capitalize ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition capitalize cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-indigo-600 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -132,7 +185,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           <button
             onClick={handleExportCsv}
             disabled={filteredProducts.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
             title="Download CSV of current products list"
           >
             <Download className="w-3.5 h-3.5" />
@@ -141,17 +194,69 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
         </div>
       </div>
 
+      {/* Floating Bulk Action Sticky Bar */}
+      {selectedIds.length > 0 && (
+        <div className="sticky top-4 z-20 bg-slate-900 text-white p-3.5 rounded-2xl shadow-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 rounded-xl text-xs font-bold font-mono">
+              {selectedIds.length} Products Selected
+            </span>
+            <span className="text-xs text-slate-400 hidden sm:inline">Perform batch updates or removal</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={bulkStatus}
+              onChange={(e) => {
+                const val = e.target.value as ProductStatus;
+                setBulkStatus(val);
+                if (val) handleExecuteBulkStatus(val);
+              }}
+              className="px-3 py-1.5 bg-slate-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold focus:outline-hidden"
+            >
+              <option value="">Bulk Status Change...</option>
+              <option value="active">Set to Active</option>
+              <option value="draft">Set to Draft</option>
+              <option value="out_of_stock">Set to Out of Stock</option>
+            </select>
+
+            <button
+              onClick={handleExecuteBulkDelete}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete ({selectedIds.length})</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-semibold transition"
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Products Table */}
       <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleToggleSelectAll}
+                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300 cursor-pointer"
+                  />
+                </th>
                 <th className="py-3 px-4">Product Details</th>
                 <th className="py-3 px-4">SKU</th>
                 <th className="py-3 px-4">Category</th>
                 <th className="py-3 px-4">Price</th>
-                <th className="py-3 px-4">Stock</th>
+                <th className="py-3 px-4">Stock & Low Limit</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Total Sales</th>
                 <th className="py-3 px-4 text-right">Actions</th>
@@ -160,56 +265,79 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
+                  <td colSpan={9} className="py-8 text-center text-slate-500">
                     No products matching your search or selected filter.
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg bg-slate-100 object-cover shrink-0 border border-slate-200" />
-                        <div>
-                          <p className="font-bold text-slate-900 line-clamp-1">{p.title}</p>
-                          <p className="text-[11px] text-slate-400">Added {p.createdAt}</p>
+                filteredProducts.map((p) => {
+                  const threshold = p.lowStockThreshold ?? 10;
+                  const isLowStock = p.stockQuantity <= threshold;
+                  const isChecked = selectedIds.includes(p.id);
+
+                  return (
+                    <tr 
+                      key={p.id} 
+                      className={`hover:bg-slate-50/80 transition ${isChecked ? 'bg-indigo-50/30' : ''}`}
+                    >
+                      <td className="py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleSelect(p.id)}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300 cursor-pointer"
+                        />
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg bg-slate-100 object-cover shrink-0 border border-slate-200" />
+                          <div>
+                            <p className="font-bold text-slate-900 line-clamp-1">{p.title}</p>
+                            <p className="text-[11px] text-slate-400">Added {p.createdAt}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-mono font-medium text-slate-600">{p.sku}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-medium">
-                        {p.category}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-bold text-slate-900">${p.price.toFixed(2)}</td>
-                    <td className="py-3 px-4 font-medium">
-                      <span className={p.stockQuantity <= 10 ? 'text-amber-600 font-bold' : 'text-slate-700'}>
-                        {p.stockQuantity} units
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">{getStatusBadge(p.status, p.stockQuantity)}</td>
-                    <td className="py-3 px-4 font-semibold text-slate-700">{p.salesCount} sold</td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setEditingProduct(p)}
-                          title="Edit Product"
-                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteProduct(p.id)}
-                          title="Delete Product"
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="py-3 px-4 font-mono font-medium text-slate-600">{p.sku}</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-medium">
+                          {p.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-bold text-slate-900">${p.price.toFixed(2)}</td>
+                      <td className="py-3 px-4 font-medium">
+                        <div className="flex items-center gap-2">
+                          <span className={isLowStock ? 'text-rose-600 font-bold flex items-center gap-1' : 'text-slate-700'}>
+                            {isLowStock && <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />}
+                            {p.stockQuantity} units
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="Low stock threshold trigger">
+                            Limit: {threshold}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">{getStatusBadge(p.status, p.stockQuantity, threshold)}</td>
+                      <td className="py-3 px-4 font-semibold text-slate-700">{p.salesCount} sold</td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setEditingProduct(p)}
+                            title="Edit Product & Low Stock Limit"
+                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition cursor-pointer"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteProduct(p.id)}
+                            title="Delete Product"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -222,7 +350,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-display font-bold text-base text-slate-900">Edit Product: {editingProduct.sku}</h3>
-              <button onClick={() => setEditingProduct(null)} className="p-1 text-slate-400 hover:text-slate-600">
+              <button onClick={() => setEditingProduct(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -272,6 +400,20 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                 </div>
               </div>
 
+              {/* Per-Product Low Stock Limit Threshold */}
+              <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-200/80 space-y-1">
+                <label className="block text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-600" /> Product Low Stock Alert Threshold
+                </label>
+                <p className="text-[11px] text-amber-700">Triggers visual warning badges on Dashboard when inventory hits this limit</p>
+                <input
+                  type="number"
+                  value={editingProduct.lowStockThreshold ?? 10}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, lowStockThreshold: parseInt(e.target.value) || 5 })}
+                  className="w-full px-3 py-1.5 text-xs border border-amber-300 rounded-lg bg-white font-mono font-bold focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
                 <input
@@ -300,13 +442,13 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditingProduct(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm cursor-pointer"
                 >
                   Save Changes
                 </button>

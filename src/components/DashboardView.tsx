@@ -11,7 +11,8 @@ import {
   CheckCircle2, 
   Clock, 
   Truck,
-  Eye
+  Eye,
+  ShieldAlert
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { AnalyticsSummary, Order, Product, NavigationTab } from '../types';
@@ -33,7 +34,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenAddProductModal,
   onOpenAddOrderModal,
 }) => {
-  const lowStockProducts = products.filter(p => p.stockQuantity <= 10);
+  // Threshold-based low stock alert calculation per product
+  const lowStockProducts = products.filter(p => p.stockQuantity <= (p.lowStockThreshold ?? 10));
   const recentOrders = orders.slice(0, 5);
 
   const getOrderStatusBadge = (status: Order['status']) => {
@@ -52,7 +54,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* KPI Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
@@ -124,15 +126,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-2xl font-bold font-display text-slate-900">
               {analytics.activeProducts} SKUs
             </span>
-            {analytics.lowStockItems > 0 ? (
-              <span className="text-xs font-semibold text-amber-600 flex items-center gap-0.5">
-                <AlertTriangle className="w-3.5 h-3.5" /> {analytics.lowStockItems} low stock
+            {lowStockProducts.length > 0 ? (
+              <span className="text-xs font-semibold text-amber-600 flex items-center gap-0.5 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                <AlertTriangle className="w-3.5 h-3.5" /> {lowStockProducts.length} low stock
               </span>
             ) : (
               <span className="text-xs font-semibold text-emerald-600">Stock healthy</span>
             )}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Ready for fulfillment</p>
+          <p className="text-[11px] text-slate-400 mt-1">Threshold alert active</p>
         </div>
       </div>
 
@@ -145,7 +147,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <button
             onClick={() => setActiveTab('analytics')}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition cursor-pointer"
           >
             View Full Report <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
@@ -188,7 +190,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <button
               onClick={() => setActiveTab('orders')}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
             >
               See All Orders ({orders.length})
             </button>
@@ -216,11 +218,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Low Stock Alerts (1 col) */}
         <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              <h3 className="font-display font-bold text-base text-slate-900">Inventory Alert</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <h3 className="font-display font-bold text-base text-slate-900">Inventory Alert</h3>
+              </div>
+              <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                {lowStockProducts.length} Items Below Limit
+              </span>
             </div>
-            <p className="text-xs text-slate-500 mb-4">Products with critical stock level requiring reorder</p>
+            <p className="text-xs text-slate-500 mb-4">Threshold-based low stock monitor per SKU</p>
 
             <div className="space-y-3">
               {lowStockProducts.length === 0 ? (
@@ -228,29 +235,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   🎉 All product inventory levels are healthy!
                 </div>
               ) : (
-                lowStockProducts.map((p) => (
-                  <div key={p.id} className="p-3 rounded-lg border border-amber-200 bg-amber-50/50 flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img src={p.image} alt={p.title} className="w-9 h-9 rounded bg-slate-100 object-cover shrink-0" />
-                      <div className="truncate">
-                        <p className="text-xs font-bold text-slate-900 truncate">{p.title}</p>
-                        <p className="text-[11px] text-slate-500">SKU: {p.sku}</p>
+                lowStockProducts.map((p) => {
+                  const thresh = p.lowStockThreshold ?? 10;
+                  return (
+                    <div key={p.id} className="p-3 rounded-lg border border-amber-200 bg-amber-50/50 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img src={p.image} alt={p.title} className="w-9 h-9 rounded bg-slate-100 object-cover shrink-0 border border-amber-200" />
+                        <div className="truncate">
+                          <p className="text-xs font-bold text-slate-900 truncate">{p.title}</p>
+                          <p className="text-[10px] text-slate-500 font-mono">Limit: {thresh} units</p>
+                        </div>
                       </div>
+                      <span className="shrink-0 px-2 py-1 rounded bg-amber-200 text-amber-900 text-xs font-bold font-mono">
+                        {p.stockQuantity} left
+                      </span>
                     </div>
-                    <span className="shrink-0 px-2 py-1 rounded bg-amber-100 text-amber-800 text-xs font-bold">
-                      {p.stockQuantity} left
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
 
           <button
             onClick={() => setActiveTab('products')}
-            className="w-full mt-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs py-2.5 rounded-lg transition"
+            className="w-full mt-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs py-2.5 rounded-lg transition cursor-pointer"
           >
-            Manage Inventory
+            Manage Inventory & Thresholds
           </button>
         </div>
       </div>

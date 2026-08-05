@@ -9,6 +9,7 @@ import {
   Store,
   Blocks,
   Palette,
+  Webhook,
   CreditCard,
   Wallet,
   Truck,
@@ -37,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, store
     { id: 'settings', label: 'Store Settings', icon: Settings },
     { id: 'plugins', label: 'Plugins & Add-ons', icon: Blocks, badge: plugins.filter(p => p.isActive).length ? `${plugins.filter(p => p.isActive).length} Active` : 'Hub' },
     { id: 'templates', label: 'Storefront Themes', icon: Palette, badge: 'Themes' },
+    { id: 'webhooks', label: 'Webhook Engine', icon: Webhook, badge: 'API' },
   ];
 
   const getPluginIcon = (iconName: string) => {

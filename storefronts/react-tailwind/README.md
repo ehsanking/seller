@@ -1,17 +1,49 @@
-<!-- SELLER React + Tailwind CSS Starter Storefront -->
-# SELLER Storefront — React + Tailwind CSS
+# SELLER React + Tailwind CSS Starter Storefront
 
-A hyper-fast, responsive storefront template for **SELLER Core (ehsanking/seller)**.
+This is an official starter storefront boilerplate built with **React 18**, **Vite**, and **Tailwind CSS**, designed to connect directly to **SELLER Core Headless Engine** (`ehsanking/seller`).
 
-## Key Features
-- Ultra-lightweight Vite + React 18 frontend
-- Tailwind CSS utility styling
-- Automated cart persistence via localStorage
-- One-click checkout integration with SELLER Stripe & PayPal REST Endpoints
+## ⚡ Quick Start
 
-## Quick Start
 ```bash
+# 1. Navigate to directory
 cd storefronts/react-tailwind
+
+# 2. Install dependencies
 npm install
+
+# 3. Start development server
 npm run dev
 ```
+
+## 🌐 Fetching Products from SELLER Headless REST API
+
+In React, fetch catalog data directly from the `/api/products` endpoint:
+
+```jsx
+import { useEffect, useState } from 'react';
+
+export default function Catalog() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(console.error);
+  }, []);
+
+  return (
+    <div>
+      {products.map(product => (
+        <div key={product.id}>
+          <h3>{product.title}</h3>
+          <p>${product.price}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## 🛠️ Created by EHSANKiNG — 100% Free Forever
+For complete docs and core API specifications, visit [ehsanking/seller](https://github.com/ehsanking/seller).
