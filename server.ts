@@ -360,6 +360,41 @@ let crmTickets = [
   }
 ];
 
+let notifications = [
+  {
+    id: 'ntf_1',
+    title: 'New Order Placed',
+    message: 'Order #ORD-2026-8805 was placed successfully by Alina Restova.',
+    type: 'success',
+    isRead: false,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'ntf_2',
+    title: 'Low Stock Alert',
+    message: 'The stock count for "Wireless Ergonomic Mechanical Keyboard" has dropped below the threshold of 5 units.',
+    type: 'warning',
+    isRead: false,
+    createdAt: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: 'ntf_3',
+    title: 'Google Translate Activated',
+    message: 'The Google Cloud Translation plugin has been successfully configured and activated.',
+    type: 'info',
+    isRead: true,
+    createdAt: new Date(Date.now() - 12000000).toISOString()
+  },
+  {
+    id: 'ntf_4',
+    title: 'Bot Blocked',
+    message: 'Google reCAPTCHA Enterprise successfully blocked a suspicious login attempt from IP 192.168.1.102.',
+    type: 'error',
+    isRead: false,
+    createdAt: new Date(Date.now() - 400000).toISOString()
+  }
+];
+
 let customerActivities = [
   {
     id: 'act_101',
@@ -796,6 +831,28 @@ let plugins = [
     hooks: ['OrderPlaced', 'VipAppointmentBooked']
   },
   {
+    id: 'plg_social_media_manager',
+    slug: 'social-media-manager',
+    name: 'Omni-Channel Social Media Manager & Auto-Poster',
+    description: 'Automatically schedules, publishes, and syndicates new product launches, flash sales, and discount vouchers to Instagram, Telegram, Twitter (X), LinkedIn, and Facebook Pages with AI caption generation.',
+    author: 'EHSANKiNG Enterprise',
+    version: '3.2.0',
+    category: 'marketing',
+    iconName: 'Share2',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Social Media Hub',
+    config: {
+      telegramBotToken: '792018392:AAH_ehsan_store_bot_token',
+      telegramChannelId: '@ehsan_store_channel',
+      instagramAccountId: 'ig_biz_9928192',
+      twitterApiKey: 'tw_key_9981203',
+      autoPublishOnNewProduct: true,
+      aiCaptionHashtags: '#EhsanStore #NewProduct #Ecommerce #TechDeals #FlashSale'
+    },
+    hooks: ['ProductCreated', 'FlashSaleStarted', 'DiscountVoucherCreated']
+  },
+  {
     id: 'plg_cloudflare_cdn',
     slug: 'cloudflare-cdn',
     name: 'Cloudflare Edge CDN & Cache Purge API',
@@ -903,6 +960,92 @@ let plugins = [
       enableDnsPrefetch: true
     },
     hooks: ['VendorAssetInjected']
+  },
+  {
+    id: 'plg_sendgrid',
+    slug: 'sendgrid-email-api',
+    name: 'SendGrid Transactional & Marketing Email API',
+    description: 'Connect with Twilio SendGrid to dispatch transactional order confirmation emails, custom marketing newsletters, and receipt notifications using dynamic templates.',
+    author: 'SendGrid / EHSANKiNG',
+    version: '4.1.0',
+    category: 'api',
+    iconName: 'Mail',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'SendGrid Email API',
+    config: {
+      apiKey: 'SG.Live_EhsanStore_9921820AHS_example',
+      senderEmail: 'receipts@ehsan-store.io',
+      senderName: 'Ehsan Store Fulfillment',
+      enableOrderEmails: true,
+      enableNewsletterSync: true,
+      newsletterTemplateId: 'd-992a1882b810'
+    },
+    hooks: ['OrderPlaced', 'NewsletterSubscribed', 'CustomerRegistered']
+  },
+  {
+    id: 'plg_twilio',
+    slug: 'twilio-sms-api',
+    name: 'Twilio SMS & Whatsapp OTP Gateway API',
+    description: 'Enable instant order dispatch notifications, 2FA security codes, shipping status SMS alerts, and official WhatsApp Business message delivery.',
+    author: 'Twilio / EHSANKiNG',
+    version: '5.2.0',
+    category: 'api',
+    iconName: 'MessageSquare',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Twilio SMS Gateway',
+    config: {
+      accountSid: 'AC_ehsan_store_live_99218a8b1',
+      authToken: 'tw_auth_tok_882910a30b40',
+      fromNumber: '+18889921002',
+      whatsappFromNumber: 'whatsapp:+14155238886',
+      enableDispatchSms: true,
+      enableOtpVerification: false
+    },
+    hooks: ['OrderShipped', 'FailedLoginAttempt', 'CustomerRegistered']
+  },
+  {
+    id: 'plg_slack',
+    slug: 'slack-sales-bot',
+    name: 'Slack Channel Commerce Alerts Bot API',
+    description: 'Post live notification feeds directly to your corporate Slack channels when new orders are captured, inventory falls low, or system webhooks trigger.',
+    author: 'Slack / EHSANKiNG',
+    version: '2.0.0',
+    category: 'api',
+    iconName: 'Terminal',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Slack Commerce Bot',
+    config: {
+      webhookUrl: 'https://hooks.slack.com/services/T992/B881/EhsanStoreWebhookExample',
+      channelName: '#store-ops-alerts',
+      alertOnNewOrder: true,
+      alertOnLowStock: true,
+      alertOnSystemAudit: false
+    },
+    hooks: ['OrderPlaced', 'StockChanged', 'WafBlockTriggered']
+  },
+  {
+    id: 'plg_mailchimp',
+    slug: 'mailchimp-sync',
+    name: 'Mailchimp Audience & Contact Sync API',
+    description: 'Sync your customer directory and purchase histories automatically to Mailchimp subscriber lists, segments, and cart recovery journeys.',
+    author: 'Mailchimp / EHSANKiNG',
+    version: '3.1.2',
+    category: 'marketing',
+    iconName: 'UserCheck',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Mailchimp Sync',
+    config: {
+      apiKey: 'mailchimp_live_key_9921820a-us14',
+      listId: 'mc_list_ehsan_88219',
+      doubleOptIn: false,
+      autoSyncOnPurchase: true,
+      syncProductCatalog: true
+    },
+    hooks: ['CustomerRegistered', 'NewsletterSubscribed', 'OrderPlaced']
   }
 ];
 
@@ -1316,8 +1459,8 @@ app.post('/api/plugins/cdn/cloudfront/invalidate', (req, res) => {
 app.post('/api/plugins/google/translate', (req, res) => {
   const { text, targetLang = 'fa' } = req.body;
   const sampleTranslations: Record<string, string> = {
-    'fa': `ترجمه هوشمند گوگل (FA): "${text || 'Product Title'}" با موفقیت برای کاتالوگ فروشگاه ترجمه شد.`,
-    'ar': `ترجمة جوجل السحابية (AR): "${text || 'Product Title'}" تمت ترجمتها بنجاح.`,
+    'fa': `Google Translation (FA): "${text || 'Product Title'}" translated successfully for the catalog.`,
+    'ar': `Google Translation (AR): "${text || 'Product Title'}" translated successfully.`,
     'es': `Traducción Google Cloud (ES): "${text || 'Product Title'}" traducido exitosamente.`,
     'fr': `Traduction Google Cloud (FR): "${text || 'Product Title'}" traduit avec succès.`
   };
@@ -1374,6 +1517,21 @@ app.post('/api/plugins/google/recaptcha', (req, res) => {
   });
 });
 
+app.post('/api/plugins/social/publish', (req, res) => {
+  const { platform = 'telegram', message, imageUrl } = req.body;
+  res.json({
+    success: true,
+    provider: 'Omni-Channel Social Media Manager',
+    platform: platform,
+    postId: `soc_${Date.now()}`,
+    publishedMessage: message || '🚀 New Product Launch / Flash Sale at Ehsan Store!',
+    mediaAttached: !!imageUrl,
+    status: 'PUBLISHED_SUCCESSFULLY',
+    engagement: { impressions: 0, clicks: 0, likes: 0 },
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.post('/api/plugins/google/workspace', (req, res) => {
   const { action = 'send_email', recipient, subject } = req.body;
   if (action === 'send_email') {
@@ -1396,6 +1554,65 @@ app.post('/api/plugins/google/workspace', (req, res) => {
       status: 'CONFIRMED'
     });
   }
+});
+
+app.post('/api/plugins/sendgrid/test', (req, res) => {
+  const { recipient, subject, templateId, bodyText } = req.body;
+  res.json({
+    success: true,
+    provider: 'SendGrid Email API',
+    messageId: `sg_msg_${Date.now()}_ehsan`,
+    recipient: recipient || 'customer@example.com',
+    subject: subject || 'Storefront Dynamic Alert via SendGrid',
+    templateId: templateId || 'd-992a1882b810',
+    bodyText: bodyText || 'Hello from your custom SendGrid integration!',
+    status: 'DISPATCHED_SUCCESSFULLY',
+    creditsRemaining: 39281,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/twilio/test', (req, res) => {
+  const { recipientPhone, messageText, channel = 'sms' } = req.body;
+  res.json({
+    success: true,
+    provider: 'Twilio Gateway API',
+    sid: `SM_${Date.now()}_tw`,
+    recipientPhone: recipientPhone || '+1 (555) 019-2831',
+    channel: channel, // 'sms' or 'whatsapp'
+    messageText: messageText || 'Your order has been shipped with DHL!',
+    status: 'DELIVERED',
+    cost: 0.0075,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/slack/test', (req, res) => {
+  const { channelName, text, author } = req.body;
+  res.json({
+    success: true,
+    provider: 'Slack Webhooks API',
+    channel: channelName || '#store-ops-alerts',
+    text: text || '⚡ *New Store Alert*: Product inventory has been updated!',
+    author: author || 'Slack Commerce Bot',
+    status: 'OK_POSTED',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/mailchimp/test', (req, res) => {
+  const { email, firstName, status = 'subscribed' } = req.body;
+  res.json({
+    success: true,
+    provider: 'Mailchimp Audience API',
+    contactId: `mc_${Date.now()}_hash`,
+    email: email || 'subscriber@example.com',
+    firstName: firstName || 'Alice',
+    listId: 'mc_list_ehsan_88219',
+    memberStatus: status,
+    syncStatus: 'SYNCHRONIZED',
+    timestamp: new Date().toISOString()
+  });
 });
 
 
@@ -2111,6 +2328,48 @@ app.get('/api/analytics', (req, res) => {
       { category: 'Home Office', sales: 1740, percentage: 10 }
     ]
   });
+});
+
+// Notifications API
+app.get('/api/notifications', (req, res) => {
+  res.json(notifications);
+});
+
+app.post('/api/notifications', (req, res) => {
+  const { title, message, type = 'info' } = req.body;
+  const newNotification = {
+    id: `ntf_${Date.now()}`,
+    title: title || 'System Notification',
+    message: message || 'A new event was logged in the system.',
+    type: type as 'info' | 'success' | 'warning' | 'error',
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  notifications.unshift(newNotification);
+  res.status(201).json(newNotification);
+});
+
+app.post('/api/notifications/:id/read', (req, res) => {
+  const { id } = req.params;
+  const n = notifications.find(item => item.id === id);
+  if (n) {
+    n.isRead = true;
+    res.json({ success: true, notification: n });
+  } else {
+    res.status(404).json({ error: 'Notification not found' });
+  }
+});
+
+app.post('/api/notifications/read-all', (req, res) => {
+  notifications.forEach(item => {
+    item.isRead = true;
+  });
+  res.json({ success: true, count: notifications.length });
+});
+
+app.post('/api/notifications/clear', (req, res) => {
+  notifications = [];
+  res.json({ success: true });
 });
 
 // Settings API

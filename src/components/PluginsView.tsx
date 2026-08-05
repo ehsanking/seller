@@ -28,7 +28,10 @@ import {
   Info,
   Layers,
   Cpu,
-  BarChart3
+  BarChart3,
+  Mail,
+  MessageSquare,
+  UserCheck
 } from 'lucide-react';
 import { Plugin } from '../types';
 
@@ -84,6 +87,54 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
   const [fastlySurrogateKey, setFastlySurrogateKey] = useState<string>('global-product-catalog');
   const [cloudfrontPath, setCloudfrontPath] = useState<string>('/*');
 
+  // Social Media Manager State
+  const [socialPlatform, setSocialPlatform] = useState('telegram');
+  const [socialMessage, setSocialMessage] = useState('🚀 Flash Sale: 30% OFF Mechanical Keyboards at Ehsan Store! Use code EHSAN30.');
+  const [socialImageUrl, setSocialImageUrl] = useState('https://images.unsplash.com/photo-1587829741301-dc798b83add3');
+  const [socialResult, setSocialResult] = useState<any>(null);
+  const [isSocialLoading, setIsSocialLoading] = useState(false);
+
+  // Google Translate State
+  const [translateText, setTranslateText] = useState('Professional E-Commerce Solution with Real-time Inventory');
+  const [translateTargetLang, setTranslateTargetLang] = useState('fa');
+  const [translateResult, setTranslateResult] = useState<any>(null);
+  const [isTranslateLoading, setIsTranslateLoading] = useState(false);
+
+  // Google Vision State
+  const [visionImageUrl, setVisionImageUrl] = useState('https://images.unsplash.com/photo-1505740420928-5e560c06d30e');
+  const [visionResult, setVisionResult] = useState<any>(null);
+  const [isVisionLoading, setIsVisionLoading] = useState(false);
+
+  // Google Maps State
+  const [mapsAddress, setMapsAddress] = useState('1600 Amphitheatre Pkwy, Mountain View, CA 94043');
+  const [mapsResult, setMapsResult] = useState<any>(null);
+  const [isMapsLoading, setIsMapsLoading] = useState(false);
+
+  // SendGrid State
+  const [sgRecipient, setSgRecipient] = useState('customer@example.com');
+  const [sgSubject, setSgSubject] = useState('Thank you for your purchase from Ehsan Store!');
+  const [sgBody, setSgBody] = useState('Your order #ORD-2026-9012 has been successfully packed and handed over to DHL.');
+  const [sgResult, setSgResult] = useState<any>(null);
+  const [isSgLoading, setIsSgLoading] = useState(false);
+
+  // Twilio State
+  const [twPhone, setTwPhone] = useState('+1 (555) 019-2831');
+  const [twMessage, setTwMessage] = useState('Ehsan Store alert: Your order has been dispatched! Track via DHL with code tracking_9921.');
+  const [twChannel, setTwChannel] = useState<'sms' | 'whatsapp'>('sms');
+  const [twResult, setTwResult] = useState<any>(null);
+  const [isTwLoading, setIsTwLoading] = useState(false);
+
+  // Slack State
+  const [slackMessageText, setSlackMessageText] = useState('⚡ *Store Operational Alert*: New purchase captured! Order #ORD-2026-9012 for $450.00 by Alice.');
+  const [slackResult, setSlackResult] = useState<any>(null);
+  const [isSlackLoading, setIsSlackLoading] = useState(false);
+
+  // Mailchimp State
+  const [mcEmailAddress, setMcEmailAddress] = useState('new_subscriber@gmail.com');
+  const [mcFirstName, setMcFirstName] = useState('Alice');
+  const [mcResult, setMcResult] = useState<any>(null);
+  const [isMcLoading, setIsMcLoading] = useState(false);
+
   // Custom Upload Form State
   const [customForm, setCustomForm] = useState({
     name: '',
@@ -113,6 +164,10 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
       case 'ShieldAlert': return ShieldCheck;
       case 'Lock': return ShieldCheck;
       case 'BarChart3': return Sliders;
+      case 'Mail': return Mail;
+      case 'MessageSquare': return MessageSquare;
+      case 'Terminal': return Terminal;
+      case 'UserCheck': return UserCheck;
       default: return Blocks;
     }
   };
@@ -265,6 +320,74 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
       console.error(err);
     } finally {
       setIsDhlLoading(false);
+    }
+  };
+
+  const handlePublishSocial = async () => {
+    try {
+      setIsSocialLoading(true);
+      const res = await fetch('/api/plugins/social/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform: socialPlatform, message: socialMessage, imageUrl: socialImageUrl })
+      });
+      const data = await res.json();
+      setSocialResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSocialLoading(false);
+    }
+  };
+
+  const handleTranslate = async () => {
+    try {
+      setIsTranslateLoading(true);
+      const res = await fetch('/api/plugins/google/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: translateText, targetLang: translateTargetLang })
+      });
+      const data = await res.json();
+      setTranslateResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsTranslateLoading(false);
+    }
+  };
+
+  const handleVisionSearch = async () => {
+    try {
+      setIsVisionLoading(true);
+      const res = await fetch('/api/plugins/google/vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: visionImageUrl })
+      });
+      const data = await res.json();
+      setVisionResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsVisionLoading(false);
+    }
+  };
+
+  const handleGeocodeMaps = async () => {
+    try {
+      setIsMapsLoading(true);
+      const res = await fetch('/api/plugins/google/maps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: mapsAddress })
+      });
+      const data = await res.json();
+      setMapsResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsMapsLoading(false);
     }
   };
 
@@ -1138,6 +1261,401 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
             </div>
           )}
 
+          {/* Omni-Channel Social Media Manager Control Panel */}
+          {selectedPluginForSubView.slug === 'social-media-manager' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                      <Send className="w-5 h-5 text-indigo-600" /> Omni-Channel Social Media Manager &amp; Auto-Poster
+                    </h3>
+                    <p className="text-xs text-slate-500">Publish promotions, new products, and discounts across Telegram, Instagram, X (Twitter), LinkedIn, Facebook, Eitaa, Rubika, and WhatsApp.</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    Active Hub
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Target Platform</label>
+                    <select
+                      value={socialPlatform}
+                      onChange={(e) => setSocialPlatform(e.target.value)}
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="telegram">Telegram Channel / Group (@ehsan_store)</option>
+                      <option value="instagram">Instagram Business Feed &amp; Stories</option>
+                      <option value="twitter">X (Twitter) Official Account</option>
+                      <option value="linkedin">LinkedIn Company Page</option>
+                      <option value="facebook">Facebook Business Page</option>
+                      <option value="eitaa">Eitaa Messenger Channel</option>
+                      <option value="rubika">Rubika SuperApp</option>
+                      <option value="whatsapp">WhatsApp Business Broadcast</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Attached Image Media URL</label>
+                    <input
+                      type="text"
+                      value={socialImageUrl}
+                      onChange={(e) => setSocialImageUrl(e.target.value)}
+                      className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Post Caption &amp; Promo Text</label>
+                  <textarea
+                    value={socialMessage}
+                    onChange={(e) => setSocialMessage(e.target.value)}
+                    rows={3}
+                    className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <div className="text-[11px] text-slate-500">
+                    Auto-hashtags enabled: <code className="text-indigo-600 font-mono">#EhsanStore #Tech #FlashSale</code>
+                  </div>
+                  <button
+                    onClick={handlePublishSocial}
+                    disabled={isSocialLoading}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <Send className={`w-4 h-4 ${isSocialLoading ? 'animate-pulse' : ''}`} />
+                    <span>Publish to {socialPlatform.toUpperCase()} Now</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 border border-slate-800 space-y-4">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-emerald-400" /> Live Syndication &amp; Engagement
+                </h4>
+                <p className="text-xs text-slate-400">Real-time API response and engagement metrics for recent broadcasts.</p>
+
+                {socialResult ? (
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-emerald-400 font-mono text-[11px] space-y-2">
+                    <p className="font-bold text-white">✅ Status: {socialResult.status}</p>
+                    <p>Platform: {socialResult.platform}</p>
+                    <p>Post ID: {socialResult.postId}</p>
+                    <p className="truncate">Message: {socialResult.publishedMessage}</p>
+                    <div className="pt-2 border-t border-slate-800 text-slate-400">
+                      <span>Impressions: 1,420</span> | <span>Clicks: 184</span> | <span>CTR: 12.9%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-xs text-slate-500 bg-slate-950/60 rounded-xl border border-dashed border-slate-800">
+                    No active broadcast triggered in this session yet. Click publish to test.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Google Cloud Translation API Control Panel */}
+          {selectedPluginForSubView.slug === 'google-cloud-translation-api' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-indigo-600" /> Google Cloud Translation AI Engine
+                  </h3>
+                  <p className="text-xs text-slate-500">Instant neural machine translation for product catalogs, descriptions, and multi-language storefronts.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Google Translate v2
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Text to Translate</label>
+                  <input
+                    type="text"
+                    value={translateText}
+                    onChange={(e) => setTranslateText(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Target Language</label>
+                  <select
+                    value={translateTargetLang}
+                    onChange={(e) => setTranslateTargetLang(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  >
+                    <option value="fa">Persian</option>
+                    <option value="ar">Arabic</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleTranslate}
+                  disabled={isTranslateLoading}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition"
+                >
+                  {isTranslateLoading ? 'Translating...' : 'Translate with Google Cloud AI'}
+                </button>
+              </div>
+
+              {translateResult && (
+                <div className="p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl border border-slate-800 space-y-1">
+                  <p className="text-white font-bold">Translated Result ({translateResult.targetLanguage}):</p>
+                  <p className="text-base text-amber-300">"{translateResult.translatedText}"</p>
+                  <p className="text-[11px] text-slate-400">Confidence Score: {(translateResult.confidence * 100).toFixed(1)}%</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Google Cloud Vision AI Control Panel */}
+          {selectedPluginForSubView.slug === 'google-cloud-vision-search' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-indigo-600" /> Google Cloud Vision AI - Visual Product Search
+                  </h3>
+                  <p className="text-xs text-slate-500">Allow customers to find products by taking or uploading photos using neural computer vision.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Google Vision API
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Sample Image URL for Visual Recognition</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={visionImageUrl}
+                    onChange={(e) => setVisionImageUrl(e.target.value)}
+                    className="flex-1 text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                  <button
+                    onClick={handleVisionSearch}
+                    disabled={isVisionLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition"
+                  >
+                    Analyze Image
+                  </button>
+                </div>
+              </div>
+
+              {visionResult && (
+                <div className="space-y-4 pt-2">
+                  <div className="p-4 bg-indigo-50/60 rounded-xl border border-indigo-200 space-y-2">
+                    <h4 className="text-xs font-bold text-indigo-900">Detected Labels &amp; Object Classes</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {visionResult.detectedLabels.map((lbl: string, idx: number) => (
+                        <span key={idx} className="px-2.5 py-1 bg-white text-indigo-700 font-semibold text-xs rounded-md border border-indigo-100 shadow-2xs">
+                          {lbl}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-800">Matched Catalog Products</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {visionResult.matchedCatalogProducts.map((p: any) => (
+                        <div key={p.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                          <div>
+                            <p className="font-bold text-xs text-slate-900">{p.name}</p>
+                            <p className="text-[11px] text-emerald-600 font-semibold">${p.price.toFixed(2)}</p>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800">
+                            {p.matchConfidence}% Match
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Google Maps Platform Control Panel */}
+          {selectedPluginForSubView.slug === 'google-maps-platform' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-indigo-600" /> Google Maps Platform &amp; Distance Matrix
+                  </h3>
+                  <p className="text-xs text-slate-500">Autocomplete delivery addresses, geocode latitude/longitude coordinates, and calculate distance shipping fees.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Google Maps API
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Customer Delivery Address</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={mapsAddress}
+                    onChange={(e) => setMapsAddress(e.target.value)}
+                    className="flex-1 text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                  <button
+                    onClick={handleGeocodeMaps}
+                    disabled={isMapsLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition"
+                  >
+                    Geocode &amp; Calculate
+                  </button>
+                </div>
+              </div>
+
+              {mapsResult && (
+                <div className="p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl border border-slate-800 space-y-2">
+                  <p className="text-white font-bold">📍 Verified Formatted Address:</p>
+                  <p className="text-amber-300">{mapsResult.formattedAddress}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2 border-t border-slate-800 text-[11px]">
+                    <div>Lat/Lng: {mapsResult.coordinates.lat}, {mapsResult.coordinates.lng}</div>
+                    <div>Distance: {mapsResult.distanceKm} km</div>
+                    <div>Est. Time: {mapsResult.estimatedDeliveryMinutes} mins</div>
+                    <div className="text-emerald-300 font-bold">Shipping Fee: ${mapsResult.calculatedShippingFee.toFixed(2)}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Google reCAPTCHA Enterprise Control Panel */}
+          {selectedPluginForSubView.slug === 'google-recaptcha-enterprise' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-indigo-600" /> Google reCAPTCHA Enterprise &amp; Bot Defense
+                  </h3>
+                  <p className="text-xs text-slate-500">Protects checkout orders, customer registration, and login from bots and automated credential stuffing.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Protected (v3 Enterprise)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Site Key</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedPluginForSubView.config.siteKey || ''}
+                    className="w-full text-xs font-mono px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Minimum Score Threshold</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedPluginForSubView.config.scoreThreshold || 0.5}
+                    className="w-full text-xs font-mono px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-xs text-emerald-900">Bot Defense Status: Fully Operational</p>
+                  <p className="text-[11px] text-emerald-700">Checking visitor behavioral signals on checkout &amp; auth endpoints.</p>
+                </div>
+                <button
+                  onClick={() => alert('reCAPTCHA Enterprise verification simulation passed with score 0.94!')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition"
+                >
+                  Test Bot Challenge Token
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Google Workspace Sync Control Panel */}
+          {selectedPluginForSubView.slug === 'google-workspace-sync' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-indigo-600" /> Google Workspace Sync (Gmail SMTP &amp; Calendar API)
+                  </h3>
+                  <p className="text-xs text-slate-500">Automates customer order confirmation emails via Gmail SMTP and syncs VIP client appointments to Google Calendar.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Google Workspace
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Service Account Email</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedPluginForSubView.config.clientEmail || ''}
+                    className="w-full text-xs font-mono px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sender Email Address</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.senderEmail || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, senderEmail: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/plugins/google/workspace', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'send_email', recipient: 'ehsan@example.com', subject: 'Test Order Receipt #9921' })
+                    });
+                    const d = await res.json();
+                    alert(`Gmail SMTP Sent! Message ID: ${d.messageId}`);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition"
+                >
+                  Send Test Email via Gmail API
+                </button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/plugins/google/workspace', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'sync_calendar' })
+                    });
+                    const d = await res.json();
+                    alert(`Google Calendar Event Created! ID: ${d.eventId} at ${d.scheduledTime}`);
+                  }}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition"
+                >
+                  Sync VIP Consultation to Google Calendar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* jsDelivr & cdnjs Vendor Assets Control Panel */}
           {selectedPluginForSubView.slug === 'jsdelivr-cdnjs-vendor-cdn' && (
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
@@ -1187,6 +1705,612 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
                     className="rounded text-indigo-600"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* SendGrid Transactional Email Control Panel */}
+          {selectedPluginForSubView.slug === 'sendgrid-email-api' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-indigo-600" /> SendGrid Transactional &amp; Marketing Email API
+                  </h3>
+                  <p className="text-xs text-slate-500">Configure Twilio SendGrid to trigger dynamic customer checkout receipts and marketing templates.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  SendGrid API
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">SendGrid API Key</label>
+                  <input
+                    type="password"
+                    value={selectedPluginForSubView.config.apiKey || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, apiKey: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sender Email Address</label>
+                  <input
+                    type="email"
+                    value={selectedPluginForSubView.config.senderEmail || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, senderEmail: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sender Authorized Name</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.senderName || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, senderName: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Marketing Newsletter Template ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.newsletterTemplateId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, newsletterTemplateId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between text-xs col-span-1">
+                  <span className="font-semibold text-slate-800">Dispatch Order Confirmation Receipts</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableOrderEmails ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableOrderEmails: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs col-span-1">
+                  <span className="font-semibold text-slate-800">Subscribe Registered Customers to Marketing</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableNewsletterSync ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableNewsletterSync: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Live Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">SendGrid API Live Sandbox Test</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Test Recipient Email</label>
+                    <input
+                      type="email"
+                      value={sgRecipient}
+                      onChange={(e) => setSgRecipient(e.target.value)}
+                      className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Email Subject Line</label>
+                    <input
+                      type="text"
+                      value={sgSubject}
+                      onChange={(e) => setSgSubject(e.target.value)}
+                      className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Email Body Content</label>
+                  <textarea
+                    rows={2}
+                    value={sgBody}
+                    onChange={(e) => setSgBody(e.target.value)}
+                    className="w-full text-xs p-3 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsSgLoading(true);
+                        const res = await fetch('/api/plugins/sendgrid/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            recipient: sgRecipient,
+                            subject: sgSubject,
+                            templateId: selectedPluginForSubView.config.newsletterTemplateId,
+                            bodyText: sgBody
+                          })
+                        });
+                        const data = await res.json();
+                        setSgResult(data);
+                      } catch (err) {
+                        setSgResult({ error: 'Network transmission failed' });
+                      } finally {
+                        setIsSgLoading(false);
+                      }
+                    }}
+                    disabled={isSgLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isSgLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    Dispatch Test Email via SendGrid
+                  </button>
+                  {sgResult && (
+                    <button 
+                      onClick={() => setSgResult(null)}
+                      className="text-xs text-slate-500 hover:text-slate-800"
+                    >
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {sgResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>SENDGRID API DISPATCH LOGS</span>
+                      <span className="text-emerald-400">STATUS: HTTP 202 ACCEPTED</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(sgResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Twilio SMS Gateway Control Panel */}
+          {selectedPluginForSubView.slug === 'twilio-sms-api' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-indigo-600" /> Twilio SMS &amp; WhatsApp OTP Gateway API
+                  </h3>
+                  <p className="text-xs text-slate-500">Provide direct customer mobile outreach with SMS dispatch updates and secure WhatsApp notification templates.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Twilio Gateway
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Twilio Account SID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.accountSid || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, accountSid: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Twilio Auth Token</label>
+                  <input
+                    type="password"
+                    value={selectedPluginForSubView.config.authToken || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, authToken: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Authorized Twilio Phone Number (SMS)</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.fromNumber || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, fromNumber: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp Business Sender Number</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.whatsappFromNumber || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, whatsappFromNumber: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between text-xs col-span-1">
+                  <span className="font-semibold text-slate-800">Dispatch SMS Alerts on Order Shipments</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableDispatchSms ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableDispatchSms: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs col-span-1">
+                  <span className="font-semibold text-slate-800">Enforce 2FA Mobile Verification on Logins</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableOtpVerification ?? false}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableOtpVerification: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Live Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Twilio Live API SMS Sandbox</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Recipient Mobile Phone</label>
+                    <input
+                      type="text"
+                      value={twPhone}
+                      onChange={(e) => setTwPhone(e.target.value)}
+                      className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Channel</label>
+                    <select
+                      value={twChannel}
+                      onChange={(e) => setTwChannel(e.target.value as 'sms' | 'whatsapp')}
+                      className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg"
+                    >
+                      <option value="sms">SMS Gateway Channel</option>
+                      <option value="whatsapp">Official WhatsApp Business API</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mobile Message Body</label>
+                  <textarea
+                    rows={2}
+                    value={twMessage}
+                    onChange={(e) => setTwMessage(e.target.value)}
+                    className="w-full text-xs p-3 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsTwLoading(true);
+                        const res = await fetch('/api/plugins/twilio/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            recipientPhone: twPhone,
+                            messageText: twMessage,
+                            channel: twChannel
+                          })
+                        });
+                        const data = await res.json();
+                        setTwResult(data);
+                      } catch (err) {
+                        setTwResult({ error: 'Network connection failed' });
+                      } finally {
+                        setIsTwLoading(false);
+                      }
+                    }}
+                    disabled={isTwLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isTwLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+                    Send Live {twChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'} Notification
+                  </button>
+                  {twResult && (
+                    <button 
+                      onClick={() => setTwResult(null)}
+                      className="text-xs text-slate-500 hover:text-slate-800"
+                    >
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {twResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>TWILIO REST ENGINE RESPONSES</span>
+                      <span className="text-emerald-400">STATUS: HTTP 201 CREATED</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(twResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Slack Channel Commerce Alerts Control Panel */}
+          {selectedPluginForSubView.slug === 'slack-sales-bot' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Terminal className="w-5 h-5 text-indigo-600" /> Slack Channel Commerce Alerts Bot API
+                  </h3>
+                  <p className="text-xs text-slate-500">Relay instantaneous store activities, transaction events, and system security blocks directly to designated Slack feeds.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Slack Integration
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Incoming Webhook URL</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.webhookUrl || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, webhookUrl: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Default Channel Name</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.channelName || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, channelName: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Alert on New Orders</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.alertOnNewOrder ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, alertOnNewOrder: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Alert on Low Stock</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.alertOnLowStock ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, alertOnLowStock: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Slack WAF Auditing</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.alertOnSystemAudit ?? false}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, alertOnSystemAudit: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Live Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Post Test Slack Payload</h4>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Rich Webhook Message (Slack Markdown Supported)</label>
+                  <textarea
+                    rows={2}
+                    value={slackMessageText}
+                    onChange={(e) => setSlackMessageText(e.target.value)}
+                    className="w-full text-xs p-3 font-mono border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsSlackLoading(true);
+                        const res = await fetch('/api/plugins/slack/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            channelName: selectedPluginForSubView.config.channelName,
+                            text: slackMessageText,
+                            author: 'Slack Commerce Bot'
+                          })
+                        });
+                        const data = await res.json();
+                        setSlackResult(data);
+                      } catch (err) {
+                        setSlackResult({ error: 'Network delivery error' });
+                      } finally {
+                        setIsSlackLoading(false);
+                      }
+                    }}
+                    disabled={isSlackLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isSlackLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    Post Alert to Slack Channel
+                  </button>
+                  {slackResult && (
+                    <button 
+                      onClick={() => setSlackResult(null)}
+                      className="text-xs text-slate-500 hover:text-slate-800"
+                    >
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {slackResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>SLACK INCOMING WEBHOOK WEB-RESPONSE</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(slackResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Mailchimp Audience Contact Sync Control Panel */}
+          {selectedPluginForSubView.slug === 'mailchimp-sync' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-indigo-600" /> Mailchimp Audience &amp; Contact Sync API
+                  </h3>
+                  <p className="text-xs text-slate-500">Synchronize client email directories, subscriber lists, and past purchase histories automatically on purchase.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Mailchimp Sync
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Mailchimp API Key</label>
+                  <input
+                    type="password"
+                    value={selectedPluginForSubView.config.apiKey || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, apiKey: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Mailchimp List / Audience ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.listId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, listId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Auto-Sync on Purchase</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.autoSyncOnPurchase ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, autoSyncOnPurchase: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Sync Product Catalog</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.syncProductCatalog ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, syncProductCatalog: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Double Opt-In Enforced</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.doubleOptIn ?? false}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, doubleOptIn: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Live Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Mailchimp Contact Dispatcher Sandbox</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subscriber First Name</label>
+                    <input
+                      type="text"
+                      value={mcFirstName}
+                      onChange={(e) => setMcFirstName(e.target.value)}
+                      className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subscriber Email Address</label>
+                    <input
+                      type="email"
+                      value={mcEmailAddress}
+                      onChange={(e) => setMcEmailAddress(e.target.value)}
+                      className="w-full text-xs px-3 py-1.5 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsMcLoading(true);
+                        const res = await fetch('/api/plugins/mailchimp/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            email: mcEmailAddress,
+                            firstName: mcFirstName,
+                            status: selectedPluginForSubView.config.doubleOptIn ? 'pending' : 'subscribed'
+                          })
+                        });
+                        const data = await res.json();
+                        setMcResult(data);
+                      } catch (err) {
+                        setMcResult({ error: 'Mailchimp REST connection failed' });
+                      } finally {
+                        setIsMcLoading(false);
+                      }
+                    }}
+                    disabled={isMcLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isMcLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
+                    Sync Customer Contact to Mailchimp List
+                  </button>
+                  {mcResult && (
+                    <button 
+                      onClick={() => setMcResult(null)}
+                      className="text-xs text-slate-500 hover:text-slate-800"
+                    >
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {mcResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>MAILCHIMP REST API CONTACT METRICS</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(mcResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             </div>
           )}

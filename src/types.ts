@@ -347,5 +347,14 @@ export interface CrmTicket {
   updatedAt: string;
 }
 
+export interface StoreNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  isRead: boolean;
+  createdAt: string;
+}
+
 
 

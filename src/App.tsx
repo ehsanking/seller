@@ -55,22 +55,40 @@ export function App() {
   const [isAdminProfileOpen, setIsAdminProfileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Helper for resilient fetching during dev server restarts
+  const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3, delay = 1000): Promise<Response> => {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok && retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithRetry(url, options, retries - 1, delay * 1.5);
+      }
+      return res;
+    } catch (err) {
+      if (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithRetry(url, options, retries - 1, delay * 1.5);
+      }
+      throw err;
+    }
+  };
+
   // Fetch data from Express API
   const fetchAllData = async () => {
     try {
       setLoading(true);
       const [prodRes, ordRes, custRes, anaRes, setRes, plgRes, tmplRes, whRes, admRes, rlsRes, seoRes] = await Promise.all([
-        fetch('/api/products').then(r => r.json()),
-        fetch('/api/orders').then(r => r.json()),
-        fetch('/api/customers').then(r => r.json()),
-        fetch('/api/analytics').then(r => r.json()),
-        fetch('/api/settings').then(r => r.json()),
-        fetch('/api/plugins').then(r => r.json()),
-        fetch('/api/templates').then(r => r.json()),
-        fetch('/api/webhooks').then(r => r.json()),
-        fetch('/api/admin/profile').then(r => r.json()).catch(() => null),
-        fetch('/api/admin/roles').then(r => r.json()).catch(() => []),
-        fetch('/api/seo/settings').then(r => r.json()).catch(() => null),
+        fetchWithRetry('/api/products').then(r => r.json()),
+        fetchWithRetry('/api/orders').then(r => r.json()),
+        fetchWithRetry('/api/customers').then(r => r.json()),
+        fetchWithRetry('/api/analytics').then(r => r.json()),
+        fetchWithRetry('/api/settings').then(r => r.json()),
+        fetchWithRetry('/api/plugins').then(r => r.json()),
+        fetchWithRetry('/api/templates').then(r => r.json()),
+        fetchWithRetry('/api/webhooks').then(r => r.json()),
+        fetchWithRetry('/api/admin/profile').then(r => r.json()).catch(() => null),
+        fetchWithRetry('/api/admin/roles').then(r => r.json()).catch(() => []),
+        fetchWithRetry('/api/seo/settings').then(r => r.json()).catch(() => null),
       ]);
 
       setProducts(prodRes || []);

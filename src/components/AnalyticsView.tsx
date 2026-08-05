@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnalyticsSummary, Product } from '../types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, Line, Legend } from 'recharts';
 import { TrendingUp, Award, Layers, DollarSign } from 'lucide-react';
 
 interface AnalyticsViewProps {
@@ -15,6 +15,49 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ analytics, product
 
   return (
     <div className="space-y-6">
+      {/* Sales Performance Trend Line Chart */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-indigo-600 animate-pulse" /> Daily Sales Performance Trend
+            </h3>
+            <p className="text-xs text-slate-500">Visual trend lines tracking daily revenue, order volumes, and gross profit margins</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100">Recharts Engine</span>
+            <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-100">Real-time Trend</span>
+          </div>
+        </div>
+
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={analytics.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1e293b', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '12px' }}
+              />
+              <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600, paddingBottom: '10px' }} />
+              <Area type="monotone" dataKey="revenue" name="Revenue ($)" stroke="#6366f1" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" />
+              <Area type="monotone" dataKey="profit" name="Gross Profit ($)" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorProfit)" />
+              <Line type="monotone" dataKey="orders" name="Order Count" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Category Sales Breakdown & Daily Bar Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Revenue Bar Chart */}
