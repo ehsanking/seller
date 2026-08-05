@@ -186,9 +186,13 @@ export default async function HomePage() {
 
 ---
 
-## 🧩 Extension & Plugin System
+## 🧩 Extension, Plugin & Template Ecosystem & Commercial Freedom
 
 SELLER Core provides an event-driven plugin architecture that allows developers to extend payment gateways, logistics services, and AI automation tools without touching core backend source files.
+
+> ### 💼 Commercial Policy: Custom Plugins & Templates Monetization
+> **Designing custom plugins, specialized integrations, and unique storefront templates and selling them commercially is 100% permitted, legal, and encouraged!** 
+> Developers and agencies are free to build proprietary or commercial plugins and templates for SELLER Core and monetize them independently without any licensing restrictions or revenue share requirements.
 
 ```
                   ┌─────────────────────────────────────────┐

@@ -291,5 +291,61 @@ export interface StoreSection {
   settings?: Record<string, any>;
 }
 
+export type CustomerSegment = 'vip' | 'active' | 'at_risk' | 'lead';
+
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  status: 'active' | 'inactive';
+  segment: CustomerSegment;
+  leadScore: number;
+  tags: string[];
+  assignedAgent: string;
+  notes?: string;
+}
+
+export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+
+export interface CrmDeal {
+  id: string;
+  customerId: string;
+  customerName: string;
+  title: string;
+  value: number;
+  stage: DealStage;
+  probability: number;
+  expectedCloseDate: string;
+  createdAt: string;
+}
+
+export interface CrmTask {
+  id: string;
+  customerId?: string;
+  customerName?: string;
+  title: string;
+  dueDate: string;
+  priority: 'low' | 'medium' | 'high';
+  completed: boolean;
+  assignedTo: string;
+  createdAt: string;
+}
+
+export interface CrmTicket {
+  id: string;
+  customerId: string;
+  customerName: string;
+  subject: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  createdAt: string;
+  updatedAt: string;
+}
+
 
 

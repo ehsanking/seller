@@ -204,40 +204,159 @@ let customers = [
     name: 'Sarah Jenkins',
     email: 'sarah.j@example.com',
     phone: '+1 (555) 234-5678',
+    company: 'Jenkins Studio',
     totalOrders: 6,
     totalSpent: 840.50,
     lastOrderDate: '2026-08-01',
-    status: 'active'
+    status: 'active',
+    segment: 'vip',
+    leadScore: 92,
+    tags: ['VIP', 'Repeat Buyer', 'Design Lead'],
+    assignedAgent: 'Ehsan King',
+    notes: 'Key enterprise buyer interested in bulk mechanical keyboards and custom templates.'
   },
   {
     id: 'cust_2',
     name: 'Marcus Vance',
     email: 'm.vance@techcorp.io',
     phone: '+1 (555) 876-5432',
+    company: 'TechCorp IO',
     totalOrders: 3,
     totalSpent: 310.00,
     lastOrderDate: '2026-08-03',
-    status: 'active'
+    status: 'active',
+    segment: 'active',
+    leadScore: 78,
+    tags: ['Tech', 'B2B Partner'],
+    assignedAgent: 'Ehsan King',
+    notes: 'Requested integration support for REST API webhooks.'
   },
   {
     id: 'cust_3',
     name: 'Elena Rostova',
     email: 'elena.rostova@designstudio.net',
     phone: '+1 (555) 432-1098',
+    company: 'Rostova Design',
     totalOrders: 1,
     totalSpent: 199.00,
     lastOrderDate: '2026-08-04',
-    status: 'active'
+    status: 'active',
+    segment: 'lead',
+    leadScore: 65,
+    tags: ['Prospect', 'UI/UX'],
+    assignedAgent: 'Support Team',
+    notes: 'Evaluating multi-storefront licenses for client projects.'
   },
   {
     id: 'cust_4',
     name: 'David Kim',
     email: 'dkim.dev@gmail.com',
     phone: '+1 (555) 901-2345',
+    company: 'KimSoft',
     totalOrders: 4,
     totalSpent: 520.00,
     lastOrderDate: '2026-08-04',
-    status: 'active'
+    status: 'active',
+    segment: 'vip',
+    leadScore: 88,
+    tags: ['Developer', 'API Heavy User'],
+    assignedAgent: 'Ehsan King',
+    notes: 'Uses custom webhooks for automated order synchronization.'
+  }
+];
+
+let crmDeals = [
+  {
+    id: 'deal_1',
+    customerId: 'cust_1',
+    customerName: 'Sarah Jenkins',
+    title: 'Enterprise Store License Upgrade',
+    value: 1250.00,
+    stage: 'negotiation',
+    probability: 80,
+    expectedCloseDate: '2026-08-20',
+    createdAt: '2026-08-02'
+  },
+  {
+    id: 'deal_2',
+    customerId: 'cust_2',
+    customerName: 'Marcus Vance',
+    title: 'TechCorp Bulk Hardware Order',
+    value: 3400.00,
+    stage: 'proposal',
+    probability: 60,
+    expectedCloseDate: '2026-08-28',
+    createdAt: '2026-08-03'
+  },
+  {
+    id: 'deal_3',
+    customerId: 'cust_3',
+    customerName: 'Elena Rostova',
+    title: 'Custom Plugin Development Contract',
+    value: 950.00,
+    stage: 'qualified',
+    probability: 40,
+    expectedCloseDate: '2026-09-05',
+    createdAt: '2026-08-04'
+  }
+];
+
+let crmTasks = [
+  {
+    id: 'task_1',
+    customerId: 'cust_1',
+    customerName: 'Sarah Jenkins',
+    title: 'Follow up on enterprise SLA agreement',
+    dueDate: '2026-08-08',
+    priority: 'high',
+    completed: false,
+    assignedTo: 'Ehsan King',
+    createdAt: '2026-08-04'
+  },
+  {
+    id: 'task_2',
+    customerId: 'cust_2',
+    customerName: 'Marcus Vance',
+    title: 'Send webhook documentation & API keys',
+    dueDate: '2026-08-06',
+    priority: 'medium',
+    completed: true,
+    assignedTo: 'Ehsan King',
+    createdAt: '2026-08-03'
+  },
+  {
+    id: 'task_3',
+    customerId: 'cust_3',
+    customerName: 'Elena Rostova',
+    title: 'Schedule product demo and Q&A session',
+    dueDate: '2026-08-10',
+    priority: 'high',
+    completed: false,
+    assignedTo: 'Support Team',
+    createdAt: '2026-08-04'
+  }
+];
+
+let crmTickets = [
+  {
+    id: 'tkt_101',
+    customerId: 'cust_2',
+    customerName: 'Marcus Vance',
+    subject: 'Webhook payload delivery delay on order_placed',
+    status: 'in_progress',
+    priority: 'high',
+    createdAt: '2026-08-03T11:20:00Z',
+    updatedAt: '2026-08-04T09:15:00Z'
+  },
+  {
+    id: 'tkt_102',
+    customerId: 'cust_3',
+    customerName: 'Elena Rostova',
+    subject: 'Question regarding custom CSS injection in templates',
+    status: 'open',
+    priority: 'medium',
+    createdAt: '2026-08-04T14:30:00Z',
+    updatedAt: '2026-08-04T14:30:00Z'
   }
 ];
 
@@ -715,48 +834,6 @@ let templates: StoreTemplateItem[] = [
     repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/react-tailwind',
     demoUrl: 'https://seller-react-demo.ehsan-store.io',
     features: ['Vite 5 Lightning HMR', 'Tailwind Utility Design System', 'Cart Persistence', 'Instant Checkout Webhooks']
-  },
-  {
-    id: 'tmpl_vue_tailwind',
-    slug: 'vue-pinia-storefront',
-    name: 'Vue 3 + Pinia Enterprise Storefront',
-    description: 'Composition API storefront built with Vue 3, Pinia reactive state engine, and automated product catalog caching.',
-    framework: 'Vue',
-    author: 'EHSANKiNG',
-    version: '1.9.0',
-    isActive: false,
-    previewImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80',
-    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/vue-tailwind',
-    demoUrl: 'https://seller-vue-demo.ehsan-store.io',
-    features: ['Vue 3 Composition API', 'Pinia Store State', 'Automated Filter Query Params', 'Tailwind CSS']
-  },
-  {
-    id: 'tmpl_bootstrap5',
-    slug: 'bootstrap5-classic',
-    name: 'Bootstrap 5 Classic Zero-Build Storefront',
-    description: 'Pure HTML5 + Bootstrap 5 lightweight template with CDN assets and zero npm compilation required. Perfect for instant deployment on static hosts.',
-    framework: 'Bootstrap 5',
-    author: 'EHSANKiNG',
-    version: '1.5.0',
-    isActive: false,
-    previewImage: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=600&q=80',
-    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/bootstrap5',
-    demoUrl: 'https://seller-bootstrap-demo.ehsan-store.io',
-    features: ['Zero Build Step (No Node.js needed)', 'CDN Bootstrap 5.3', 'Vanila JS REST Client', 'Instant Load (<100ms)']
-  },
-  {
-    id: 'tmpl_nextjs',
-    slug: 'nextjs-app-router',
-    name: 'Next.js 14 App Router Ultra Storefront',
-    description: 'Server-Side Rendered (SSR) & Incremental Static Regeneration (ISR) storefront with SEO supremacy and edge image optimization.',
-    framework: 'Next.js',
-    author: 'EHSANKiNG',
-    version: '3.0.0',
-    isActive: false,
-    previewImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80',
-    repoUrl: 'https://github.com/ehsanking/seller/tree/main/storefronts/nextjs-app-router',
-    demoUrl: 'https://seller-nextjs-demo.ehsan-store.io',
-    features: ['Next.js 14 App Router', 'Server Actions', 'Edge Caching & ISR', 'OpenGraph Auto-Generation']
   },
   {
     id: 'tmpl_react_luxury',
@@ -1658,6 +1735,16 @@ app.get('/api/customers', (req, res) => {
   res.json(customers);
 });
 
+app.patch('/api/customers/:id', (req, res) => {
+  const { id } = req.params;
+  const idx = customers.findIndex(c => c.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  customers[idx] = { ...customers[idx], ...req.body };
+  res.json(customers[idx]);
+});
+
 app.get('/api/customers/:id/activities', (req, res) => {
   const { id } = req.params;
   const customerActs = customerActivities.filter(a => a.customerId === id);
@@ -1679,6 +1766,108 @@ app.post('/api/customers/:id/activities', (req, res) => {
   };
   customerActivities.unshift(newActivity);
   res.status(201).json(newActivity);
+});
+
+// CRM Deals, Tasks, Tickets Endpoints
+app.get('/api/crm/deals', (req, res) => {
+  res.json(crmDeals);
+});
+
+app.post('/api/crm/deals', (req, res) => {
+  const { customerId, title, value, stage, probability, expectedCloseDate } = req.body;
+  const customer = customers.find(c => c.id === customerId);
+  const newDeal = {
+    id: `deal_${Date.now()}`,
+    customerId: customerId || 'cust_1',
+    customerName: customer ? customer.name : (req.body.customerName || 'General Prospect'),
+    title: title || 'New Sales Deal',
+    value: Number(value) || 500,
+    stage: stage || 'lead',
+    probability: Number(probability) || 30,
+    expectedCloseDate: expectedCloseDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+  crmDeals.push(newDeal);
+  res.status(201).json(newDeal);
+});
+
+app.patch('/api/crm/deals/:id', (req, res) => {
+  const { id } = req.params;
+  const idx = crmDeals.findIndex(d => d.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Deal not found' });
+  }
+  crmDeals[idx] = { ...crmDeals[idx], ...req.body };
+  res.json(crmDeals[idx]);
+});
+
+app.get('/api/crm/tasks', (req, res) => {
+  res.json(crmTasks);
+});
+
+app.post('/api/crm/tasks', (req, res) => {
+  const { customerId, title, dueDate, priority, assignedTo } = req.body;
+  const customer = customers.find(c => c.id === customerId);
+  const newTask = {
+    id: `task_${Date.now()}`,
+    customerId: customerId || '',
+    customerName: customer ? customer.name : '',
+    title: title || 'Follow up task',
+    dueDate: dueDate || new Date().toISOString().split('T')[0],
+    priority: priority || 'medium',
+    completed: false,
+    assignedTo: assignedTo || 'Ehsan King',
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+  crmTasks.push(newTask);
+  res.status(201).json(newTask);
+});
+
+app.patch('/api/crm/tasks/:id', (req, res) => {
+  const { id } = req.params;
+  const idx = crmTasks.findIndex(t => t.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  crmTasks[idx] = { ...crmTasks[idx], ...req.body };
+  res.json(crmTasks[idx]);
+});
+
+app.delete('/api/crm/tasks/:id', (req, res) => {
+  const { id } = req.params;
+  crmTasks = crmTasks.filter(t => t.id !== id);
+  res.json({ success: true, id });
+});
+
+app.get('/api/crm/tickets', (req, res) => {
+  res.json(crmTickets);
+});
+
+app.post('/api/crm/tickets', (req, res) => {
+  const { customerId, subject, priority } = req.body;
+  const customer = customers.find(c => c.id === customerId);
+  const newTicket = {
+    id: `tkt_${Date.now()}`,
+    customerId: customerId || 'cust_1',
+    customerName: customer ? customer.name : 'Valued Customer',
+    subject: subject || 'Support Request',
+    status: 'open' as const,
+    priority: priority || 'medium',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  crmTickets.unshift(newTicket);
+  res.status(201).json(newTicket);
+});
+
+app.patch('/api/crm/tickets/:id', (req, res) => {
+  const { id } = req.params;
+  const idx = crmTickets.findIndex(t => t.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Ticket not found' });
+  }
+  crmTickets[idx] = { ...crmTickets[idx], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(crmTickets[idx]);
 });
 
 // Analytics API
