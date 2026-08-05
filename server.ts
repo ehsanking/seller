@@ -691,6 +691,111 @@ let plugins = [
     hooks: ['ProductCreated', 'CustomerInquiry', 'OrderAnalyzed']
   },
   {
+    id: 'plg_google_translate',
+    slug: 'google-cloud-translation-api',
+    name: 'Google Cloud Translation API',
+    description: 'Instantly translates product titles, descriptions, categories, and customer reviews into 100+ languages with neural machine translation.',
+    author: 'Google / EHSANKiNG',
+    version: '2.5.0',
+    category: 'ai',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Google Translate API',
+    config: {
+      projectId: 'google-translate-prod-99',
+      apiKey: 'AIzaSyGoogleTranslate_LiveKey',
+      defaultSourceLang: 'en',
+      targetLanguages: 'fa,ar,es,fr,de',
+      autoTranslateNewProducts: true
+    },
+    hooks: ['ProductCreated', 'ReviewAdded']
+  },
+  {
+    id: 'plg_google_vision',
+    slug: 'google-cloud-vision-search',
+    name: 'Google Cloud Vision AI - Visual Product Search',
+    description: 'Allows customers to upload or snap a photo of any item to instantly find matching products in your store catalog using Google computer vision neural nets.',
+    author: 'Google / EHSANKiNG',
+    version: '1.8.0',
+    category: 'ai',
+    iconName: 'Sparkles',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Google Vision Visual Search',
+    config: {
+      projectId: 'google-vision-ai-prod',
+      apiKey: 'AIzaSyGoogleVision_LiveKey',
+      matchThreshold: 0.82,
+      enableLandmarkDetection: false,
+      enableObjectLocalization: true
+    },
+    hooks: ['ImageSearched', 'ProductCatalogIndexed']
+  },
+  {
+    id: 'plg_google_maps',
+    slug: 'google-maps-platform',
+    name: 'Google Maps Platform (Places, Address Validation & Distance)',
+    description: 'Provides checkout address autocomplete, precise delivery latitude/longitude geocoding, and automated delivery distance fee calculation.',
+    author: 'Google / EHSANKiNG',
+    version: '3.0.1',
+    category: 'api',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Google Maps & Geocoding',
+    config: {
+      apiKey: 'AIzaSyGoogleMaps_LiveKey',
+      defaultCountryRestriction: 'US,IR,AE',
+      enableAddressValidation: true,
+      calculateDeliveryFeeByDistance: true,
+      pricePerKm: 1.50
+    },
+    hooks: ['CheckoutStarted', 'AddressSubmitted', 'ShippingCalculated']
+  },
+  {
+    id: 'plg_google_recaptcha',
+    slug: 'google-recaptcha-enterprise',
+    name: 'Google reCAPTCHA Enterprise & Bot Defense',
+    description: 'Protects checkout forms, user registration, login, and contact forms from automated bots, credential stuffing, and spam attacks.',
+    author: 'Google / EHSANKiNG',
+    version: '2.1.0',
+    category: 'security',
+    iconName: 'ShieldCheck',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Google reCAPTCHA v3',
+    config: {
+      siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+      secretKey: '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFUJJ4WifJSPf',
+      scoreThreshold: 0.5,
+      protectCheckout: true,
+      protectRegistration: true
+    },
+    hooks: ['CheckoutSubmitted', 'UserRegistered', 'LoginFormSubmitted']
+  },
+  {
+    id: 'plg_google_workspace',
+    slug: 'google-workspace-sync',
+    name: 'Google Workspace Sync (Gmail SMTP & Calendar API)',
+    description: 'Sends automated customer order confirmation emails via Gmail SMTP and syncs VIP consultation appointments directly to Google Calendar.',
+    author: 'Google Workspace / EHSANKiNG',
+    version: '2.2.0',
+    category: 'api',
+    iconName: 'Mail',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Google Workspace (Gmail & Calendar)',
+    config: {
+      clientEmail: 'seller-bot@ehsan-store.iam.gserviceaccount.com',
+      privateKeyId: 'key_google_workspace_99182',
+      senderEmail: 'orders@ehsan-store.io',
+      syncCalendarWithVipBookings: true,
+      calendarId: 'primary'
+    },
+    hooks: ['OrderPlaced', 'VipAppointmentBooked']
+  },
+  {
     id: 'plg_cloudflare_cdn',
     slug: 'cloudflare-cdn',
     name: 'Cloudflare Edge CDN & Cache Purge API',
@@ -1206,6 +1311,93 @@ app.post('/api/plugins/cdn/cloudfront/invalidate', (req, res) => {
     message: `CloudFront invalidation created for path: "${invalidationPath}"`
   });
 });
+
+// Google Cloud Services Plugins API Endpoints
+app.post('/api/plugins/google/translate', (req, res) => {
+  const { text, targetLang = 'fa' } = req.body;
+  const sampleTranslations: Record<string, string> = {
+    'fa': `ترجمه هوشمند گوگل (FA): "${text || 'Product Title'}" با موفقیت برای کاتالوگ فروشگاه ترجمه شد.`,
+    'ar': `ترجمة جوجل السحابية (AR): "${text || 'Product Title'}" تمت ترجمتها بنجاح.`,
+    'es': `Traducción Google Cloud (ES): "${text || 'Product Title'}" traducido exitosamente.`,
+    'fr': `Traduction Google Cloud (FR): "${text || 'Product Title'}" traduit avec succès.`
+  };
+  res.json({
+    success: true,
+    provider: 'Google Cloud Translation API v2',
+    originalText: text,
+    targetLanguage: targetLang,
+    translatedText: sampleTranslations[targetLang] || `[Google Translated] ${text} (${targetLang})`,
+    confidence: 0.992
+  });
+});
+
+app.post('/api/plugins/google/vision', (req, res) => {
+  const { imageUrl } = req.body;
+  res.json({
+    success: true,
+    provider: 'Google Cloud Vision AI Product Search',
+    imageAnalyzed: imageUrl || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+    detectedLabels: ['Wireless Headphone', 'Electronics', 'Over-ear Acoustic Gear', 'Audio Accessory'],
+    matchedCatalogProducts: [
+      { id: 'prod_1', name: 'Ultra Wireless Headphone Pro', matchConfidence: 96.4, price: 299.00 },
+      { id: 'prod_2', name: 'Studio Monitor Acoustic Set', matchConfidence: 89.1, price: 450.00 }
+    ],
+    status: '200 OK'
+  });
+});
+
+app.post('/api/plugins/google/maps', (req, res) => {
+  const { address, destination } = req.body;
+  res.json({
+    success: true,
+    provider: 'Google Maps Platform & Distance Matrix',
+    formattedAddress: address || '1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA',
+    coordinates: { lat: 37.4221, lng: -122.0841 },
+    distanceKm: 14.5,
+    estimatedDeliveryMinutes: 28,
+    calculatedShippingFee: 21.75,
+    status: 'VALID_ADDRESS'
+  });
+});
+
+app.post('/api/plugins/google/recaptcha', (req, res) => {
+  const { token } = req.body;
+  res.json({
+    success: true,
+    provider: 'Google reCAPTCHA Enterprise',
+    tokenProvided: !!token,
+    score: 0.94,
+    action: 'checkout_submission',
+    hostname: 'ehsan-store.io',
+    decision: 'ALLOW',
+    message: 'reCAPTCHA verification passed with high human confidence score (0.94).'
+  });
+});
+
+app.post('/api/plugins/google/workspace', (req, res) => {
+  const { action = 'send_email', recipient, subject } = req.body;
+  if (action === 'send_email') {
+    res.json({
+      success: true,
+      provider: 'Google Workspace Gmail API / SMTP Relay',
+      messageId: `msg_${Date.now()}_ehsan`,
+      recipient: recipient || 'customer@example.com',
+      subject: subject || 'Order Confirmation #9921',
+      status: 'SENT',
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    res.json({
+      success: true,
+      provider: 'Google Calendar API',
+      eventId: `cal_${Date.now()}`,
+      summary: 'VIP Consultation & Storefront Architecture Review',
+      scheduledTime: new Date(Date.now() + 86400000).toISOString(),
+      status: 'CONFIRMED'
+    });
+  }
+});
+
 
 
 // Initial Webhooks Store
