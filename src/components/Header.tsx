@@ -22,6 +22,12 @@ export const Header: React.FC<HeaderProps> = ({
   setSearchQuery,
 }) => {
   const getTabTitle = (tab: NavigationTab) => {
+    if (tab === 'plugins') return 'Plugins & Extension Center';
+    if (tab.startsWith('plugin_')) {
+      const slug = tab.replace('plugin_', '').replace(/-/g, ' ');
+      return `Plugin: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
+    }
+
     switch (tab) {
       case 'dashboard': return 'Store Overview';
       case 'products': return 'Product Inventory';

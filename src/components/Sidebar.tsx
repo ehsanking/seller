@@ -7,19 +7,26 @@ import {
   BarChart3, 
   Settings, 
   Store,
-  ArrowUpRight,
-  RefreshCw,
-  TrendingUp
+  Blocks,
+  CreditCard,
+  Wallet,
+  Truck,
+  Sparkles,
+  Code,
+  Puzzle,
+  TrendingUp,
+  ChevronRight
 } from 'lucide-react';
-import { NavigationTab } from '../types';
+import { NavigationTab, Plugin } from '../types';
 
 interface SidebarProps {
   activeTab: NavigationTab;
   setActiveTab: (tab: NavigationTab) => void;
   storeName: string;
+  plugins?: Plugin[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, storeName }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, storeName, plugins = [] }) => {
   const navItems: { id: NavigationTab; label: string; icon: React.ElementType; badge?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', label: 'Products & Inventory', icon: Package },
@@ -27,7 +34,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, store
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'analytics', label: 'Sales & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Store Settings', icon: Settings },
+    { id: 'plugins', label: 'Plugins & Add-ons', icon: Blocks, badge: plugins.filter(p => p.isActive).length ? `${plugins.filter(p => p.isActive).length} Active` : 'Hub' },
   ];
+
+  const getPluginIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'CreditCard': return CreditCard;
+      case 'Wallet': return Wallet;
+      case 'Truck': return Truck;
+      case 'Sparkles': return Sparkles;
+      case 'Code': return Code;
+      default: return Puzzle;
+    }
+  };
+
+  const activePlugins = plugins.filter(p => p.isActive);
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0 shrink-0 border-r border-slate-800">
@@ -70,13 +91,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, store
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-300 font-semibold">
+                <span className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-indigo-500/20 text-indigo-300'
+                }`}>
                   {item.badge}
                 </span>
               )}
             </button>
           );
         })}
+
+        {/* Dynamic Active Plugins Menu */}
+        {activePlugins.length > 0 && (
+          <div className="pt-4 mt-2 border-t border-slate-800/80">
+            <div className="px-3 pb-2 flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span>Active Extensions</span>
+              <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-indigo-400 font-mono">Dynamic</span>
+            </div>
+            <div className="space-y-1">
+              {activePlugins.map((plugin) => {
+                const PluginIcon = getPluginIcon(plugin.iconName);
+                const tabId = `plugin_${plugin.slug}` as NavigationTab;
+                const isPluginActive = activeTab === tabId;
+
+                return (
+                  <button
+                    key={plugin.id}
+                    onClick={() => setActiveTab(tabId)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
+                      isPluginActive
+                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-sm'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <PluginIcon className={`w-3.5 h-3.5 shrink-0 ${isPluginActive ? 'text-white' : 'text-indigo-400'}`} />
+                      <span className="truncate">{plugin.menuTitle || plugin.name}</span>
+                    </div>
+                    <ChevronRight className={`w-3 h-3 transition-transform ${isPluginActive ? 'translate-x-0.5 text-white' : 'text-slate-600'}`} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Store Quick Status Widget */}
@@ -111,3 +169,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, store
     </aside>
   );
 };
+

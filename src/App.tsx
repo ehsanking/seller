@@ -7,9 +7,10 @@ import { OrdersView } from './components/OrdersView';
 import { CustomersView } from './components/CustomersView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsView } from './components/SettingsView';
+import { PluginsView } from './components/PluginsView';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
-import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus } from './types';
+import { NavigationTab, Product, Order, Customer, AnalyticsSummary, StoreSettings, OrderStatus, Plugin } from './types';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
@@ -20,6 +21,7 @@ export function App() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [plugins, setPlugins] = useState<Plugin[]>([]);
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
@@ -29,12 +31,13 @@ export function App() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [prodRes, ordRes, custRes, anaRes, setRes] = await Promise.all([
+      const [prodRes, ordRes, custRes, anaRes, setRes, plgRes] = await Promise.all([
         fetch('/api/products').then(r => r.json()),
         fetch('/api/orders').then(r => r.json()),
         fetch('/api/customers').then(r => r.json()),
         fetch('/api/analytics').then(r => r.json()),
         fetch('/api/settings').then(r => r.json()),
+        fetch('/api/plugins').then(r => r.json()),
       ]);
 
       setProducts(prodRes);
@@ -42,6 +45,7 @@ export function App() {
       setCustomers(custRes);
       setAnalytics(anaRes);
       setSettings(setRes);
+      setPlugins(plgRes);
     } catch (err) {
       console.error('Error loading data from server:', err);
     } finally {
@@ -52,6 +56,63 @@ export function App() {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  // Plugin Handlers
+  const handleTogglePlugin = async (id: string) => {
+    try {
+      const res = await fetch(`/api/plugins/${id}/toggle`, { method: 'PATCH' });
+      const updated = await res.json();
+      setPlugins(prev => prev.map(p => p.id === id ? updated : p));
+    } catch (err) {
+      console.error('Failed to toggle plugin:', err);
+    }
+  };
+
+  const handleUpdatePluginConfig = async (id: string, config: Record<string, any>) => {
+    try {
+      const res = await fetch(`/api/plugins/${id}/config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      const updated = await res.json();
+      setPlugins(prev => prev.map(p => p.id === id ? updated : p));
+    } catch (err) {
+      console.error('Failed to update plugin config:', err);
+    }
+  };
+
+  const handleUploadPlugin = async (pluginData: Partial<Plugin>) => {
+    try {
+      const res = await fetch('/api/plugins/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pluginData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+      const newPlugin = await res.json();
+      setPlugins(prev => [...prev, newPlugin]);
+    } catch (err) {
+      console.error('Failed to upload plugin:', err);
+      throw err;
+    }
+  };
+
+  const handleDeletePlugin = async (id: string) => {
+    try {
+      await fetch(`/api/plugins/${id}`, { method: 'DELETE' });
+      setPlugins(prev => prev.filter(p => p.id !== id));
+      if (activeTab.startsWith('plugin_')) {
+        setActiveTab('plugins');
+      }
+    } catch (err) {
+      console.error('Failed to delete plugin:', err);
+    }
+  };
+
 
   // Product CRUD
   const handleAddProduct = async (productData: Partial<Product>) => {
@@ -151,6 +212,7 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         storeName={settings.storeName}
+        plugins={plugins}
       />
 
       {/* Main Content Area */}
@@ -213,6 +275,24 @@ export function App() {
             <SettingsView
               settings={settings}
               onSaveSettings={handleSaveSettings}
+            />
+          )}
+
+          {(activeTab === 'plugins' || activeTab.startsWith('plugin_')) && (
+            <PluginsView
+              plugins={plugins}
+              onTogglePlugin={handleTogglePlugin}
+              onUpdateConfig={handleUpdatePluginConfig}
+              onUploadPlugin={handleUploadPlugin}
+              onDeletePlugin={handleDeletePlugin}
+              selectedPluginTab={activeTab.startsWith('plugin_') ? activeTab.replace('plugin_', '') : null}
+              onSelectPluginTab={(slug) => {
+                if (slug) {
+                  setActiveTab(`plugin_${slug}` as NavigationTab);
+                } else {
+                  setActiveTab('plugins');
+                }
+              }}
             />
           )}
         </main>

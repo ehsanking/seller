@@ -11,7 +11,9 @@ import {
   MapPin, 
   User, 
   CreditCard,
-  Printer
+  Printer,
+  Download,
+  FileText
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
 
@@ -38,6 +40,153 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     const matchesStatus = selectedStatus === 'all' || o.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
+
+  const handleExportCsv = () => {
+    const headers = ['Order Number', 'Customer Name', 'Customer Email', 'Items Count', 'Total Amount ($)', 'Payment Method', 'Status', 'Shipping Address', 'Created At'];
+    const rows = filteredOrders.map(o => [
+      o.orderNumber,
+      o.customerName,
+      o.customerEmail,
+      o.items.reduce((acc, item) => acc + item.quantity, 0),
+      o.totalAmount.toFixed(2),
+      o.paymentMethod,
+      o.status,
+      o.shippingAddress,
+      o.createdAt
+    ]);
+
+    const escapeCsv = (val: string | number) => {
+      const str = String(val ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvContent = [
+      headers.map(escapeCsv).join(','),
+      ...rows.map(row => row.map(escapeCsv).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrintOrder = (order: Order, type: 'invoice' | 'packing_slip' = 'packing_slip') => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const isInvoice = type === 'invoice';
+    const title = isInvoice ? `Invoice #${order.orderNumber}` : `Packing Slip #${order.orderNumber}`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 32px; color: #0f172a; max-width: 800px; margin: 0 auto; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; }
+            .logo { font-size: 22px; font-weight: 800; color: #4f46e5; letter-spacing: -0.5px; }
+            .doc-type { text-transform: uppercase; font-size: 13px; font-weight: 700; color: #64748b; text-align: right; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
+            .info-box h4 { margin: 0 0 4px 0; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+            .info-box p { margin: 0; font-size: 13px; font-weight: 600; color: #1e293b; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+            th { background: #f1f5f9; text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; border-bottom: 1px solid #cbd5e1; }
+            td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            .total-row { display: flex; justify-content: flex-end; font-size: 16px; font-weight: 800; padding-top: 12px; border-top: 2px solid #e2e8f0; }
+            .footer { margin-top: 40px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+            @media print {
+              body { padding: 0; margin: 0; }
+              @page { margin: 1.5cm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">Ehsan Headless Core</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Maintained by EHSANKiNG</div>
+            </div>
+            <div class="doc-type">
+              <h2 style="margin:0 0 4px 0; color:#0f172a;">${isInvoice ? 'COMMERCIAL INVOICE' : 'PACKING SLIP'}</h2>
+              <div style="font-size:13px; font-weight:bold; color:#4f46e5;">#${order.orderNumber}</div>
+              <div style="font-size:11px; font-weight:normal; color:#64748b; margin-top:2px;">Issued: ${new Date(order.createdAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-box">
+              <h4>Customer Information</h4>
+              <p>${order.customerName}</p>
+              <p style="font-weight: normal; color: #64748b; font-size: 12px;">${order.customerEmail}</p>
+            </div>
+            <div class="info-box">
+              <h4>Shipping Destination</h4>
+              <p style="font-weight: normal; color: #334155;">${order.shippingAddress}</p>
+            </div>
+            <div class="info-box">
+              <h4>Payment Details</h4>
+              <p>${order.paymentMethod}</p>
+            </div>
+            <div class="info-box">
+              <h4>Status</h4>
+              <p style="text-transform: capitalize;">${order.status}</p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Item Description</th>
+                <th style="text-align: center;">Qty</th>
+                ${isInvoice ? '<th style="text-align: right;">Unit Price</th><th style="text-align: right;">Total</th>' : ''}
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td><strong>${item.productTitle}</strong></td>
+                  <td style="text-align: center; font-weight: bold;">${item.quantity}</td>
+                  ${isInvoice ? `<td style="text-align: right;">$${item.price.toFixed(2)}</td><td style="text-align: right; font-weight: bold;">$${(item.quantity * item.price).toFixed(2)}</td>` : ''}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          ${isInvoice ? `
+            <div class="total-row">
+              <div>Total Paid: <span style="color:#4f46e5; margin-left: 8px;">$${order.totalAmount.toFixed(2)}</span></div>
+            </div>
+          ` : `
+            <div style="margin-top:20px; font-size:12px; color:#475569; background:#f8fafc; padding:12px; border-radius:6px; border: 1px solid #e2e8f0;">
+              <strong>Fulfillment Checklist:</strong> Please verify all quantities match the physical contents prior to sealing package.
+            </div>
+          `}
+
+          <div class="footer">
+            Ehsan Seller Headless Core • Author: EHSANKiNG • Generated on ${new Date().toLocaleString()}
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -75,8 +224,20 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
           ))}
         </div>
 
-        <div className="text-xs text-slate-500 font-medium">
-          Showing <span className="font-bold text-slate-900">{filteredOrders.length}</span> Orders
+        <div className="flex items-center gap-4">
+          <div className="text-xs text-slate-500 font-medium">
+            Showing <span className="font-bold text-slate-900">{filteredOrders.length}</span> Orders
+          </div>
+
+          <button
+            onClick={handleExportCsv}
+            disabled={filteredOrders.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs"
+            title="Download CSV of current orders list"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
@@ -132,12 +293,21 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                       </select>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => setViewingOrder(order)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Details
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handlePrintOrder(order, 'packing_slip')}
+                          title="Print Packing Slip"
+                          className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setViewingOrder(order)}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -200,16 +370,22 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
               <span className="text-lg font-bold font-display text-indigo-600">${viewingOrder.totalAmount.toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
               <button
                 onClick={() => setViewingOrder(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                className="px-3.5 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
               >
                 Close
               </button>
               <button
-                onClick={() => alert(`Packing slip for ${viewingOrder.orderNumber} sent to printer.`)}
-                className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition flex items-center gap-1.5"
+                onClick={() => handlePrintOrder(viewingOrder, 'invoice')}
+                className="px-3.5 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-1.5"
+              >
+                <FileText className="w-3.5 h-3.5" /> Print Invoice
+              </button>
+              <button
+                onClick={() => handlePrintOrder(viewingOrder, 'packing_slip')}
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition flex items-center gap-1.5 shadow-2xs"
               >
                 <Printer className="w-3.5 h-3.5" /> Print Packing Slip
               </button>

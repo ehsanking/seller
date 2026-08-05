@@ -80,4 +80,30 @@ export interface StoreSettings {
   apiKey: string;
 }
 
-export type NavigationTab = 'dashboard' | 'products' | 'orders' | 'customers' | 'analytics' | 'settings';
+export interface Plugin {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  author: string;
+  version: string;
+  category: 'payment' | 'shipping' | 'ai' | 'marketing' | 'custom';
+  iconName: string;
+  isInstalled: boolean;
+  isActive: boolean;
+  isCustom?: boolean;
+  menuTitle?: string;
+  config: Record<string, any>;
+  hooks?: string[];
+}
+
+export type NavigationTab = 
+  | 'dashboard' 
+  | 'products' 
+  | 'orders' 
+  | 'customers' 
+  | 'analytics' 
+  | 'settings' 
+  | 'plugins'
+  | `plugin_${string}`;
+

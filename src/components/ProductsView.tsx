@@ -11,7 +11,8 @@ import {
   Tag,
   DollarSign,
   Package,
-  Layers
+  Layers,
+  Download
 } from 'lucide-react';
 import { Product, ProductStatus } from '../types';
 
@@ -42,6 +43,43 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleExportCsv = () => {
+    const headers = ['SKU', 'Title', 'Category', 'Price', 'Cost Price', 'Stock Quantity', 'Status', 'Sales Count', 'Created At'];
+    const rows = filteredProducts.map(p => [
+      p.sku,
+      p.title,
+      p.category,
+      p.price.toFixed(2),
+      p.costPrice ? p.costPrice.toFixed(2) : '0.00',
+      p.stockQuantity,
+      p.status,
+      p.salesCount,
+      p.createdAt
+    ]);
+
+    const escapeCsv = (val: string | number) => {
+      const str = String(val ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvContent = [
+      headers.map(escapeCsv).join(','),
+      ...rows.map(row => row.map(escapeCsv).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `products_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const getStatusBadge = (status: ProductStatus, stock: number) => {
     if (stock <= 0 || status === 'out_of_stock') {
@@ -86,8 +124,20 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           ))}
         </div>
 
-        <div className="text-xs text-slate-500 font-medium">
-          Showing <span className="font-bold text-slate-900">{filteredProducts.length}</span> of {products.length} Products
+        <div className="flex items-center gap-4">
+          <div className="text-xs text-slate-500 font-medium">
+            Showing <span className="font-bold text-slate-900">{filteredProducts.length}</span> of {products.length} Products
+          </div>
+
+          <button
+            onClick={handleExportCsv}
+            disabled={filteredProducts.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs"
+            title="Download CSV of current products list"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
