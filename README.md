@@ -1,147 +1,209 @@
 <p align="center">
-  <img src="./src/assets/images/seller_banner_1785927221343.jpg" alt="Seller Banner" width="100%" style="border-radius: 12px; shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+  <img src="./src/assets/images/seller_banner_1785927221343.jpg" alt="SELLER Core Banner" width="100%" style="border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.35);" />
 </p>
 
 <p align="center">
-  <img src="./src/assets/images/seller_logo_1785927209652.jpg" alt="Seller Logo" width="120" height="120" style="border-radius: 20px;" />
+  <img src="./src/assets/images/seller_logo_1785927209652.jpg" alt="SELLER Logo" width="130" height="130" style="border-radius: 24px;" />
 </p>
 
-<h1 align="center">SELLER Core (ehsanking/seller)</h1>
+<h1 align="center">SELLER Core — Enterprise Headless E-Commerce Platform</h1>
 
 <p align="center">
-  <strong>Hyper-Fast, Open-Source, Headless E-Commerce Core & Extension Platform</strong><br>
-  Designed to empower small businesses and startups with enterprise-grade headless technology — <strong>100% Free Forever</strong>.
+  <strong>The Ultimate High-Performance, Modular, Open-Source E-Commerce Engine</strong><br>
+  Empowering small businesses, creators, and developers worldwide with enterprise-grade headless technology — <strong>100% Free Forever</strong>.
 </p>
 
 <p align="center">
-  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Maintainer-EHSANKiNG-indigo.svg?style=for-the-badge&logo=github" alt="Maintainer EHSANKiNG" /></a>
+  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Author-EHSANKiNG-indigo.svg?style=for-the-badge&logo=github" alt="Maintainer EHSANKiNG" /></a>
   <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge" alt="License MIT" /></a>
-  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Laravel-11.x-red.svg?style=for-the-badge&logo=laravel" alt="Laravel 11" /></a>
-  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg?style=for-the-badge&logo=php" alt="PHP 8.2+" /></a>
-  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/PostgreSQL-JSONB-336791.svg?style=for-the-badge&logo=postgresql" alt="PostgreSQL" /></a>
-  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Price-100%25%20FREE%20FOREVER-purple.svg?style=for-the-badge" alt="Free Forever" /></a>
+  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Backend-Laravel%2011%20%7C%20PHP%208.2%2B-red.svg?style=for-the-badge&logo=laravel" alt="Laravel 11" /></a>
+  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Database-PostgreSQL%20JSONB-336791.svg?style=for-the-badge&logo=postgresql" alt="PostgreSQL" /></a>
+  <a href="https://github.com/ehsanking/seller"><img src="https://img.shields.io/badge/Price-100%25%20FREE%20%26%20OPEN%20SOURCE-purple.svg?style=for-the-badge" alt="Free Forever" /></a>
 </p>
 
 ---
 
-## 🌟 Mission Statement / ماموریت ما
+## 🌐 Mission & Vision: Democratic Commerce for Everyone
 
-> **"Financial freedom for small businesses, zero software tax."**
-> 
-> **SELLER** was created by **EHSANKiNG** with a singular mission: to ensure that any entrepreneur, small business owner, or startup anywhere in the world can build, run, and scale a modern, lightning-fast e-commerce store with **zero licensing fees, zero recurring subscription costs, and total data sovereignty**.
-> 
-> This platform is **100% Free and Open-Source, forever**. There are no hidden paywalls, no "pro" lock-outs, and no mandatory cloud dependencies.
+In today’s e-commerce landscape, small business owners and independent entrepreneurs are choked by escalating monthly SaaS subscription fees, transaction cut percentages, locked-in proprietary ecosystems, and forced platform migrations.
+
+**SELLER Core** was architected from the ground up by **EHSANKiNG** to break these barriers permanently. 
+
+> ### 📢 Our Immutable Guarantee:
+> **SELLER Core is, and will forever remain, 100% Free and Open-Source.** 
+> No feature lock-outs, no monthly licensing fees, no transactional commission cuts, and zero vendor lock-in. You own your data, your infrastructure, your codebase, and your destiny.
 
 ---
 
-## 🚀 One-Line Instant Installation / نصب تک‌خطی سریع
+## ⚡ One-Line Automatic Installation
 
-Deploy the full SELLER Headless Core stack instantly using our single-line installer:
+Deploy the complete SELLER Headless Core environment on any Linux server, Cloud VM, or Docker container with a single command:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/ehsanking/seller/main/install.sh | bash
 ```
 
-### Docker One-Liner Execution:
+### 🐳 Docker One-Liner Execution:
 ```bash
 docker run -d -p 3000:3000 --name seller-core ehsanking/seller:latest
 ```
 
 ---
 
-## 💎 Key Features & Capabilities
+## 🎨 Universal Multi-Framework Storefront Engines
 
-- ⚡ **100% Headless Architecture**: Pure RESTful API outputs built using Laravel API Resources and strict PHP 8.2+ typing. Compatible with any frontend framework (Next.js, Nuxt.js, React, Mobile Apps).
-- 🧩 **Dynamic Plugin Engine**: Modular plugin library supporting activation, custom config, drag-and-drop manifest uploads, and automatic mounting of active extensions into the Admin Navigation Menu.
-- 💳 **Payment Integrations**: Pre-built plugins for **Stripe** (Credit Cards, Apple Pay, Webhooks) and **PayPal Commerce** (Express Checkout, Pay Later).
-- 🚚 **Logistics & Express Shipping**: Integrated **DHL Express** plugin with live shipping rate calculation and waybill/packing slip printing.
-- 🧠 **Multi-AI Commerce Copilot**: Built-in support for **Google Gemini 2.5 Flash**, **OpenAI GPT-4o**, and **Anthropic Claude 3.5** for automated SEO titles, product descriptions, and customer support response drafting.
-- 📊 **CSV Data Exporting**: One-click CSV export for filtered Products and Orders data tables.
-- 🖨️ **Print Engine**: Commercial invoice and warehouse packing slip print generators for store managers.
-- 🛡️ **PostgreSQL & JSONB Ready**: Flexible schema supporting dynamic product attributes and custom metadata without database migrations.
+SELLER Core is a **true headless platform**. Its high-speed RESTful JSON API layer decouples backend management from frontend presentation, allowing you to connect **any** frontend technology stack seamlessly. 
+
+We provide official pre-built starter storefront templates in the `/storefronts` repository directory:
+
+```
+├── storefronts/
+│   ├── react-tailwind/        # React 18 + Vite + Tailwind CSS Storefront
+│   ├── vue-tailwind/          # Vue 3 Composition API + Pinia Storefront
+│   ├── bootstrap5/            # Pure HTML5 + Bootstrap 5 Lightweight Theme
+│   └── nextjs-app-router/     # Next.js 14 App Router + Server Components
+```
+
+### 1. React + Tailwind CSS Starter
+```bash
+cd storefronts/react-tailwind
+npm install && npm run dev
+```
+
+### 2. Vue 3 + Tailwind CSS Starter
+```bash
+cd storefronts/vue-tailwind
+npm install && npm run dev
+```
+
+### 3. Bootstrap 5 Zero-Build HTML5 Template
+Simply open `storefronts/bootstrap5/index.html` in any web browser or serve it directly via Nginx/Apache.
 
 ---
 
-## 🛠️ Plugin & Platform Development Guide / راهنمای توسعه
+## 🧩 Dynamic Extension & Plugin Architecture
 
-### 1. Plugin Manifest Specification (`plugin.json`)
-Every plugin in **Seller** is defined by a manifest structure. Developers can author plugins locally or upload them via the Admin UI:
+SELLER Core features an extensible plugin lifecycle. Plugins can hook into core application events, extend admin navigation menus, inject payment gateways, and trigger third-party API webhooks automatically.
 
+```
+                  ┌─────────────────────────────────────────┐
+                  │            SELLER CORE API              │
+                  │   Laravel 11 / PHP 8.2+ Event Engine    │
+                  └────────────────────┬────────────────────┘
+                                       │
+         ┌─────────────────────────────┼─────────────────────────────┐
+         ▼                             ▼                             ▼
+┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
+│ Stripe & PayPal  │         │   DHL Express    │         │ Multi-AI Engine  │
+│ Payment Gateways │         │ Shipping & Rates │         │ Gemini/OpenAI/Cl │
+└──────────────────┘         └──────────────────┘         └──────────────────┘
+```
+
+### Included Out-of-the-Box Plugins:
+1. **Stripe Gateway Integration**: Credit cards, Apple Pay, Google Pay, and webhook event listeners (`payment_intent.succeeded`, `charge.refunded`).
+2. **PayPal Commerce Platform**: Express Checkout, Pay Later, and global debit/credit processing.
+3. **DHL Express Logistics**: Live real-time shipping rate calculator, zip code distance mapping, and automatic commercial waybill/packing slip printing.
+4. **Popular Multi-AI Commerce Copilot**: Built-in adapter for **Google Gemini 2.5 Flash**, **OpenAI GPT-4o**, and **Anthropic Claude 3.5** to generate SEO product titles, automated descriptions, and customer support responses.
+
+---
+
+## 💻 Developer Guide: Building Custom Plugins
+
+Developing custom plugins for **SELLER Core** requires no core code modifications. Simply create a manifest file (`plugin.json`) or upload it directly through the **Plugin Library UI**:
+
+### Plugin Manifest Specification (`plugin.json`)
 ```json
 {
-  "name": "Custom Crypto Payment Gateway",
+  "name": "Crypto & Web3 Payment Gateway",
   "slug": "crypto-payment",
-  "description": "Accept Bitcoin, Ethereum, and USDT payments with instant webhook confirmation.",
+  "description": "Accept Bitcoin, Ethereum, and USDT TRC20 with instant webhook confirmation.",
   "author": "EHSANKiNG",
   "version": "1.0.0",
   "category": "payment",
   "iconName": "CreditCard",
   "menuTitle": "Crypto Payments",
   "config": {
-    "walletAddress": "TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU",
+    "usdtWalletAddress": "TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU",
     "network": "TRC20",
-    "autoConfirm": true
+    "autoConfirmWebhooks": true
   },
   "hooks": [
     "OrderPlaced",
-    "PaymentConfirmed"
+    "PaymentCaptured"
   ]
 }
 ```
 
-### 2. Event-Driven Architecture (Laravel Events)
-Plugins register listeners to core event dispatches without modifying core codebase:
-- `OrderPlaced`: Dispatched when a customer completes checkout.
-- `PaymentProcessed`: Triggered upon gateway confirmation.
-- `OrderShipped`: Auto-invokes DHL tracking status emails.
-- `ProductCreated`: Triggers AI SEO metadata auto-generation.
+### Event Hooks Lifecycle
+- `OrderPlaced`: Dispatched immediately when a customer initiates checkout.
+- `PaymentProcessed`: Executed upon payment provider verification.
+- `OrderShipped`: Invokes shipping label generation and parcel tracking dispatch.
+- `ProductCreated`: Fires AI metadata auto-enrichment processes.
 
 ---
 
-## 🏗️ Technical Stack & Standards
+## 🏛️ Technical Stack & Architectural Standards
 
-| Component | Technology | Standards / Architecture |
+| Tier | Technology | Key Architectural Benefits |
 | :--- | :--- | :--- |
-| **Backend Core** | Laravel 11 (PHP 8.2+) | Service-Repository Pattern, Strict Typing, PSR-12 |
-| **Database** | PostgreSQL | JSONB for Dynamic Attributes, Indexing & Query Optimization |
-| **API Layer** | Laravel API Resources | 100% Headless REST APIs, Rate Limited, CORS Secured |
-| **Admin UI** | React 18, Vite, Tailwind CSS | Modular Component Architecture, Responsive, Accessible |
-| **Icons** | Lucide React | Clean Vector Icons |
+| **Backend Core** | **Laravel 11 (PHP 8.2+)** | Repository-Service Pattern, PSR-12, Strict Static Typing |
+| **Database Engine** | **PostgreSQL** | JSONB Dynamic Attribute Storage for zero-migration product custom fields |
+| **API Transport** | **RESTful JSON Resources** | Sub-30ms response times, CORS secured, API Rate Limited |
+| **Admin Control Panel** | **React 18 + Vite + Tailwind** | Responsive design, real-time metrics, CSV exporter, invoice printer |
 
 ---
 
-## ☕ Support & Donations / حمایت مالی از پروژه
+## ☕ Support the Free Software Movement / Donations
 
-**SELLER** is completely free to use for any commercial or personal purpose. If this software helped your business save money and thrive, consider donating to support continuous maintenance and feature updates by **EHSANKiNG**:
+SELLER Core is developed and maintained independently by **EHSANKiNG** with the goal of keeping enterprise commerce accessible to every human being for free. 
 
-| Currency / Network | Wallet Address |
-| :--- | :--- |
-| 🟢 **USDT (Tether - TRC20)** | `TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU` |
-| 🔴 **TRON (TRX)** | `TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU` |
+If SELLER Core saved you thousands of dollars in SaaS fees and helped launch your business, consider supporting ongoing development with a crypto donation:
+
+<p align="center">
+  <table>
+    <tr>
+      <th>Network / Asset</th>
+      <th>Wallet Address</th>
+    </tr>
+    <tr>
+      <td>🟢 <strong>Tether (USDT - TRC20)</strong></td>
+      <td><code>TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU</code></td>
+    </tr>
+    <tr>
+      <td>🔴 <strong>TRON (TRX)</strong></td>
+      <td><code>TKPswLQqd2e73UTGJ5prxVXBVo7MTsWedU</code></td>
+    </tr>
+  </table>
+</p>
 
 ---
 
-## ⚖️ Legal Disclaimer & Terms of Use / سلب مسئولیت قانونی
+## ⚖️ Legal Disclaimer & Terms of Use
 
 ```text
-DISCLAIMER OF WARRANTY AND LIABILITY:
+LEGAL DISCLAIMER OF WARRANTY AND LIMITATION OF LIABILITY:
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 PURPOSE AND NONINFRINGEMENT. 
 
 IN NO EVENT SHALL THE AUTHOR ("EHSANKiNG") OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-MERCHANTS AND USERS ARE SOLELY RESPONSIBLE FOR COMPLYING WITH LOCAL E-COMMERCE LAWS,
-TAXATION REGULATIONS, PAYMENT GATEWAY COMPLIANCE (PCI-DSS), AND DATA PRIVACY LAWS (GDPR/CCPA).
+STORE MANAGERS, DEVELOPERS, AND MERCHANTS ARE SOLELY RESPONSIBLE FOR COMPLYING WITH ALL
+APPLICABLE LOCAL E-COMMERCE LAWS, TAXATION STATUTES, CONSUMER PROTECTION ACTS, AND PAYMENT
+CARD INDUSTRY DATA SECURITY STANDARDS (PCI-DSS) WITHIN THEIR RESPECTIVE JURISDICTIONS.
 ```
 
 ---
 
-## 📜 License & Authorship
+## 📜 License & Community
 
-- **Author & Maintainer**: **EHSANKiNG** ([GitHub: @ehsanking](https://github.com/ehsanking))
-- **Repository**: [ehsanking/seller](https://github.com/ehsanking/seller)
-- **License**: MIT License — Open-Source and Free Forever.
+- **Creator & Principal Maintainer**: **EHSANKiNG** ([GitHub Profile](https://github.com/ehsanking))
+- **Official Repository**: [ehsanking/seller](https://github.com/ehsanking/seller)
+- **License**: MIT License — Free for commercial and private use forever.
+
+<p align="center">
+  <sub>Built with passion for the global open-source community by <strong>EHSANKiNG</strong>.</sub>
+</p>
