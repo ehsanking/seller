@@ -24,3 +24,29 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #FFD700;
 }
+
+/* Print Media Optimization for Invoices & Factors */
+@media print {
+  /* Hide non-printable application UI controls */
+  aside,
+  header,
+  nav,
+  .no-print,
+  button,
+  .sidebar,
+  .navbar {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  @page {
+    margin: 1cm;
+    size: auto;
+  }
+}

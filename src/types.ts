@@ -9,6 +9,7 @@ export interface ProductVariation {
   price: number;
   stockQuantity: number;
   attributes: Record<string, string>;
+  image?: string;
 }
 
 export interface Product {
@@ -45,6 +46,7 @@ export interface OrderItem {
   productTitle: string;
   quantity: number;
   price: number;
+  sku?: string;
 }
 
 export interface Order {
@@ -56,6 +58,8 @@ export interface Order {
   totalAmount: number;
   status: OrderStatus;
   paymentMethod: string;
+  cryptoCurrency?: string;
+  cryptoTxHash?: string;
   shippingAddress: string;
   createdAt: string;
 }
@@ -71,11 +75,13 @@ export interface Customer {
   status: 'active' | 'inactive';
 }
 
-export type CustomerActivityType = 'order' | 'support_note' | 'status_change' | 'email_sent' | 'refund' | 'review';
+export type CustomerActivityType = 'order' | 'support_note' | 'status_change' | 'email_sent' | 'refund' | 'review' | 'account_created';
 
 export interface CustomerActivity {
   id: string;
   customerId: string;
+  customerName?: string;
+  customerEmail?: string;
   type: CustomerActivityType;
   title: string;
   description: string;
@@ -118,6 +124,31 @@ export interface StoreBranch {
   isMain: boolean;
 }
 
+export interface FactorSettings {
+  companyName: string;
+  economicCode?: string;
+  nationalId?: string;
+  registrationNumber?: string;
+  taxId?: string;
+  companyAddress: string;
+  companyPhone: string;
+  companyEmail?: string;
+  logoUrl?: string;
+  headerTitle: string;
+  accentColor: string;
+  paperFormat: 'a4' | 'a5' | 'thermal';
+  templateStyle: 'official' | 'modern' | 'minimal';
+  showTax: boolean;
+  showDiscount: boolean;
+  showSku: boolean;
+  showSignatureBox: boolean;
+  showQrCode: boolean;
+  showPaymentMethod: boolean;
+  footerNote: string;
+  termsAndConditions?: string;
+  bankInfo?: string;
+}
+
 export interface StoreSettings {
   storeName: string;
   storeEmail: string;
@@ -129,6 +160,8 @@ export interface StoreSettings {
   apiWebhookUrl: string;
   apiKey: string;
   branches?: StoreBranch[];
+  theme?: 'light' | 'dark';
+  factorSettings?: FactorSettings;
   // Store-wide SEO Meta Tags
   metaTitle?: string;
   metaDescription?: string;
@@ -307,6 +340,7 @@ export type NavigationTab =
   | 'products' 
   | 'orders' 
   | 'customers' 
+  | 'wishlist'
   | 'analytics' 
   | 'settings' 
   | 'branches'
@@ -317,6 +351,7 @@ export type NavigationTab =
   | 'seo'
   | 'coupons'
   | 'builder'
+  | 'telegram_mini_app'
   | `plugin_${string}`;
 
 export interface StoreSection {
@@ -406,6 +441,14 @@ export interface Coupon {
   endDate: string;
   description?: string;
 }
+
+export interface WishlistItem {
+  id: string;
+  productId: string;
+  addedAt: string;
+  product?: Product;
+}
+
 
 
 

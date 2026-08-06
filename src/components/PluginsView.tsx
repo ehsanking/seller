@@ -34,6 +34,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { Plugin } from '../types';
+import { openFedexLabelPrintWindow, FedexLabelData } from '../utils/fedexLabel';
 
 interface PluginsViewProps {
   plugins: Plugin[];
@@ -61,6 +62,7 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
 
   // Active Plugin Sub-view if opened from Sidebar or direct tab
   const [activeSubView, setActiveSubView] = useState<string | null>(selectedPluginTab || null);
+  const [selectedCarrierTab, setSelectedCarrierTab] = useState<'fedex' | 'dhl' | 'ups'>('fedex');
 
   // Sync sub view if passed from props
   React.useEffect(() => {
@@ -68,6 +70,17 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
       setActiveSubView(selectedPluginTab);
     }
   }, [selectedPluginTab]);
+
+  // Sync shipping carrier tab based on the active subview
+  React.useEffect(() => {
+    if (activeSubView === 'dhl-express-shipping' || activeSubView === 'plugin_dhl-express-shipping') {
+      setSelectedCarrierTab('dhl');
+    } else if (activeSubView === 'fedex-shipping' || activeSubView === 'plugin_fedex-shipping') {
+      setSelectedCarrierTab('fedex');
+    } else if (activeSubView === 'ups-shipping' || activeSubView === 'plugin_ups-shipping') {
+      setSelectedCarrierTab('ups');
+    }
+  }, [activeSubView]);
 
   // AI Assistant State
   const [aiPrompt, setAiPrompt] = useState('Ergonomic Mechanical Keyboard with RGB backlighting');
@@ -80,6 +93,38 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
   const [dhlWeight, setDhlWeight] = useState('2.5');
   const [dhlRates, setDhlRates] = useState<any>(null);
   const [isDhlLoading, setIsDhlLoading] = useState(false);
+
+  // FedEx Calculator & Label State
+  const [fedexDestination, setFedexDestination] = useState('10001');
+  const [fedexWeight, setFedexWeight] = useState('2.5');
+  const [fedexRates, setFedexRates] = useState<any>(null);
+  const [isFedexLoading, setIsFedexLoading] = useState(false);
+  const [fedexLabelOrderId, setFedexLabelOrderId] = useState('ORD-2026-8801');
+  const [fedexLabelRecipient, setFedexLabelRecipient] = useState('Sarah Jenkins');
+  const [fedexLabelAddress, setFedexLabelAddress] = useState('742 Evergreen Terrace, Springfield, OR');
+  const [fedexLabelService, setFedexLabelService] = useState('FedEx Ground');
+  const [fedexLabelResult, setFedexLabelResult] = useState<any>(null);
+  const [isFedexLabelLoading, setIsFedexLabelLoading] = useState(false);
+
+  // UPS Calculator & Label State
+  const [upsDestination, setUpsDestination] = useState('10001');
+  const [upsWeight, setUpsWeight] = useState('2.5');
+  const [upsRates, setUpsRates] = useState<any>(null);
+  const [isUpsLoading, setIsUpsLoading] = useState(false);
+  const [upsLabelOrderId, setUpsLabelOrderId] = useState('ORD-2026-9901');
+  const [upsLabelRecipient, setUpsLabelRecipient] = useState('William Adams');
+  const [upsLabelAddress, setUpsLabelAddress] = useState('123 Broadway, New York, NY');
+  const [upsLabelService, setUpsLabelService] = useState('UPS Ground');
+  const [upsLabelResult, setUpsLabelResult] = useState<any>(null);
+  const [isUpsLabelLoading, setIsUpsLabelLoading] = useState(false);
+
+  // DHL Label State
+  const [dhlLabelOrderId, setDhlLabelOrderId] = useState('ORD-2026-9902');
+  const [dhlLabelRecipient, setDhlLabelRecipient] = useState('Charlotte Meier');
+  const [dhlLabelAddress, setDhlLabelAddress] = useState('456 Kurfürstendamm, Berlin, DE');
+  const [dhlLabelService, setDhlLabelService] = useState('DHL Express Worldwide');
+  const [dhlLabelResult, setDhlLabelResult] = useState<any>(null);
+  const [isDhlLabelLoading, setIsDhlLabelLoading] = useState(false);
 
   // CDN Operations State
   const [cdnLog, setCdnLog] = useState<string>('');
@@ -134,6 +179,54 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
   const [mcFirstName, setMcFirstName] = useState('Alice');
   const [mcResult, setMcResult] = useState<any>(null);
   const [isMcLoading, setIsMcLoading] = useState(false);
+
+  // Telegram Bot State
+  const [tgTestMessage, setTgTestMessage] = useState('🚀 Flash Sale: 25% OFF Mechanical Keyboards at Ehsan Store!');
+  const [tgResult, setTgResult] = useState<any>(null);
+  const [isTgLoading, setIsTgLoading] = useState(false);
+
+  // Instagram Graph State
+  const [igCaption, setIgCaption] = useState('New ergonomic setup available now! #EhsanStore');
+  const [igResult, setIgResult] = useState<any>(null);
+  const [isIgLoading, setIsIgLoading] = useState(false);
+
+  // Facebook Pages State
+  const [fbMessage, setFbMessage] = useState('Check out our newest products and offers on Facebook Shop.');
+  const [fbResult, setFbResult] = useState<any>(null);
+  const [isFbLoading, setIsFbLoading] = useState(false);
+
+  // LinkedIn Publisher State
+  const [liText, setLiText] = useState('Ehsan Store expands B2B wholesale catalog for enterprise procurement.');
+  const [liResult, setLiResult] = useState<any>(null);
+  const [isLiLoading, setIsLiLoading] = useState(false);
+
+  // Telegram Mini Shop State
+  const [msSyncResult, setMsSyncResult] = useState<any>(null);
+  const [isMsLoading, setIsMsLoading] = useState(false);
+
+  // Crypto Gateway Test State
+  const [cryptoTestAmount, setCryptoTestAmount] = useState('150.00');
+  const [cryptoTestCurrency, setCryptoTestCurrency] = useState('USDT');
+  const [cryptoInvoiceResult, setCryptoInvoiceResult] = useState<any>(null);
+  const [isCryptoLoading, setIsCryptoLoading] = useState(false);
+
+  const handleTestCryptoInvoice = async () => {
+    try {
+      setIsCryptoLoading(true);
+      const res = await fetch('/api/plugins/crypto/create-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amountUsd: parseFloat(cryptoTestAmount) || 50, currency: cryptoTestCurrency })
+      });
+      const data = await res.json();
+      setCryptoInvoiceResult(data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate test crypto invoice.');
+    } finally {
+      setIsCryptoLoading(false);
+    }
+  };
 
   // Custom Upload Form State
   const [customForm, setCustomForm] = useState({
@@ -320,6 +413,120 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
       console.error(err);
     } finally {
       setIsDhlLoading(false);
+    }
+  };
+
+  // FedEx Calculator Handler
+  const handleCalculateFedex = async () => {
+    try {
+      setIsFedexLoading(true);
+      const res = await fetch('/api/plugins/fedex/calculate-rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destinationPostal: fedexDestination,
+          weightKg: Number(fedexWeight) || 1.0
+        })
+      });
+      const data = await res.json();
+      setFedexRates(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsFedexLoading(false);
+    }
+  };
+
+  // FedEx Label Generator Handler
+  const handleGenerateFedexLabel = async () => {
+    try {
+      setIsFedexLabelLoading(true);
+      const res = await fetch('/api/plugins/fedex/generate-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: fedexLabelOrderId,
+          serviceType: fedexLabelService,
+          weightKg: Number(fedexWeight) || 2.5,
+          recipientName: fedexLabelRecipient,
+          destinationAddress: fedexLabelAddress
+        })
+      });
+      const data = await res.json();
+      setFedexLabelResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsFedexLabelLoading(false);
+    }
+  };
+
+  // UPS Calculator Handler
+  const handleCalculateUps = async () => {
+    try {
+      setIsUpsLoading(true);
+      const res = await fetch('/api/plugins/ups/calculate-rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destinationPostal: upsDestination,
+          weightKg: Number(upsWeight) || 1.0
+        })
+      });
+      const data = await res.json();
+      setUpsRates(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpsLoading(false);
+    }
+  };
+
+  // UPS Label Generator Handler
+  const handleGenerateUpsLabel = async () => {
+    try {
+      setIsUpsLabelLoading(true);
+      const res = await fetch('/api/plugins/ups/generate-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: upsLabelOrderId,
+          serviceType: upsLabelService,
+          weightKg: Number(upsWeight) || 2.5,
+          recipientName: upsLabelRecipient,
+          destinationAddress: upsLabelAddress
+        })
+      });
+      const data = await res.json();
+      setUpsLabelResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpsLabelLoading(false);
+    }
+  };
+
+  // DHL Label Generator Handler
+  const handleGenerateDhlLabel = async () => {
+    try {
+      setIsDhlLabelLoading(true);
+      const res = await fetch('/api/plugins/dhl/generate-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: dhlLabelOrderId,
+          serviceType: dhlLabelService,
+          weightKg: Number(dhlWeight) || 2.5,
+          recipientName: dhlLabelRecipient,
+          destinationAddress: dhlLabelAddress
+        })
+      });
+      const data = await res.json();
+      setDhlLabelResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDhlLabelLoading(false);
     }
   };
 
@@ -703,106 +910,871 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
             </div>
           )}
 
-          {selectedPluginForSubView.slug === 'dhl-express-shipping' && (
+          {selectedPluginForSubView.slug === 'crypto-gateway' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div>
                     <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-                      <Truck className="w-5 h-5 text-amber-600" /> DHL Express Logistics Engine
+                      <Cpu className="w-5 h-5 text-purple-600" /> CryptoPay &amp; Web3 Gateway Settings
                     </h3>
-                    <p className="text-xs text-slate-500">Calculate live shipping rates and generate waybills</p>
+                    <p className="text-xs text-slate-500">Configure decentralized wallet addresses and blockchain networks</p>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-100">
-                    Account: {selectedPluginForSubView.config.accountNumber || 'DHL-1002'}
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100 uppercase">
+                    Mode: {selectedPluginForSubView.config.networkMode || 'Mainnet'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Account Number</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Blockchain Network Mode</label>
+                    <select
+                      value={selectedPluginForSubView.config.networkMode || 'mainnet'}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, networkMode: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                    >
+                      <option value="mainnet">Mainnet (Production)</option>
+                      <option value="testnet">Testnet (Sandbox)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Confirmation Blocks Required</label>
                     <input
-                      type="text"
-                      value={selectedPluginForSubView.config.accountNumber || ''}
-                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, accountNumber: e.target.value })}
+                      type="number"
+                      value={selectedPluginForSubView.config.confirmationBlocks || 2}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, confirmationBlocks: parseInt(e.target.value) || 2 })}
                       className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">DHL API Key</label>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">USDT (TRC-20) Merchant Deposit Address</label>
                     <input
                       type="text"
-                      value={selectedPluginForSubView.config.apiKey || ''}
-                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, apiKey: e.target.value })}
+                      value={selectedPluginForSubView.config.usdtTrc20Address || ''}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, usdtTrc20Address: e.target.value })}
+                      className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ethereum / EVM Vault Address</label>
+                    <input
+                      type="text"
+                      value={selectedPluginForSubView.config.walletAddress || ''}
+                      onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, walletAddress: e.target.value })}
                       className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
                     />
                   </div>
                 </div>
 
-                {/* Live Rate Calculator Simulator */}
-                <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/70 space-y-3">
-                  <h4 className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-600" /> Live Rate Calculator Test
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-purple-600" /> Supported Cryptocurrencies
                   </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Zip Code</label>
-                      <input
-                        type="text"
-                        value={dhlDestination}
-                        onChange={(e) => setDhlDestination(e.target.value)}
-                        className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">Parcel Weight (kg)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={dhlWeight}
-                        onChange={(e) => setDhlWeight(e.target.value)}
-                        className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg"
-                      />
-                    </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {['USDT (TRC20)', 'Bitcoin (BTC)', 'Ethereum (ERC20)', 'TON (Telegram)', 'Binance Pay'].map((coin) => (
+                      <span key={coin} className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-slate-800 border border-slate-200 shadow-2xs">
+                        {coin}
+                      </span>
+                    ))}
                   </div>
-                  <button
-                    onClick={handleCalculateDhl}
-                    disabled={isDhlLoading}
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs rounded-lg transition"
-                  >
-                    {isDhlLoading ? 'Calculating Rates...' : 'Calculate DHL Rates'}
-                  </button>
-
-                  {dhlRates && (
-                    <div className="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                      <div className="text-xs font-bold text-slate-900">Calculated Rates for {dhlRates.destination}:</div>
-                      {dhlRates.rates.map((r: any, idx: number) => (
-                        <div key={idx} className="flex justify-between items-center text-xs text-slate-700 border-b border-slate-100 last:border-0 pb-1">
-                          <span>{r.service} ({r.estimatedDays})</span>
-                          <span className="font-bold text-amber-700">${r.price.toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
               <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 border border-slate-800 space-y-4">
                 <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <FileCode className="w-4 h-4 text-amber-400" /> DHL Shipping Hooks
+                  <Terminal className="w-4 h-4 text-purple-400" /> Crypto Invoice Sandbox Test
                 </h4>
-                <div className="text-xs text-slate-400 space-y-2">
-                  <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
-                    <span className="text-amber-400 font-mono text-[11px]">OrderShipped</span>
-                    <p className="text-[11px] text-slate-400 mt-1">Triggers auto-tracking code email to buyer.</p>
+                <p className="text-xs text-slate-400">Generate a live crypto deposit invoice and test mempool verification.</p>
+
+                <div className="space-y-3 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Test Amount (USD)</label>
+                    <input
+                      type="text"
+                      value={cryptoTestAmount}
+                      onChange={(e) => setCryptoTestAmount(e.target.value)}
+                      className="w-full text-xs bg-slate-950 border border-slate-800 text-white px-3 py-2 rounded-lg"
+                    />
                   </div>
-                  <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
-                    <span className="text-amber-400 font-mono text-[11px]">LabelGenerated</span>
-                    <p className="text-[11px] text-slate-400 mt-1">Generates printable Commercial Shipping Waybill.</p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Cryptocurrency</label>
+                    <select
+                      value={cryptoTestCurrency}
+                      onChange={(e) => setCryptoTestCurrency(e.target.value)}
+                      className="w-full text-xs bg-slate-950 border border-slate-800 text-white px-3 py-2 rounded-lg"
+                    >
+                      <option value="USDT">USDT (TRC-20)</option>
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="ETH">Ethereum (ETH)</option>
+                      <option value="TON">TON (Telegram)</option>
+                    </select>
                   </div>
+
+                  <button
+                    onClick={handleTestCryptoInvoice}
+                    disabled={isCryptoLoading}
+                    className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-2"
+                  >
+                    {isCryptoLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4" />}
+                    Generate Test Crypto Invoice
+                  </button>
                 </div>
+
+                {cryptoInvoiceResult && (
+                  <div className="font-mono text-[11px] bg-slate-950 p-3 rounded-lg text-purple-300 border border-slate-800 space-y-1.5">
+                    <p className="text-emerald-400 font-bold">✓ Invoice Created Successfully</p>
+                    <p>ID: {cryptoInvoiceResult.invoiceId}</p>
+                    <p>Pay: {cryptoInvoiceResult.amountCrypto} {cryptoInvoiceResult.currency}</p>
+                    <p className="truncate">To: {cryptoInvoiceResult.depositAddress}</p>
+                    <p className="text-amber-400">Status: {cryptoInvoiceResult.status}</p>
+                  </div>
+                )}
               </div>
+            </div>
+          )}
+
+          {['dhl-express-shipping', 'fedex-shipping', 'ups-shipping'].includes(selectedPluginForSubView.slug) && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Carrier Selection Tabs */}
+              <div className="flex border-b border-slate-200">
+                <button
+                  onClick={() => setSelectedCarrierTab('fedex')}
+                  className={`px-6 py-3 font-bold text-xs flex items-center gap-2 border-b-2 transition-colors ${selectedCarrierTab === 'fedex' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                >
+                  <Truck className="w-4 h-4 text-indigo-600" /> FedEx Ground & Express
+                </button>
+                <button
+                  onClick={() => setSelectedCarrierTab('dhl')}
+                  className={`px-6 py-3 font-bold text-xs flex items-center gap-2 border-b-2 transition-colors ${selectedCarrierTab === 'dhl' ? 'border-amber-500 text-amber-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                >
+                  <Truck className="w-4 h-4 text-amber-500" /> DHL Express Cargo
+                </button>
+                <button
+                  onClick={() => setSelectedCarrierTab('ups')}
+                  className={`px-6 py-3 font-bold text-xs flex items-center gap-2 border-b-2 transition-colors ${selectedCarrierTab === 'ups' ? 'border-amber-800 text-[#351C15]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                >
+                  <Truck className="w-4 h-4 text-amber-800" /> UPS Ground & Air
+                </button>
+              </div>
+
+              {/* FedEx Panel */}
+              {selectedCarrierTab === 'fedex' && (() => {
+                const fedexPlg = plugins.find(p => p.slug === 'fedex-shipping') || selectedPluginForSubView;
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                          <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                            <span className="text-indigo-600">Fed</span><span className="text-orange-500">Ex</span> Logistics Engine
+                          </h3>
+                          <p className="text-xs text-slate-500">Configure FedEx API credentials, estimate transit rates and test real-time label creation</p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          Account: {fedexPlg.config?.accountNumber || 'FEDEX-1002'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Account ID / Number</label>
+                          <input
+                            type="text"
+                            value={fedexPlg.config?.accountNumber || ''}
+                            onChange={(e) => onUpdateConfig(fedexPlg.id, { ...fedexPlg.config, accountNumber: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            placeholder="e.g. 510087780"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">FedEx API Key</label>
+                          <input
+                            type="text"
+                            value={fedexPlg.config?.apiKey || ''}
+                            onChange={(e) => onUpdateConfig(fedexPlg.id, { ...fedexPlg.config, apiKey: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            placeholder="e.g. l7xxa28fb5b..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">FedEx API Secret</label>
+                          <input
+                            type="password"
+                            value={fedexPlg.config?.apiSecret || ''}
+                            onChange={(e) => onUpdateConfig(fedexPlg.id, { ...fedexPlg.config, apiSecret: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Meter Number (Optional)</label>
+                          <input
+                            type="text"
+                            value={fedexPlg.config?.meterNumber || ''}
+                            onChange={(e) => onUpdateConfig(fedexPlg.id, { ...fedexPlg.config, meterNumber: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            placeholder="e.g. 119028103"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2 flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <div>
+                            <span className="block text-xs font-semibold text-slate-900">Sandbox / Test Mode</span>
+                            <span className="text-[11px] text-slate-500">Enable to send requests to FedEx test server.</span>
+                          </div>
+                          <button
+                            onClick={() => onUpdateConfig(fedexPlg.id, { ...fedexPlg.config, sandbox: !fedexPlg.config?.sandbox })}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${fedexPlg.config?.sandbox ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                          >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${fedexPlg.config?.sandbox ? 'translate-x-5' : 'translate-x-0'}`} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* FedEx Rate Calculator Simulator */}
+                      <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-200/70 space-y-3">
+                        <h4 className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-indigo-600" /> Live Rate Calculator Test
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Zip Code</label>
+                            <input
+                              type="text"
+                              value={fedexDestination}
+                              onChange={(e) => setFedexDestination(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Parcel Weight (kg)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={fedexWeight}
+                              onChange={(e) => setFedexWeight(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleCalculateFedex}
+                          disabled={isFedexLoading}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-lg transition"
+                        >
+                          {isFedexLoading ? 'Calculating Rates...' : 'Calculate FedEx Rates'}
+                        </button>
+
+                        {fedexRates && (
+                          <div className="bg-white p-3 rounded-lg border border-indigo-200 space-y-2 animate-in fade-in duration-150">
+                            <div className="text-xs font-bold text-slate-900">Calculated Rates for {fedexRates.destination}:</div>
+                            {fedexRates.rates.map((r: any, idx: number) => (
+                              <div key={idx} className="flex justify-between items-center text-xs text-slate-700 border-b border-slate-100 last:border-0 pb-1">
+                                <span>{r.service} ({r.estimatedDays})</span>
+                                <span className="font-bold text-indigo-700">${r.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Real-time FedEx Label Generator Simulator */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          <FileCode className="w-4 h-4 text-indigo-600" /> Real-time FedEx Shipping Label Generator
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Order ID</label>
+                            <input
+                              type="text"
+                              value={fedexLabelOrderId}
+                              onChange={(e) => setFedexLabelOrderId(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Service Type</label>
+                            <select
+                              value={fedexLabelService}
+                              onChange={(e) => setFedexLabelService(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            >
+                              <option value="FedEx Ground">FedEx Ground</option>
+                              <option value="FedEx 2Day">FedEx 2Day</option>
+                              <option value="FedEx Standard Overnight">FedEx Standard Overnight</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Recipient Name</label>
+                            <input
+                              type="text"
+                              value={fedexLabelRecipient}
+                              onChange={(e) => setFedexLabelRecipient(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Address</label>
+                            <input
+                              type="text"
+                              value={fedexLabelAddress}
+                              onChange={(e) => setFedexLabelAddress(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-indigo-600"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleGenerateFedexLabel}
+                          disabled={isFedexLabelLoading}
+                          className="px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition"
+                        >
+                          {isFedexLabelLoading ? 'Generating Label...' : 'Generate Shipping Label'}
+                        </button>
+
+                        {fedexLabelResult && (
+                          <div className="bg-white p-4 rounded-lg border border-slate-200 space-y-3 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <span className="text-xs font-bold text-slate-900">Waybill Generated Successfully</span>
+                              <span className="px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-100 text-[10px] font-bold">Active</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-slate-400">Tracking Number:</span>
+                                <p className="font-mono font-bold text-slate-800">{fedexLabelResult.trackingNumber}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-400">Carrier / Service:</span>
+                                <p className="font-bold text-slate-800">{fedexLabelResult.carrier} {fedexLabelResult.serviceType}</p>
+                              </div>
+                            </div>
+                            <div className="pt-2">
+                              <button
+                                onClick={() => {
+                                  openFedexLabelPrintWindow({
+                                    id: fedexLabelResult.trackingNumber,
+                                    customerName: fedexLabelResult.recipientName,
+                                    shippingAddress: fedexLabelResult.destinationAddress,
+                                    totalAmount: 120.00,
+                                    currency: 'USD',
+                                    items: []
+                                  } as any, {
+                                    carrier: 'FedEx',
+                                    trackingNumber: fedexLabelResult.trackingNumber,
+                                    serviceType: fedexLabelResult.serviceType,
+                                    weightKg: fedexLabelResult.weightKg,
+                                    recipientName: fedexLabelResult.recipientName,
+                                    destinationAddress: fedexLabelResult.destinationAddress,
+                                    generatedAt: fedexLabelResult.generatedAt
+                                  });
+                                }}
+                                className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-500 font-semibold"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> View & Print Professional Shipping Label (PDF)
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 border border-slate-800 space-y-4">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <FileCode className="w-4 h-4 text-indigo-400" /> FedEx Shipping Hooks
+                      </h4>
+                      <div className="text-xs text-slate-400 space-y-2">
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-indigo-400 font-mono text-[11px]">OrderShipped</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Fires automatically when a FedEx shipping label is generated, sending the tracking link to the customer.</p>
+                        </div>
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-indigo-400 font-mono text-[11px]">RateCalculated</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Triggers dynamic delivery charge allocation during customer checkout sessions.</p>
+                        </div>
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-indigo-400 font-mono text-[11px]">LabelGenerated</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Generates an authorized official FedEx Waybill document stored securely in your Cloud run files.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* DHL Panel */}
+              {selectedCarrierTab === 'dhl' && (() => {
+                const dhlPlg = plugins.find(p => p.slug === 'dhl-express-shipping') || selectedPluginForSubView;
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                          <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                            <span className="text-red-600 bg-yellow-400 px-1.5 py-0.5 rounded font-black">DHL</span> Express Logistics Engine
+                          </h3>
+                          <p className="text-xs text-slate-500 font-normal">Configure DHL credentials, retrieve global cargo rates and generate international waybills</p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-100">
+                          Account: {dhlPlg.config?.accountNumber || 'DHL-99281-EHSAN'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Account Number</label>
+                          <input
+                            type="text"
+                            value={dhlPlg.config?.accountNumber || ''}
+                            onChange={(e) => onUpdateConfig(dhlPlg.id, { ...dhlPlg.config, accountNumber: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-amber-500"
+                            placeholder="e.g. DHL-99281-EHSAN"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">DHL API Key</label>
+                          <input
+                            type="text"
+                            value={dhlPlg.config?.apiKey || ''}
+                            onChange={(e) => onUpdateConfig(dhlPlg.id, { ...dhlPlg.config, apiKey: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-amber-500"
+                            placeholder="e.g. dhl_live_api_key_..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">DHL API Secret</label>
+                          <input
+                            type="password"
+                            value={dhlPlg.config?.apiSecret || ''}
+                            onChange={(e) => onUpdateConfig(dhlPlg.id, { ...dhlPlg.config, apiSecret: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-amber-500"
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Pickup Postal Code</label>
+                          <input
+                            type="text"
+                            value={dhlPlg.config?.pickupPostalCode || ''}
+                            onChange={(e) => onUpdateConfig(dhlPlg.id, { ...dhlPlg.config, pickupPostalCode: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-amber-500"
+                            placeholder="e.g. 90210"
+                          />
+                        </div>
+                      </div>
+
+                      {/* DHL Rate Calculator Simulator */}
+                      <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/70 space-y-3">
+                        <h4 className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-amber-600" /> Live Rate Calculator Test
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Zip Code</label>
+                            <input
+                              type="text"
+                              value={dhlDestination}
+                              onChange={(e) => setDhlDestination(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-amber-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Parcel Weight (kg)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={dhlWeight}
+                              onChange={(e) => setDhlWeight(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-amber-500"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleCalculateDhl}
+                          disabled={isDhlLoading}
+                          className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs rounded-lg transition"
+                        >
+                          {isDhlLoading ? 'Calculating Rates...' : 'Calculate DHL Rates'}
+                        </button>
+
+                        {dhlRates && (
+                          <div className="bg-white p-3 rounded-lg border border-amber-200 space-y-2 animate-in fade-in duration-150">
+                            <div className="text-xs font-bold text-slate-900">Calculated Rates for {dhlRates.destination}:</div>
+                            {dhlRates.rates.map((r: any, idx: number) => (
+                              <div key={idx} className="flex justify-between items-center text-xs text-slate-700 border-b border-slate-100 last:border-0 pb-1">
+                                <span>{r.service} ({r.estimatedDays})</span>
+                                <span className="font-bold text-amber-700">${r.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* DHL Label Generator Simulator */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          <FileCode className="w-4 h-4 text-amber-600" /> Real-time DHL Waybill / Label Generator
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Order ID</label>
+                            <input
+                              type="text"
+                              value={dhlLabelOrderId}
+                              onChange={(e) => setDhlLabelOrderId(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-amber-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Service Type</label>
+                            <select
+                              value={dhlLabelService}
+                              onChange={(e) => setDhlLabelService(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-amber-500"
+                            >
+                              <option value="DHL Express Worldwide">DHL Express Worldwide</option>
+                              <option value="DHL Express Easy">DHL Express Easy</option>
+                              <option value="DHL Domestic Express">DHL Domestic Express</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Recipient Name</label>
+                            <input
+                              type="text"
+                              value={dhlLabelRecipient}
+                              onChange={(e) => setDhlLabelRecipient(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-amber-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Address</label>
+                            <input
+                              type="text"
+                              value={dhlLabelAddress}
+                              onChange={(e) => setDhlLabelAddress(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-amber-500"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleGenerateDhlLabel}
+                          disabled={isDhlLabelLoading}
+                          className="px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition"
+                        >
+                          {isDhlLabelLoading ? 'Generating Waybill...' : 'Generate DHL Waybill'}
+                        </button>
+
+                        {dhlLabelResult && (
+                          <div className="bg-white p-4 rounded-lg border border-slate-200 space-y-3 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <span className="text-xs font-bold text-slate-900">DHL International Waybill Created</span>
+                              <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold">Ready for Pickup</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-slate-400">Waybill Tracking ID:</span>
+                                <p className="font-mono font-bold text-slate-800">{dhlLabelResult.trackingNumber}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-400">Carrier / Service:</span>
+                                <p className="font-bold text-slate-800">{dhlLabelResult.carrier} {dhlLabelResult.serviceType}</p>
+                              </div>
+                            </div>
+                            <div className="pt-2">
+                              <button
+                                onClick={() => {
+                                  openFedexLabelPrintWindow({
+                                    id: dhlLabelResult.trackingNumber,
+                                    customerName: dhlLabelResult.recipientName,
+                                    shippingAddress: dhlLabelResult.destinationAddress,
+                                    totalAmount: 180.00,
+                                    currency: 'USD',
+                                    items: []
+                                  } as any, {
+                                    carrier: 'DHL',
+                                    trackingNumber: dhlLabelResult.trackingNumber,
+                                    serviceType: dhlLabelResult.serviceType,
+                                    weightKg: dhlLabelResult.weightKg,
+                                    recipientName: dhlLabelResult.recipientName,
+                                    destinationAddress: dhlLabelResult.destinationAddress,
+                                    generatedAt: dhlLabelResult.generatedAt
+                                  });
+                                }}
+                                className="inline-flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-500 font-semibold"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> View & Print Professional DHL Waybill (PDF)
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 border border-slate-800 space-y-4">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <FileCode className="w-4 h-4 text-amber-400" /> DHL Shipping Hooks
+                      </h4>
+                      <div className="text-xs text-slate-400 space-y-2">
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-amber-400 font-mono text-[11px]">OrderShipped</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Fires automatically when a DHL Waybill is generated, updating the order and sending DHL tracking link to customers.</p>
+                        </div>
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-amber-400 font-mono text-[11px]">RateCalculated</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Triggers dynamic delivery calculation on international checkouts.</p>
+                        </div>
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-amber-400 font-mono text-[11px]">LabelGenerated</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Saves a commercial customs invoice waybill and stores locally on host.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* UPS Panel */}
+              {selectedCarrierTab === 'ups' && (() => {
+                const upsPlg = plugins.find(p => p.slug === 'ups-shipping') || selectedPluginForSubView;
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                          <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                            <span className="text-[#FFC72C] bg-[#351C15] px-1.5 py-0.5 rounded font-black border border-[#FFC72C]">UPS</span> Logistics Engine
+                          </h3>
+                          <p className="text-xs text-slate-500 font-normal font-sans">Configure UPS credentials, calculate UPS Ground &amp; Air rates and generate tracking labels</p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-200">
+                          Account: {upsPlg.config?.accountNumber || 'UPS-77291-EHSAN'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Account ID / Shipper Number</label>
+                          <input
+                            type="text"
+                            value={upsPlg.config?.accountNumber || ''}
+                            onChange={(e) => onUpdateConfig(upsPlg.id, { ...upsPlg.config, accountNumber: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-[#351C15]"
+                            placeholder="e.g. UPS-77291-EHSAN"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">UPS Client API ID / Key</label>
+                          <input
+                            type="text"
+                            value={upsPlg.config?.apiKey || ''}
+                            onChange={(e) => onUpdateConfig(upsPlg.id, { ...upsPlg.config, apiKey: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-[#351C15]"
+                            placeholder="e.g. ups_live_api_key_..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">UPS Client Secret</label>
+                          <input
+                            type="password"
+                            value={upsPlg.config?.apiSecret || ''}
+                            onChange={(e) => onUpdateConfig(upsPlg.id, { ...upsPlg.config, apiSecret: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-[#351C15]"
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Access License Number</label>
+                          <input
+                            type="text"
+                            value={upsPlg.config?.accessLicenseNumber || ''}
+                            onChange={(e) => onUpdateConfig(upsPlg.id, { ...upsPlg.config, accessLicenseNumber: e.target.value })}
+                            className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-[#351C15]"
+                            placeholder="e.g. ups_license_..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* UPS Rate Calculator Simulator */}
+                      <div className="bg-stone-50 p-4 rounded-xl border border-stone-200/70 space-y-3">
+                        <h4 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-yellow-600" /> Live Rate Calculator Test
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Zip Code</label>
+                            <input
+                              type="text"
+                              value={upsDestination}
+                              onChange={(e) => setUpsDestination(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-yellow-600"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Parcel Weight (kg)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={upsWeight}
+                              onChange={(e) => setUpsWeight(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-yellow-600"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleCalculateUps}
+                          disabled={isUpsLoading}
+                          className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-[#FFC72C] font-semibold text-xs rounded-lg transition"
+                        >
+                          {isUpsLoading ? 'Calculating Rates...' : 'Calculate UPS Rates'}
+                        </button>
+
+                        {upsRates && (
+                          <div className="bg-white p-3 rounded-lg border border-stone-200 space-y-2 animate-in fade-in duration-150">
+                            <div className="text-xs font-bold text-slate-900">Calculated Rates for {upsRates.destination}:</div>
+                            {upsRates.rates.map((r: any, idx: number) => (
+                              <div key={idx} className="flex justify-between items-center text-xs text-slate-700 border-b border-slate-100 last:border-0 pb-1">
+                                <span>{r.service} ({r.estimatedDays})</span>
+                                <span className="font-bold text-[#351C15]">${r.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* UPS Label Generator Simulator */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          <FileCode className="w-4 h-4 text-stone-800" /> Real-time UPS Shipping Label Generator
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Order ID</label>
+                            <input
+                              type="text"
+                              value={upsLabelOrderId}
+                              onChange={(e) => setUpsLabelOrderId(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Service Type</label>
+                            <select
+                              value={upsLabelService}
+                              onChange={(e) => setUpsLabelService(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg"
+                            >
+                              <option value="UPS Ground">UPS Ground</option>
+                              <option value="UPS 3-Day Select">UPS 3-Day Select</option>
+                              <option value="UPS Next Day Air">UPS Next Day Air</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Recipient Name</label>
+                            <input
+                              type="text"
+                              value={upsLabelRecipient}
+                              onChange={(e) => setUpsLabelRecipient(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Destination Address</label>
+                            <input
+                              type="text"
+                              value={upsLabelAddress}
+                              onChange={(e) => setUpsLabelAddress(e.target.value)}
+                              className="w-full text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleGenerateUpsLabel}
+                          disabled={isUpsLabelLoading}
+                          className="px-4 py-2 bg-[#351C15] hover:bg-stone-800 text-[#FFC72C] font-semibold text-xs rounded-lg transition animate-pulse"
+                        >
+                          {isUpsLabelLoading ? 'Generating Label...' : 'Generate UPS Label'}
+                        </button>
+
+                        {upsLabelResult && (
+                          <div className="bg-white p-4 rounded-lg border border-slate-200 space-y-3 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                              <span className="text-xs font-bold text-slate-900">UPS Label Created Successfully</span>
+                              <span className="px-2 py-0.5 rounded bg-amber-100 text-[#351C15] border border-amber-200 text-[10px] font-bold">In Transit</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-slate-400">Tracking Reference:</span>
+                                <p className="font-mono font-bold text-slate-800">{upsLabelResult.trackingNumber}</p>
+                              </div>
+                              <div>
+                                <span className="text-slate-400">Carrier / Service:</span>
+                                <p className="font-bold text-slate-800">{upsLabelResult.carrier} {upsLabelResult.serviceType}</p>
+                              </div>
+                            </div>
+                            <div className="pt-2">
+                              <button
+                                onClick={() => {
+                                  openFedexLabelPrintWindow({
+                                    id: upsLabelResult.trackingNumber,
+                                    customerName: upsLabelResult.recipientName,
+                                    shippingAddress: upsLabelResult.destinationAddress,
+                                    totalAmount: 95.00,
+                                    currency: 'USD',
+                                    items: []
+                                  } as any, {
+                                    carrier: 'UPS',
+                                    trackingNumber: upsLabelResult.trackingNumber,
+                                    serviceType: upsLabelResult.serviceType,
+                                    weightKg: upsLabelResult.weightKg,
+                                    recipientName: upsLabelResult.recipientName,
+                                    destinationAddress: upsLabelResult.destinationAddress,
+                                    generatedAt: upsLabelResult.generatedAt
+                                  });
+                                }}
+                                className="inline-flex items-center gap-1.5 text-xs text-amber-800 hover:text-amber-900 font-semibold"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> View & Print Professional UPS Label (PDF)
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 border border-slate-800 space-y-4">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <FileCode className="w-4 h-4 text-yellow-500" /> UPS Shipping Hooks
+                      </h4>
+                      <div className="text-xs text-slate-400 space-y-2">
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-yellow-400 font-mono text-[11px]">OrderShipped</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Fires automatically when a UPS shipping label is generated, broadcasting live tracking signals to buyers.</p>
+                        </div>
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-yellow-400 font-mono text-[11px]">RateCalculated</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Queries the UPS Rates Engine to allocate dynamic shipping charges at checkout.</p>
+                        </div>
+                        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700">
+                          <span className="text-yellow-400 font-mono text-[11px]">LabelGenerated</span>
+                          <p className="text-[11px] text-slate-400 mt-1">Compiles and stores high-resolution official UPS shipping labels locally.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -2308,6 +3280,552 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
                     </div>
                     <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
                       {JSON.stringify(mcResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Telegram Bot Manager Panel */}
+          {selectedPluginForSubView.slug === 'telegram-bot-manager' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Send className="w-5 h-5 text-indigo-600" /> Telegram Bot &amp; Broadcast Hub
+                  </h3>
+                  <p className="text-xs text-slate-500">Manage Telegram bot token, broadcast channels, order alerts, and automated customer updates.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                  Telegram Bot
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Telegram Bot API Token</label>
+                  <input
+                    type="password"
+                    value={selectedPluginForSubView.config.botToken || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, botToken: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Channel Username / ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.channelUsername || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, channelUsername: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Notify Admin on New Order</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.notifyOnNewOrder ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, notifyOnNewOrder: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Notify on Low Stock Alerts</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.notifyOnLowStock ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, notifyOnLowStock: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Telegram Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Telegram Test Broadcast Sandbox</h4>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Broadcast Message</label>
+                  <textarea
+                    rows={2}
+                    value={tgTestMessage}
+                    onChange={(e) => setTgTestMessage(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsTgLoading(true);
+                        const res = await fetch('/api/plugins/telegram/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            botToken: selectedPluginForSubView.config.botToken,
+                            channelUsername: selectedPluginForSubView.config.channelUsername,
+                            testMessage: tgTestMessage
+                          })
+                        });
+                        const data = await res.json();
+                        setTgResult(data);
+                      } catch (err) {
+                        setTgResult({ error: 'Telegram connection failed' });
+                      } finally {
+                        setIsTgLoading(false);
+                      }
+                    }}
+                    disabled={isTgLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isTgLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    Send Test Telegram Broadcast
+                  </button>
+                  {tgResult && (
+                    <button onClick={() => setTgResult(null)} className="text-xs text-slate-500 hover:text-slate-800">
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {tgResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>TELEGRAM BOT API RESPONSE</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(tgResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Instagram Graph API Panel */}
+          {selectedPluginForSubView.slug === 'instagram-graph-api' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-pink-600" /> Instagram Business &amp; Shopping Graph API
+                  </h3>
+                  <p className="text-xs text-slate-500">Connects product catalog to Instagram Shopping tags, auto-posts product cards to IG Feed.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-pink-50 text-pink-700 border border-pink-200">
+                  Instagram Shopping
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Instagram Business Account ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.igAccountId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, igAccountId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Graph API Access Token</label>
+                  <input
+                    type="password"
+                    value={selectedPluginForSubView.config.accessToken || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, accessToken: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Instagram Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Instagram Post Publisher Sandbox</h4>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Post Caption &amp; Hashtags</label>
+                  <textarea
+                    rows={2}
+                    value={igCaption}
+                    onChange={(e) => setIgCaption(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsIgLoading(true);
+                        const res = await fetch('/api/plugins/instagram/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            igAccountId: selectedPluginForSubView.config.igAccountId,
+                            caption: igCaption
+                          })
+                        });
+                        const data = await res.json();
+                        setIgResult(data);
+                      } catch (err) {
+                        setIgResult({ error: 'Instagram connection failed' });
+                      } finally {
+                        setIsIgLoading(false);
+                      }
+                    }}
+                    disabled={isIgLoading}
+                    className="px-4 py-2 bg-pink-600 hover:bg-pink-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isIgLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+                    Publish Test Post to Instagram
+                  </button>
+                  {igResult && (
+                    <button onClick={() => setIgResult(null)} className="text-xs text-slate-500 hover:text-slate-800">
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {igResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>INSTAGRAM GRAPH API RESPONSE</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(igResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Facebook Pages Panel */}
+          {selectedPluginForSubView.slug === 'facebook-pages-marketing' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-blue-600" /> Facebook Pages &amp; Messenger Shop Sync
+                  </h3>
+                  <p className="text-xs text-slate-500">Syndicates products to Facebook Shop catalog, manages Messenger assistant, and tracks conversions via Pixel.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  Facebook Shop
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Facebook Page ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.pageId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, pageId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Meta Pixel ID</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.pixelId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, pixelId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Facebook Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Facebook Page Post Sandbox</h4>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Page Post Message</label>
+                  <textarea
+                    rows={2}
+                    value={fbMessage}
+                    onChange={(e) => setFbMessage(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsFbLoading(true);
+                        const res = await fetch('/api/plugins/facebook/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            pageId: selectedPluginForSubView.config.pageId,
+                            message: fbMessage
+                          })
+                        });
+                        const data = await res.json();
+                        setFbResult(data);
+                      } catch (err) {
+                        setFbResult({ error: 'Facebook connection failed' });
+                      } finally {
+                        setIsFbLoading(false);
+                      }
+                    }}
+                    disabled={isFbLoading}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isFbLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+                    Publish Test Post to Facebook Page
+                  </button>
+                  {fbResult && (
+                    <button onClick={() => setFbResult(null)} className="text-xs text-slate-500 hover:text-slate-800">
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {fbResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>FACEBOOK GRAPH API RESPONSE</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(fbResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* LinkedIn Publisher Panel */}
+          {selectedPluginForSubView.slug === 'linkedin-company-publisher' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-cyan-700" /> LinkedIn Company Page Publisher &amp; B2B Feed
+                  </h3>
+                  <p className="text-xs text-slate-500">Publishes B2B product highlights and enterprise announcements to LinkedIn Company Pages.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
+                  LinkedIn B2B
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">LinkedIn Organization URN</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.organizationId || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, organizationId: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Default Hashtags</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.defaultHashtags || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, defaultHashtags: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* LinkedIn Test Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">LinkedIn Share Sandbox</h4>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Company Update Text</label>
+                  <textarea
+                    rows={2}
+                    value={liText}
+                    onChange={(e) => setLiText(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsLiLoading(true);
+                        const res = await fetch('/api/plugins/linkedin/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            organizationId: selectedPluginForSubView.config.organizationId,
+                            text: liText
+                          })
+                        });
+                        const data = await res.json();
+                        setLiResult(data);
+                      } catch (err) {
+                        setLiResult({ error: 'LinkedIn connection failed' });
+                      } finally {
+                        setIsLiLoading(false);
+                      }
+                    }}
+                    disabled={isLiLoading}
+                    className="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isLiLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+                    Publish Test B2B Update to LinkedIn
+                  </button>
+                  {liResult && (
+                    <button onClick={() => setLiResult(null)} className="text-xs text-slate-500 hover:text-slate-800">
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {liResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>LINKEDIN SHARE API RESPONSE</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(liResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Telegram Mini Shop Panel */}
+          {selectedPluginForSubView.slug === 'telegram-mini-shop' && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-indigo-600" /> Telegram Mini App Shop (WebApp Store)
+                  </h3>
+                  <p className="text-xs text-slate-500">Deploys a native Telegram WebApp mini-store inside Telegram. Allows instant ordering without leaving Telegram.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Telegram Mini Shop
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Telegram Bot Username</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.botUsername || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, botUsername: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">WebApp Store URL</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.webAppUrl || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, webAppUrl: e.target.value })}
+                    className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Mini App Button Label</label>
+                  <input
+                    type="text"
+                    value={selectedPluginForSubView.config.buttonText || ''}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, buttonText: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs pt-5">
+                  <span className="font-semibold text-slate-800">Enable Telegram Payments</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedPluginForSubView.config.enableTelegramPayments ?? true}
+                    onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, enableTelegramPayments: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Telegram Mini Shop Sync Console */}
+              <div className="border-t border-slate-100 pt-6 space-y-4">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">Shareable Telegram Mini App Web-Link</h4>
+                <p className="text-xs text-slate-500">
+                  Generate and share this optimized web link directly with Telegram buyers or embed it as a Telegram Bot Menu Button (`/shop`).
+                </p>
+
+                <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`https://t.me/${selectedPluginForSubView.config.botUsername || 'EhsanStoreBot'}/shop?startapp=catalog`}
+                    className="w-full text-xs font-mono bg-white px-3 py-2 border border-slate-200 rounded-lg text-slate-800 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const link = `https://t.me/${selectedPluginForSubView.config.botUsername || 'EhsanStoreBot'}/shop?startapp=catalog`;
+                      navigator.clipboard.writeText(link);
+                      alert('Telegram Mini Shop link copied to clipboard!');
+                    }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition whitespace-nowrap shadow-xs"
+                  >
+                    Copy Link 📋
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsMsLoading(true);
+                        const res = await fetch('/api/plugins/telegram-minishop/sync', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            botUsername: selectedPluginForSubView.config.botUsername,
+                            webAppUrl: selectedPluginForSubView.config.webAppUrl
+                          })
+                        });
+                        const data = await res.json();
+                        setMsSyncResult(data);
+                      } catch (err) {
+                        setMsSyncResult({ error: 'Mini App sync failed' });
+                      } finally {
+                        setIsMsLoading(false);
+                      }
+                    }}
+                    disabled={isMsLoading}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg transition flex items-center gap-2"
+                  >
+                    {isMsLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    Sync Store Catalog to Telegram Mini App
+                  </button>
+                  {msSyncResult && (
+                    <button onClick={() => setMsSyncResult(null)} className="text-xs text-slate-500 hover:text-slate-800">
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
+
+                {msSyncResult && (
+                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1.5">
+                      <span>TELEGRAM MINI APP WEBHOOK &amp; CATALOG SYNC</span>
+                      <span className="text-emerald-400">STATUS: HTTP 200 OK</span>
+                    </div>
+                    <pre className="text-[11px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                      {JSON.stringify(msSyncResult, null, 2)}
                     </pre>
                   </div>
                 )}

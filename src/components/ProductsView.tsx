@@ -18,11 +18,18 @@ import {
   AlertTriangle,
   Settings,
   ShieldAlert,
-  Globe
+  Globe,
+  Eye,
+  Rss,
+  RefreshCw,
+  Sparkles,
+  Scale
 } from 'lucide-react';
 import { Product, ProductStatus } from '../types';
 import { ExportCsvModal } from './ExportCsvModal';
 import { ProductSeoModal } from './ProductSeoModal';
+import { ProductDetailModal } from './ProductDetailModal';
+import { ProductCompareModal } from './ProductCompareModal';
 
 interface ProductsViewProps {
   products: Product[];
@@ -31,6 +38,7 @@ interface ProductsViewProps {
   onDeleteProduct: (id: string) => void;
   onBulkDeleteProducts?: (ids: string[]) => void;
   onBulkUpdateProducts?: (ids: string[], updates: Partial<Product>) => void;
+  onSeedProducts?: () => void;
   searchQuery: string;
 }
 
@@ -41,6 +49,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   onDeleteProduct,
   onBulkDeleteProducts,
   onBulkUpdateProducts,
+  onSeedProducts,
   searchQuery,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -49,6 +58,10 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
   const [bulkStatus, setBulkStatus] = useState<ProductStatus | ''>('');
   const [isExportCsvOpen, setIsExportCsvOpen] = useState(false);
   const [seoProduct, setSeoProduct] = useState<Product | null>(null);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [compareProductAId, setCompareProductAId] = useState('');
+  const [compareProductBId, setCompareProductBId] = useState('');
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -182,10 +195,47 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-xs text-slate-500 font-medium">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="text-xs text-slate-500 font-medium mr-2">
             Showing <span className="font-bold text-slate-900">{filteredProducts.length}</span> of {products.length} Products
           </div>
+
+          <a
+            href="/api/products/feed?format=json"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition shadow-2xs cursor-pointer"
+            title="Open Google Shopping / Shopping Engine Product Feed API"
+          >
+            <Rss className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Product Feed</span>
+          </a>
+
+          {onSeedProducts && (
+            <button
+              onClick={onSeedProducts}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition shadow-2xs cursor-pointer"
+              title="Reset or seed initial sample catalog"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Seed Catalog</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              setCompareProductAId('');
+              setCompareProductBId('');
+              setIsCompareOpen(true);
+            }}
+            disabled={products.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
+            title="Compare specifications and metrics of two products"
+            id="btn-open-comparison-general"
+          >
+            <Scale className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Compare Products</span>
+          </button>
 
           <button
             onClick={() => setIsExportCsvOpen(true)}
@@ -204,12 +254,30 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
         <div className="sticky top-4 z-20 bg-slate-900 text-white p-3.5 rounded-2xl shadow-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-3">
             <span className="px-3 py-1 bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 rounded-xl text-xs font-bold font-mono">
-              {selectedIds.length} Products Selected
+              {selectedIds.length} {selectedIds.length === 1 ? 'Product' : 'Products'} Selected
             </span>
-            <span className="text-xs text-slate-400 hidden sm:inline">Perform batch updates or removal</span>
+            <span className="text-xs text-slate-400 hidden sm:inline">
+              {selectedIds.length === 2 ? 'Compare them side-by-side or perform batch updates' : 'Perform batch updates or removal'}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
+            {selectedIds.length === 2 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCompareProductAId(selectedIds[0]);
+                  setCompareProductBId(selectedIds[1]);
+                  setIsCompareOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer mr-1"
+                id="btn-compare-bulk-selected"
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>Compare Side-by-Side</span>
+              </button>
+            )}
+
             <select
               value={bulkStatus}
               onChange={(e) => {
@@ -295,8 +363,11 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="relative group shrink-0">
-                            <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg bg-slate-100 object-cover border border-slate-200" />
+                          <div 
+                            onClick={() => setDetailProduct(p)} 
+                            className="relative group shrink-0 cursor-pointer"
+                          >
+                            <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg bg-slate-100 object-cover border border-slate-200 group-hover:opacity-90 transition" />
                             {p.gallery && p.gallery.length > 0 && (
                               <span className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md scale-90 border border-white" title={`${p.gallery.length} gallery images`}>
                                 +{p.gallery.length}
@@ -304,7 +375,20 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 line-clamp-1">{p.title}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p 
+                                onClick={() => setDetailProduct(p)}
+                                className="font-bold text-slate-900 line-clamp-1 hover:text-indigo-600 transition cursor-pointer"
+                              >
+                                {p.title}
+                              </p>
+                              {p.variations && p.variations.length > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80 px-1.5 py-0.5 rounded-md shrink-0">
+                                  <Layers className="w-2.5 h-2.5" />
+                                  {p.variations.length} Variants
+                                </span>
+                              )}
+                            </div>
                             <div className="flex flex-wrap gap-1 mt-1 max-w-[240px]">
                               {p.tags && p.tags.map((tag, idx) => (
                                 <span key={idx} className="text-[9px] text-indigo-600 font-extrabold bg-indigo-50 px-1.5 py-0.5 rounded">
@@ -340,6 +424,13 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                       <td className="py-3 px-4 font-semibold text-slate-700">{p.salesCount} sold</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setDetailProduct(p)}
+                            title="Product 360 Full Detail View"
+                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded transition cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => setSeoProduct(p)}
                             title="SEO Preview & Meta Title Optimizer"
@@ -555,6 +646,26 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
         onSaveSeo={async (id, updates) => {
           onUpdateProduct(id, updates);
         }}
+      />
+
+      {/* Product 360 Detail View Modal */}
+      <ProductDetailModal
+        isOpen={!!detailProduct}
+        onClose={() => setDetailProduct(null)}
+        product={detailProduct}
+        onEdit={(p) => setEditingProduct(p)}
+        onOpenSeo={(p) => setSeoProduct(p)}
+      />
+
+      {/* Side-by-Side Product Comparison Modal */}
+      <ProductCompareModal
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+        products={products}
+        initialProductAId={compareProductAId}
+        initialProductBId={compareProductBId}
+        onUpdateProduct={onUpdateProduct}
+        onBulkUpdateProducts={onBulkUpdateProducts}
       />
     </div>
   );

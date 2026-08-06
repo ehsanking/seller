@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Product, StoreTemplate, StoreSettings, Coupon } from '../types';
+import { CustomerMyAccount } from './CustomerMyAccount';
 import { 
   ShoppingBag, Search, X, Star, ShieldCheck, Truck, RefreshCw, 
   ChevronRight, Heart, User, Check, Plus, Minus, Tag, ArrowRight,
   Flame, Sparkles, SlidersHorizontal, Eye, Lock, CreditCard, CheckCircle2,
-  Menu, Home, Layers, Settings2, MoveUp, MoveDown, MapPin, Phone
+  Menu, Home, Layers, Settings2, MoveUp, MoveDown, MapPin, Phone, Send
 } from 'lucide-react';
 
 interface StorefrontSandboxPreviewProps {
@@ -20,7 +21,7 @@ interface StoreSection {
   id: string;
   name: string;
   enabled: boolean;
-  type: 'announcement' | 'header' | 'hero' | 'categories' | 'products' | 'promo' | 'testimonials' | 'faq' | 'branches' | 'footer' | 'blog' | 'custom_page';
+  type: 'announcement' | 'header' | 'hero' | 'categories' | 'products' | 'promo' | 'testimonials' | 'faq' | 'branches' | 'blog' | 'custom_page' | 'my_account' | 'footer';
   props?: Record<string, any>;
 }
 
@@ -32,6 +33,7 @@ export function StorefrontSandboxPreview({
   settings,
   coupons = []
 }: StorefrontSandboxPreviewProps) {
+  const [currentView, setCurrentView] = useState<'storefront' | 'my_account'>('storefront');
   const [cart, setCart] = useState<{ product: Product; quantity: number; selectedColor?: string; selectedSize?: string }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -64,12 +66,13 @@ export function StorefrontSandboxPreview({
     { id: '4', name: 'Featured Categories', type: 'categories', enabled: true },
     { id: '5', name: 'Product Grid', type: 'products', enabled: true },
     { id: '6', name: 'Promotional Banner', type: 'promo', enabled: true },
-    { id: '7', name: 'Testimonials', type: 'testimonials', enabled: true },
-    { id: '8', name: 'FAQ', type: 'faq', enabled: true },
-    { id: '9', name: 'Store Locations', type: 'branches', enabled: true },
-    { id: '10', name: 'Blog Posts', type: 'blog', enabled: true },
-    { id: '11', name: 'Custom Page', type: 'custom_page', enabled: true },
-    { id: '12', name: 'Footer', type: 'footer', enabled: true },
+    { id: '7', name: 'Customer My Account Portal', type: 'my_account', enabled: true },
+    { id: '8', name: 'Testimonials', type: 'testimonials', enabled: true },
+    { id: '9', name: 'FAQ', type: 'faq', enabled: true },
+    { id: '10', name: 'Store Locations', type: 'branches', enabled: true },
+    { id: '11', name: 'Blog Posts', type: 'blog', enabled: true },
+    { id: '12', name: 'Custom Page', type: 'custom_page', enabled: true },
+    { id: '13', name: 'Footer', type: 'footer', enabled: true },
   ]);
 
   const moveSection = (index: number, direction: 'up' | 'down') => {
@@ -98,23 +101,30 @@ export function StorefrontSandboxPreview({
         );
       case 'header':
         return (
-          <header key={section.id} className="sticky top-0 z-40 bg-white border-b px-4 lg:px-8 py-4 flex items-center justify-between">
+          <header key={section.id} className="sticky top-0 z-40 bg-white border-b px-4 lg:px-8 py-4 flex items-center justify-between shadow-2xs">
             <div className="flex items-center gap-6">
-              <div className="font-black text-xl text-slate-900 tracking-tight">{template.name}</div>
+              <button onClick={() => setCurrentView('storefront')} className="font-black text-xl text-slate-900 tracking-tight text-left cursor-pointer">{template.name}</button>
               <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600">
-                <button onClick={() => setSelectedCategory('all')} className="hover:text-indigo-600 transition">Shop All</button>
-                <button onClick={() => setSelectedCategory('Electronics')} className="hover:text-indigo-600 transition">Electronics</button>
-                <button onClick={() => setSelectedCategory('Fashion')} className="hover:text-indigo-600 transition">Fashion</button>
+                <button onClick={() => { setCurrentView('storefront'); setSelectedCategory('all'); }} className={`transition cursor-pointer ${currentView === 'storefront' && selectedCategory === 'all' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}>Shop All</button>
+                <button onClick={() => { setCurrentView('storefront'); setSelectedCategory('Electronics'); }} className={`transition cursor-pointer ${currentView === 'storefront' && selectedCategory === 'Electronics' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}>Electronics</button>
+                <button onClick={() => { setCurrentView('storefront'); setSelectedCategory('Fashion'); }} className={`transition cursor-pointer ${currentView === 'storefront' && selectedCategory === 'Fashion' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}>Fashion</button>
+                <button onClick={() => setCurrentView('my_account')} className={`transition cursor-pointer flex items-center gap-1 ${currentView === 'my_account' ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600'}`}>
+                  <User className="w-4 h-4" /> My Account
+                </button>
               </nav>
             </div>
-            <div className="flex items-center gap-4">
-              <button className="text-slate-600 hover:text-indigo-600">
+            <div className="flex items-center gap-3">
+              <button className="text-slate-600 hover:text-indigo-600 p-2 rounded-lg hover:bg-slate-100 transition cursor-pointer">
                 <Search className="w-5 h-5" />
               </button>
-              <button onClick={() => setIsCartOpen(true)} className="text-slate-600 hover:text-indigo-600 relative">
+              <button onClick={() => setCurrentView(currentView === 'my_account' ? 'storefront' : 'my_account')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition border border-indigo-200/80 cursor-pointer">
+                <User className="w-4 h-4" />
+                <span>{currentView === 'my_account' ? 'Back to Store' : 'My Account'}</span>
+              </button>
+              <button onClick={() => setIsCartOpen(true)} className="text-slate-600 hover:text-indigo-600 relative p-2 rounded-lg hover:bg-slate-100 transition cursor-pointer">
                 <ShoppingBag className="w-5 h-5" />
                 {cart.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-indigo-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-2xs">
                     {cart.reduce((a, b) => a + b.quantity, 0)}
                   </span>
                 )}
@@ -184,6 +194,28 @@ export function StorefrontSandboxPreview({
               <p className="text-lg text-indigo-100 mb-8 max-w-xl mx-auto">Get up to 50% off on selected items. Limited time offer.</p>
               <button className="bg-white text-indigo-600 px-8 py-4 rounded-full font-bold hover:shadow-lg transition">
                 Claim Discount
+              </button>
+            </div>
+          </div>
+        );
+      case 'my_account':
+        return (
+          <div key={section.id} className="max-w-7xl mx-auto px-4 py-12">
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
+              <div className="space-y-2 text-center md:text-left">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 inline-flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-indigo-400" /> Customer Account Portal Block
+                </span>
+                <h2 className="text-2xl md:text-3xl font-black">My Account Dashboard for Customers</h2>
+                <p className="text-xs text-slate-300 max-w-xl">
+                  Order history tracking, factor invoice generator, saved delivery addresses, wishlist items, and customer profile management.
+                </p>
+              </div>
+              <button
+                onClick={() => setCurrentView('my_account')}
+                className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <User className="w-4 h-4" /> Launch Customer Portal
               </button>
             </div>
           </div>
@@ -404,8 +436,17 @@ export function StorefrontSandboxPreview({
             </div>
           )}
 
-          {/* Render Active Sections */}
-          {sections.map((section, index) => renderSection(section, index))}
+          {/* Render Active Sections or Customer My Account View */}
+          {currentView === 'my_account' ? (
+            <CustomerMyAccount
+              products={products}
+              settings={settings}
+              onBackToStore={() => setCurrentView('storefront')}
+              onAddToCart={handleAddToCart}
+            />
+          ) : (
+            sections.map((section, index) => renderSection(section, index))
+          )}
         </div>
 
         {/* Slide-over Cart */}

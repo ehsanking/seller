@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StoreSettings } from '../types';
+import { StoreSettings, FactorSettings, Product, Customer } from '../types';
+import { FactorCustomizerModal, DEFAULT_FACTOR_SETTINGS } from './FactorCustomizerModal';
 import { 
   Settings, 
   Globe, 
@@ -14,17 +15,37 @@ import {
   Tag, 
   ExternalLink,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Sun,
+  Moon,
+  Receipt,
+  FileText,
+  Database,
+  Download
 } from 'lucide-react';
 
 interface SettingsViewProps {
   settings: StoreSettings;
   onSaveSettings: (updated: StoreSettings) => void;
+  currentTheme?: 'light' | 'dark';
+  onThemeChange?: (theme: 'light' | 'dark') => void;
+  products?: Product[];
+  customers?: Customer[];
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSettings }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ 
+  settings, 
+  onSaveSettings,
+  currentTheme = 'light',
+  onThemeChange,
+  products = [],
+  customers = []
+}) => {
+  const [isFactorCustomizerOpen, setIsFactorCustomizerOpen] = useState(false);
   const [formData, setFormData] = useState<StoreSettings>({
     ...settings,
+    factorSettings: settings.factorSettings || DEFAULT_FACTOR_SETTINGS,
+    theme: settings.theme || currentTheme,
     metaTitle: settings.metaTitle || `${settings.storeName} — Enterprise Headless E-Commerce Engine`,
     metaDescription: settings.metaDescription || 'Shop top-rated ergonomic keyboards, precision gaming mice, studio audio gear, and sleek desk accessories with instant global shipping.',
     canonicalUrl: settings.canonicalUrl || 'https://ehsan-store.io',
@@ -38,6 +59,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSett
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [generatingAi, setGeneratingAi] = useState(false);
   const [showCodeSnippet, setShowCodeSnippet] = useState(false);
+  const [backupSuccess, setBackupSuccess] = useState(false);
 
   const handleCopyKey = () => {
     navigator.clipboard.writeText(formData.apiKey);
@@ -104,6 +126,43 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSett
     setTimeout(() => setCopiedHtml(false), 2000);
   };
 
+  const handleCreateBackup = () => {
+    try {
+      const backupData = {
+        backupVersion: "1.0.0",
+        timestamp: new Date().toISOString(),
+        storeName: formData.storeName || settings.storeName,
+        data: {
+          settings: formData,
+          inventory: products,
+          customers: customers
+        }
+      };
+
+      const jsonString = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      const formattedDate = new Date().toISOString().split('T')[0];
+      const sanitizedStoreName = (formData.storeName || 'store')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-');
+      
+      link.href = url;
+      link.download = `seller-backup-${sanitizedStoreName}-${formattedDate}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setBackupSuccess(true);
+      setTimeout(() => setBackupSuccess(false), 3000);
+    } catch (err) {
+      console.error('Failed to create local data backup:', err);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSaveSettings(formData);
@@ -127,11 +186,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSett
             <p className="text-xs text-slate-500">Configure global parameters, developer keys, and SEO meta tags for search ranking</p>
           </div>
         </div>
-        {savedSuccess && (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-            <CheckCircle2 className="w-4 h-4" /> Settings Saved!
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {savedSuccess && (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+              <CheckCircle2 className="w-4 h-4" /> Settings Saved!
+            </span>
+          )}
+          {backupSuccess && (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200">
+              <CheckCircle2 className="w-4 h-4" /> Backup Created!
+            </span>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -187,6 +253,98 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSett
                 onChange={(e) => setFormData({ ...formData, taxRate: parseFloat(e.target.value) || 0 })}
                 className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
+            </div>
+          </div>
+
+          {/* Theme Mode Toggle Switcher */}
+          <div className="pt-4 border-t border-slate-100">
+            <label className="block text-xs font-semibold text-slate-700 mb-2">
+              Dashboard Appearance & Global Theme Mode
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const newTheme = 'light';
+                  setFormData({ ...formData, theme: newTheme });
+                  onThemeChange?.(newTheme);
+                }}
+                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                  (formData.theme || currentTheme) === 'light'
+                    ? 'bg-indigo-50/80 border-indigo-500 text-indigo-700 ring-2 ring-indigo-500/20 shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Sun className="w-4 h-4 text-amber-500" />
+                <span>Light Mode</span>
+                {(formData.theme || currentTheme) === 'light' && (
+                  <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const newTheme = 'dark';
+                  setFormData({ ...formData, theme: newTheme });
+                  onThemeChange?.(newTheme);
+                }}
+                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                  (formData.theme || currentTheme) === 'dark'
+                    ? 'bg-slate-900 border-indigo-500 text-white ring-2 ring-indigo-500/20 shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Moon className="w-4 h-4 text-indigo-400" />
+                <span>Dark Mode</span>
+                {(formData.theme || currentTheme) === 'dark' && (
+                  <span className="w-2 h-2 rounded-full bg-indigo-400"></span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* INVOICE & FACTOR CUSTOMIZATION SECTION */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-indigo-600" />
+                <h4 className="font-display font-bold text-sm text-slate-900">
+                  Commercial Invoice & Factor Builder
+                </h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  A4 / A5 / Thermal 80mm
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Configure seller branding, logo, Tax ID, VAT calculation, signature blocks, and live invoice rendering
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsFactorCustomizerOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition cursor-pointer shrink-0"
+            >
+              <Receipt className="w-4 h-4" />
+              <span>Customize Invoice Template</span>
+            </button>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <span className="text-slate-400 block text-[11px]">Seller / Business:</span>
+              <strong className="text-slate-800">{formData.factorSettings?.companyName || formData.storeName}</strong>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[11px]">Paper Format:</span>
+              <strong className="text-slate-800 uppercase font-mono">{formData.factorSettings?.paperFormat || 'A4'}</strong>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[11px]">Economic Code / Tax ID:</span>
+              <strong className="text-slate-800 font-mono">{formData.factorSettings?.economicCode || 'Not Set'}</strong>
             </div>
           </div>
         </div>
@@ -446,6 +604,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSett
           </div>
         </div>
 
+        {/* System Backup & Data Portability */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-1.5">
+              <Database className="w-4 h-4 text-indigo-600" /> System Backup & Data Portability
+            </h4>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
+              Offline JSON Archives
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <div className="space-y-1 max-w-xl">
+              <p className="text-xs font-bold text-slate-900">Create Manual Store Backup</p>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Download a secure timestamped JSON file containing the complete current store configuration, entire product inventory (attributes, pricing, variations), and customer profile data for safe offline archiving and data portability.
+              </p>
+            </div>
+            
+            <button
+              type="button"
+              onClick={handleCreateBackup}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/10 transition cursor-pointer shrink-0"
+              id="btn-create-manual-backup"
+            >
+              <Download className="w-4 h-4" />
+              <span>Create Manual Backup</span>
+            </button>
+          </div>
+        </div>
+
         {/* API & Webhook Integrations */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -505,6 +694,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ settings, onSaveSett
           </button>
         </div>
       </form>
+
+      {/* Invoice / Factor Customizer Modal */}
+      <FactorCustomizerModal
+        isOpen={isFactorCustomizerOpen}
+        onClose={() => setIsFactorCustomizerOpen(false)}
+        initialSettings={formData.factorSettings}
+        onSave={(updatedFactor) => {
+          const updatedStoreSettings = {
+            ...formData,
+            factorSettings: updatedFactor,
+          };
+          setFormData(updatedStoreSettings);
+          onSaveSettings(updatedStoreSettings);
+        }}
+      />
     </div>
   );
 };

@@ -17,7 +17,7 @@ import {
   Sparkles,
   Type 
 } from 'lucide-react';
-import { NavigationTab, AdminProfile, StoreNotification } from '../types';
+import { NavigationTab, AdminProfile, StoreNotification, Product } from '../types';
 
 interface HeaderProps {
   activeTab: NavigationTab;
@@ -32,6 +32,8 @@ interface HeaderProps {
   setSearchQuery: (q: string) => void;
   dashboardFont?: string;
   onChangeFont?: (font: string) => void;
+  products?: Product[];
+  onOpenCommandPalette?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,6 +49,8 @@ export const Header: React.FC<HeaderProps> = ({
   setSearchQuery,
   dashboardFont = 'Inter',
   onChangeFont,
+  products = [],
+  onOpenCommandPalette,
 }) => {
   const [notifications, setNotifications] = useState<StoreNotification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -158,6 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (tab === 'webhooks') return 'Webhook Management & Developer API';
     if (tab === 'roles') return 'Team Roles & Access Control';
     if (tab === 'seo') return 'Search Engine Webmaster Center';
+    if (tab === 'telegram_mini_app') return 'Telegram Mini App Storefront Preview';
     if (tab.startsWith('plugin_')) {
       const slug = tab.replace('plugin_', '').replace(/-/g, ' ');
       return `Plugin: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`;
@@ -191,6 +196,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+  const lowStockProducts = (products || []).filter(p => p.stockQuantity < 5);
 
   return (
     <header className="bg-white border-b border-slate-200/80 px-6 py-4 sticky top-0 z-30 flex items-center justify-between shadow-xs">
@@ -202,16 +208,60 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Global Controls */}
       <div className="flex items-center gap-3">
-        {/* Search */}
-        <div className="relative w-64 hidden sm:block">
+        {/* Low Stock Alert Visual Badge (<5 items) */}
+        {lowStockProducts.length > 0 && (
+          <div className="relative group">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50 rounded-lg text-xs font-bold shadow-xs cursor-pointer hover:bg-amber-500/20 transition">
+              <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse shrink-0" />
+              <span>{lowStockProducts.length} Low Stock</span>
+            </div>
+
+            {/* Popover on hover showing items below 5 inventory */}
+            <div className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-3 text-xs z-50 hidden group-hover:block transition-all">
+              <div className="font-bold text-slate-900 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-display">
+                  <AlertTriangle className="w-4 h-4" /> Low Stock Safeguard
+                </span>
+                <span className="text-[10px] bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 font-mono px-1.5 py-0.5 rounded font-bold">&lt; 5 items</span>
+              </div>
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                {lowStockProducts.map(p => (
+                  <div key={p.id} className="flex items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{p.title}</p>
+                      <p className="text-[10px] text-slate-400 font-mono">SKU: {p.sku}</p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 shrink-0 border border-amber-200 dark:border-amber-700">
+                      {p.stockQuantity} left
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Global Search & Command Palette Trigger */}
+        <div className="relative w-72 hidden sm:block">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search SKU, order, product..."
+            placeholder="Search products, orders, customers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+            onFocus={() => {
+              if (onOpenCommandPalette) onOpenCommandPalette();
+            }}
+            className="w-full pl-9 pr-14 py-1.5 bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition cursor-pointer"
           />
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            className="absolute right-1.5 top-1 px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-500 bg-white border border-slate-200 rounded hover:text-indigo-600 hover:border-indigo-300 transition cursor-pointer shadow-2xs"
+            title="Open Command Palette (Cmd/Ctrl + K)"
+          >
+            ⌘K
+          </button>
         </div>
 
         {/* Keyboard Shortcuts Trigger Button */}

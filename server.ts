@@ -623,6 +623,28 @@ let plugins = [
     hooks: ['OrderPlaced', 'PaymentCaptured']
   },
   {
+    id: 'plg_crypto_gateway',
+    slug: 'crypto-gateway',
+    name: 'CryptoPay & Web3 / USDT Gateway',
+    description: 'Accept decentralized cryptocurrency payments (USDT TRC-20, Bitcoin, Ethereum, TON, Binance Pay) with automatic blockchain transaction verification and settlement.',
+    author: 'EHSANKiNG',
+    version: '2.1.0',
+    category: 'payment',
+    iconName: 'Cpu',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Crypto Gateway',
+    config: {
+      networkMode: 'mainnet',
+      acceptedCurrencies: ['USDT', 'BTC', 'ETH', 'TON'],
+      walletAddress: '0x9482A1B982847102938475910283748592019283',
+      usdtTrc20Address: 'TXYZopQRStuvWXYZ1234567890abcdefGH',
+      confirmationBlocks: 2,
+      autoSettle: true
+    },
+    hooks: ['OrderPlaced', 'CryptoPaymentConfirmed']
+  },
+  {
     id: 'plg_security_2fa',
     slug: '2fa-mfa-security-shield',
     name: '2FA Authenticator & Session Sentinel',
@@ -769,6 +791,54 @@ let plugins = [
       pickupPostalCode: '90210',
       defaultWeightUnit: 'kg',
       autoGenerateLabels: true
+    },
+    hooks: ['OrderShipped', 'RateCalculated', 'LabelGenerated']
+  },
+  {
+    id: 'plg_fedex',
+    slug: 'fedex-shipping',
+    name: 'FedEx Logistics Engine',
+    description: 'Calculate real-time shipping rates, generate shipping labels, and track domestic and international parcels via FedEx REST API.',
+    author: 'EHSANKiNG',
+    version: '1.0.0',
+    category: 'shipping',
+    iconName: 'Truck',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'FedEx Shipping Engine',
+    config: {
+      accountNumber: 'FEDEX-2991-EHSAN',
+      apiKey: 'fedex_live_api_key_77182',
+      apiSecret: 'fedex_secret_key_77182',
+      meterNumber: '77281920',
+      sandbox: true,
+      autoGenerateLabels: false,
+      pickupCountry: 'US',
+      pickupPostalCode: '90210'
+    },
+    hooks: ['OrderShipped', 'RateCalculated', 'LabelGenerated']
+  },
+  {
+    id: 'plg_ups',
+    slug: 'ups-shipping',
+    name: 'UPS Logistics Engine',
+    description: 'Calculate real-time shipping rates, generate shipping labels, and track domestic and international parcels via UPS REST API.',
+    author: 'EHSANKiNG',
+    version: '1.0.0',
+    category: 'shipping',
+    iconName: 'Truck',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'UPS Shipping Engine',
+    config: {
+      accountNumber: 'UPS-77291-EHSAN',
+      userId: 'ups_user_ehsan',
+      accessLicenseNumber: 'ups_license_882910',
+      apiKey: 'ups_live_api_key_882910',
+      apiSecret: 'ups_secret_key_882190',
+      sandbox: true,
+      pickupCountry: 'US',
+      pickupPostalCode: '90210'
     },
     hooks: ['OrderShipped', 'RateCalculated', 'LabelGenerated']
   },
@@ -941,6 +1011,112 @@ let plugins = [
       aiCaptionHashtags: '#EhsanStore #NewProduct #Ecommerce #TechDeals #FlashSale'
     },
     hooks: ['ProductCreated', 'FlashSaleStarted', 'DiscountVoucherCreated']
+  },
+  {
+    id: 'plg_telegram_bot',
+    slug: 'telegram-bot-manager',
+    name: 'Telegram Bot & Broadcast Hub',
+    description: 'Automates customer notifications, order tracking alerts, instant flash-sale broadcasts, and interactive inline keyboard menus via Telegram Bot API.',
+    author: 'EHSANKiNG Integrations',
+    version: '2.5.0',
+    category: 'marketing',
+    iconName: 'Send',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Telegram Bot Hub',
+    config: {
+      botToken: '792018392:AAH_ehsan_store_bot_token',
+      channelUsername: '@ehsan_store_channel',
+      adminChatId: '99281920',
+      notifyOnNewOrder: true,
+      notifyOnLowStock: true,
+      welcomeMessage: 'Welcome to Ehsan Store! Browse our catalog directly on Telegram.'
+    },
+    hooks: ['OrderPlaced', 'OrderShipped', 'LowStockAlert']
+  },
+  {
+    id: 'plg_instagram_graph',
+    slug: 'instagram-graph-api',
+    name: 'Instagram Business & Shopping Graph API',
+    description: 'Connects product catalog to Instagram Shopping tags, auto-posts product cards to IG Feed & Stories, and syncs direct message inquiries with CRM.',
+    author: 'EHSANKiNG Integrations',
+    version: '2.1.0',
+    category: 'marketing',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Instagram Shopping',
+    config: {
+      igAccountId: 'ig_biz_9928192',
+      accessToken: 'IGQWNYT...sample_long_token',
+      catalogId: 'cat_ig_882910',
+      autoTagProductsInFeed: true,
+      syncStoriesWithFlashSales: true
+    },
+    hooks: ['ProductCreated', 'FlashSaleStarted']
+  },
+  {
+    id: 'plg_facebook_pages',
+    slug: 'facebook-pages-marketing',
+    name: 'Facebook Pages & Messenger Shop Sync',
+    description: 'Syndicates products to Facebook Shop catalog, manages Messenger automated customer support assistant, and tracks conversions via Meta Pixel API.',
+    author: 'EHSANKiNG Integrations',
+    version: '2.3.0',
+    category: 'marketing',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Facebook Page & Shop',
+    config: {
+      pageId: 'fb_page_9928192',
+      appId: '10928192038192',
+      accessToken: 'EAAB...sample_fb_token',
+      pixelId: 'PIXEL_992819028',
+      enableMessengerChatbot: true
+    },
+    hooks: ['OrderPlaced', 'ProductCreated']
+  },
+  {
+    id: 'plg_linkedin_publisher',
+    slug: 'linkedin-company-publisher',
+    name: 'LinkedIn Company Page Publisher & B2B Feed',
+    description: 'Publishes B2B product highlights, enterprise software updates, and hiring announcements directly to LinkedIn Company Pages with analytics tracking.',
+    author: 'EHSANKiNG Integrations',
+    version: '1.9.0',
+    category: 'marketing',
+    iconName: 'Globe',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'LinkedIn B2B Hub',
+    config: {
+      organizationId: 'urn:li:organization:992819',
+      accessToken: 'AQV...sample_linkedin_token',
+      autoPublishB2bProducts: true,
+      defaultHashtags: '#EhsanStore #Enterprise #B2B #EcommerceTech'
+    },
+    hooks: ['ProductCreated', 'MilestoneReached']
+  },
+  {
+    id: 'plg_telegram_mini_shop',
+    slug: 'telegram-mini-shop',
+    name: 'Telegram Mini App Shop (WebApp Store)',
+    description: 'Deploys a lightning-fast native Telegram WebApp mini-store inside Telegram chat interface. Allows buyers to browse products, select variants, and checkout seamlessly without leaving Telegram.',
+    author: 'EHSANKiNG Enterprise',
+    version: '3.0.0',
+    category: 'marketing',
+    iconName: 'Sparkles',
+    isInstalled: true,
+    isActive: true,
+    menuTitle: 'Telegram Mini Shop',
+    config: {
+      botUsername: 'EhsanStoreBot',
+      webAppUrl: 'https://ehsanking-seller.app/mini-shop',
+      themeColor: '#4f46e5',
+      buttonText: 'Shop Now 🛒',
+      enableTelegramPayments: true,
+      currency: 'USD'
+    },
+    hooks: ['OrderPlaced', 'ProductUpdated']
   },
   {
     id: 'plg_cloudflare_cdn',
@@ -1433,6 +1609,104 @@ app.post('/api/plugins/dhl/calculate-rates', (req, res) => {
   });
 });
 
+// FedEx Rates Mock Calculator API
+app.post('/api/plugins/fedex/calculate-rates', (req, res) => {
+  const { destinationPostal, weightKg } = req.body;
+  const weight = Number(weightKg) || 1.0;
+  
+  const groundRate = 12.50 + (weight * 4.50);
+  const express2DayRate = 28.00 + (weight * 6.20);
+  const overnightRate = 45.00 + (weight * 9.50);
+
+  res.json({
+    carrier: 'FedEx',
+    origin: 'US - 90210',
+    destination: destinationPostal || 'US - 10001',
+    weightKg: weight,
+    rates: [
+      { service: 'FedEx Ground', price: Number(groundRate.toFixed(2)), estimatedDays: '3-5 Business Days' },
+      { service: 'FedEx 2Day', price: Number(express2DayRate.toFixed(2)), estimatedDays: '2 Business Days' },
+      { service: 'FedEx Standard Overnight', price: Number(overnightRate.toFixed(2)), estimatedDays: '1 Business Day' }
+    ]
+  });
+});
+
+// FedEx Label Mock Generation API
+app.post('/api/plugins/fedex/generate-label', (req, res) => {
+  const { orderId, serviceType, weightKg, recipientName, destinationAddress } = req.body;
+  const labelId = `FEDEX-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  
+  res.json({
+    success: true,
+    trackingNumber: labelId,
+    carrier: 'FedEx',
+    serviceType: serviceType || 'FedEx Ground',
+    weightKg: weightKg || 2.5,
+    recipientName: recipientName || 'Sarah Jenkins',
+    destinationAddress: destinationAddress || '742 Evergreen Terrace, Springfield, OR',
+    labelUrl: 'https://www.fedex.com/content/dam/fedex/us-united-states/services/images/shipping_label_example.png',
+    generatedAt: new Date().toISOString()
+  });
+});
+
+// DHL Label Mock Generation API
+app.post('/api/plugins/dhl/generate-label', (req, res) => {
+  const { orderId, serviceType, weightKg, recipientName, destinationAddress } = req.body;
+  const labelId = `DHL-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  
+  res.json({
+    success: true,
+    trackingNumber: labelId,
+    carrier: 'DHL',
+    serviceType: serviceType || 'DHL Express Worldwide',
+    weightKg: weightKg || 2.5,
+    recipientName: recipientName || 'Sarah Jenkins',
+    destinationAddress: destinationAddress || '742 Evergreen Terrace, Springfield, OR',
+    labelUrl: 'https://www.dhl.com/content/dam/dhl/local/global/images/shipping_label_example.png',
+    generatedAt: new Date().toISOString()
+  });
+});
+
+// UPS Rates Mock Calculator API
+app.post('/api/plugins/ups/calculate-rates', (req, res) => {
+  const { destinationPostal, weightKg } = req.body;
+  const weight = Number(weightKg) || 1.0;
+  
+  const groundRate = 11.20 + (weight * 4.10);
+  const air3DayRate = 22.50 + (weight * 5.80);
+  const nextDayAirRate = 42.00 + (weight * 9.10);
+
+  res.json({
+    carrier: 'UPS',
+    origin: 'US - 90210',
+    destination: destinationPostal || 'US - 10001',
+    weightKg: weight,
+    rates: [
+      { service: 'UPS Ground', price: Number(groundRate.toFixed(2)), estimatedDays: '3-5 Business Days' },
+      { service: 'UPS 3-Day Select', price: Number(air3DayRate.toFixed(2)), estimatedDays: '3 Business Days' },
+      { service: 'UPS Next Day Air', price: Number(nextDayAirRate.toFixed(2)), estimatedDays: '1 Business Day' }
+    ]
+  });
+});
+
+// UPS Label Mock Generation API
+app.post('/api/plugins/ups/generate-label', (req, res) => {
+  const { orderId, serviceType, weightKg, recipientName, destinationAddress } = req.body;
+  const labelId = `UPS-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  
+  res.json({
+    success: true,
+    trackingNumber: labelId,
+    carrier: 'UPS',
+    serviceType: serviceType || 'UPS Ground',
+    weightKg: weightKg || 2.5,
+    recipientName: recipientName || 'Sarah Jenkins',
+    destinationAddress: destinationAddress || '742 Evergreen Terrace, Springfield, OR',
+    labelUrl: 'https://www.ups.com/content/dam/ups/assets/images/shipping_label_example.png',
+    generatedAt: new Date().toISOString()
+  });
+});
+
 // AI Assistant Handler
 app.post('/api/plugins/ai/generate', async (req, res) => {
   const { prompt, type, provider = 'gemini' } = req.body;
@@ -1545,6 +1819,30 @@ app.post('/api/plugins/cdn/cloudfront/invalidate', (req, res) => {
   });
 });
 
+app.post('/api/plugins/crypto/create-invoice', (req, res) => {
+  const { amountUsd, currency = 'USDT' } = req.body;
+  const cryptoAmounts: Record<string, number> = {
+    USDT: amountUsd || 50.0,
+    BTC: Number(((amountUsd || 50.0) / 65000).toFixed(6)),
+    ETH: Number(((amountUsd || 50.0) / 3200).toFixed(5)),
+    TON: Number(((amountUsd || 50.0) / 6.5).toFixed(2))
+  };
+  res.json({
+    success: true,
+    invoiceId: `CRV-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+    currency,
+    amountCrypto: cryptoAmounts[currency] || amountUsd,
+    amountUsd: amountUsd || 50.0,
+    depositAddress: currency === 'BTC' ? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh' :
+                    currency === 'ETH' ? '0x9482A1B982847102938475910283748592019283' :
+                    currency === 'TON' ? 'EQD-0Q...EhsanStoreTONVault9921' :
+                    'TXYZopQRStuvWXYZ1234567890abcdefGH',
+    expiresInSeconds: 1800,
+    status: 'pending_mempool',
+    message: `Crypto invoice created successfully for ${currency}. Awaiting blockchain deposit.`
+  });
+});
+
 // Google Cloud Services Plugins API Endpoints
 app.post('/api/plugins/google/translate', (req, res) => {
   const { text, targetLang = 'fa' } = req.body;
@@ -1618,6 +1916,73 @@ app.post('/api/plugins/social/publish', (req, res) => {
     mediaAttached: !!imageUrl,
     status: 'PUBLISHED_SUCCESSFULLY',
     engagement: { impressions: 0, clicks: 0, likes: 0 },
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/telegram/test', (req, res) => {
+  const { botToken, channelUsername, testMessage } = req.body;
+  res.json({
+    success: true,
+    provider: 'Telegram Bot API (v7.0)',
+    botUsername: '@EhsanStoreBot',
+    channel: channelUsername || '@ehsan_store_channel',
+    messageId: Math.floor(Math.random() * 100000),
+    sentText: testMessage || 'Test broadcast from Ehsan Store Seller Hub.',
+    status: 'SENT_TO_TELEGRAM_API',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/instagram/test', (req, res) => {
+  const { igAccountId, caption } = req.body;
+  res.json({
+    success: true,
+    provider: 'Instagram Graph API / Content Publishing',
+    accountId: igAccountId || 'ig_biz_9928192',
+    mediaId: `ig_media_${Date.now()}`,
+    status: 'MEDIA_CONTAINER_PUBLISHED',
+    caption: caption || 'Check out our latest arrivals!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/facebook/test', (req, res) => {
+  const { pageId, message } = req.body;
+  res.json({
+    success: true,
+    provider: 'Facebook Pages Graph API',
+    pageId: pageId || 'fb_page_9928192',
+    postId: `fb_post_${Date.now()}`,
+    status: 'POST_PUBLISHED_TO_FEED',
+    message: message || 'Flash sale announcement posted to Facebook Page.',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/linkedin/test', (req, res) => {
+  const { organizationId, text } = req.body;
+  res.json({
+    success: true,
+    provider: 'LinkedIn Share API (B2B)',
+    organization: organizationId || 'urn:li:organization:992819',
+    shareId: `li_share_${Date.now()}`,
+    status: 'SHARED_ON_COMPANY_FEED',
+    text: text || 'B2B Tech Solutions update published.',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/plugins/telegram-minishop/sync', (req, res) => {
+  const { botUsername, webAppUrl } = req.body;
+  res.json({
+    success: true,
+    provider: 'Telegram Mini App (WebApp) Builder',
+    bot: botUsername || 'EhsanStoreBot',
+    webAppUrl: webAppUrl || 'https://ehsanking-seller.app/mini-shop',
+    menuButtonConfigured: true,
+    catalogProductsSynced: products.length,
+    status: 'MINI_APP_WEBHOOK_ACTIVE',
     timestamp: new Date().toISOString()
   });
 });
@@ -2083,6 +2448,118 @@ app.get('/api/products', (req, res) => {
   res.json(products);
 });
 
+// Seed Initial Default Products API
+const initialProductsSeed = [
+  {
+    id: 'prod_1',
+    sku: 'SLR-1001',
+    title: 'Wireless Ergonomic Mechanical Keyboard',
+    category: 'Electronics',
+    price: 129.99,
+    costPrice: 65.00,
+    stockQuantity: 42,
+    lowStockThreshold: 15,
+    status: 'active',
+    salesCount: 184,
+    image: '/src/assets/images/store_product_asset_1785936700399.jpg',
+    createdAt: '2026-01-15'
+  },
+  {
+    id: 'prod_2',
+    sku: 'SLR-1002',
+    title: 'Ultra-Precision Wireless Gaming Mouse',
+    category: 'Electronics',
+    price: 79.50,
+    costPrice: 32.00,
+    stockQuantity: 18,
+    lowStockThreshold: 20,
+    status: 'active',
+    salesCount: 290,
+    image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80',
+    createdAt: '2026-01-18'
+  },
+  {
+    id: 'prod_3',
+    sku: 'SLR-1003',
+    title: 'Noise-Canceling Studio Headphones',
+    category: 'Audio',
+    price: 199.00,
+    costPrice: 90.00,
+    stockQuantity: 5,
+    lowStockThreshold: 10,
+    status: 'active',
+    salesCount: 120,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80',
+    createdAt: '2026-02-01'
+  },
+  {
+    id: 'prod_4',
+    sku: 'SLR-1004',
+    title: 'Minimalist Aluminum Laptop Stand',
+    category: 'Home Office',
+    price: 49.99,
+    costPrice: 18.00,
+    stockQuantity: 60,
+    lowStockThreshold: 12,
+    status: 'active',
+    salesCount: 95,
+    image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80',
+    createdAt: '2026-02-10'
+  }
+];
+
+app.post('/api/products/seed', (req, res) => {
+  products = JSON.parse(JSON.stringify(initialProductsSeed));
+  res.json({ success: true, message: 'Products seeded successfully', products });
+});
+
+// Product Feed API (Google Shopping / RSS / JSON format)
+app.get('/api/products/feed', (req, res) => {
+  const format = req.query.format || 'json';
+
+  if (format === 'xml' || format === 'rss') {
+    res.setHeader('Content-Type', 'application/xml');
+    const xmlItems = products.map(p => `
+      <item>
+        <g:id>${p.id}</g:id>
+        <g:title>${p.title}</g:title>
+        <g:price>${p.price.toFixed(2)} USD</g:price>
+        <g:availability>${p.stockQuantity > 0 ? 'in stock' : 'out of stock'}</g:availability>
+        <g:image_link>${p.image}</g:image_link>
+        <g:brand>Seller</g:brand>
+        <g:condition>new</g:condition>
+      </item>`).join('');
+
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>
+      <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+        <channel>
+          <title>Seller Storefront Product Feed</title>
+          <link>https://seller.hub</link>
+          <description>Merchant Product Feed for Search & Shopping Engines</description>
+          ${xmlItems}
+        </channel>
+      </rss>`);
+  }
+
+  res.json({
+    feedVersion: '1.0',
+    title: 'Seller Product Feed',
+    updatedAt: new Date().toISOString(),
+    totalItems: products.length,
+    items: products.map(p => ({
+      id: p.id,
+      sku: p.sku,
+      title: p.title,
+      price: p.price,
+      currency: 'USD',
+      availability: p.stockQuantity > 0 ? 'in_stock' : 'out_of_stock',
+      category: p.category,
+      imageUrl: p.image,
+      stockQuantity: p.stockQuantity
+    }))
+  });
+});
+
 app.post('/api/products', (req, res) => {
   const newProduct = {
     id: `prod_${Date.now()}`,
@@ -2245,6 +2722,35 @@ app.patch('/api/customers/:id', (req, res) => {
   }
   customers[idx] = { ...customers[idx], ...req.body };
   res.json(customers[idx]);
+});
+
+app.get('/api/customers/recent-activities', (req, res) => {
+  const limit = Number(req.query.limit) || 5;
+  const combined = customerActivities.map(act => {
+    const cust = customers.find(c => c.id === act.customerId);
+    return {
+      ...act,
+      customerName: cust ? cust.name : 'Customer',
+      customerEmail: cust ? cust.email : ''
+    };
+  });
+
+  customers.forEach(c => {
+    combined.push({
+      id: `act_created_${c.id}`,
+      customerId: c.id,
+      type: 'account_created' as any,
+      title: 'Account Created',
+      description: `New customer account registered (${c.company || 'Direct Buyer'})`,
+      author: 'Portal Signup',
+      createdAt: (c as any).createdAt || '2026-08-01T08:00:00Z',
+      customerName: c.name,
+      customerEmail: c.email
+    });
+  });
+
+  combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(combined.slice(0, limit));
 });
 
 app.get('/api/customers/:id/activities', (req, res) => {
@@ -2604,6 +3110,51 @@ app.post('/api/coupons/validate', (req, res) => {
     }
   });
 });
+
+// Wishlist API Store & REST Endpoints
+let wishlist: string[] = ['prod_1', 'prod_3'];
+
+app.get('/api/wishlist', (req, res) => {
+  if (req.query.full === 'true') {
+    const fullProducts = products.filter(p => wishlist.includes(p.id));
+    return res.json({ wishlist, products: fullProducts });
+  }
+  res.json(wishlist);
+});
+
+app.post('/api/wishlist', (req, res) => {
+  const { productId } = req.body;
+  if (!productId) {
+    return res.status(400).json({ error: 'productId is required' });
+  }
+  if (!wishlist.includes(productId)) {
+    wishlist.push(productId);
+  }
+  res.json({ success: true, wishlist, inWishlist: true });
+});
+
+app.delete('/api/wishlist/:productId', (req, res) => {
+  const { productId } = req.params;
+  wishlist = wishlist.filter(id => id !== productId);
+  res.json({ success: true, wishlist, inWishlist: false });
+});
+
+app.post('/api/wishlist/toggle', (req, res) => {
+  const { productId } = req.body;
+  if (!productId) {
+    return res.status(400).json({ error: 'productId is required' });
+  }
+  let inWishlist = false;
+  if (wishlist.includes(productId)) {
+    wishlist = wishlist.filter(id => id !== productId);
+    inWishlist = false;
+  } else {
+    wishlist.push(productId);
+    inWishlist = true;
+  }
+  res.json({ success: true, inWishlist, wishlist });
+});
+
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Package, 
   ShoppingBag, 
   Users, 
+  Heart,
   BarChart3, 
   Settings, 
   Store,
@@ -22,7 +23,13 @@ import {
   Globe,
   UserCheck,
   Lock,
-  Ticket
+  Ticket,
+  StickyNote,
+  Check,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Send
 } from 'lucide-react';
 import { NavigationTab, Plugin } from '../types';
 
@@ -33,6 +40,91 @@ interface SidebarProps {
   plugins?: Plugin[];
   onOpenAdminProfileModal?: () => void;
 }
+
+const QuickNotesSection: React.FC = () => {
+  const [notes, setNotes] = useState<string>(() => {
+    return localStorage.getItem('seller_admin_quick_notes') || '';
+  });
+  const [isSaved, setIsSaved] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    const savedState = localStorage.getItem('seller_quick_notes_expanded');
+    return savedState !== null ? savedState === 'true' : true;
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setNotes(val);
+    localStorage.setItem('seller_admin_quick_notes', val);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 1200);
+  };
+
+  const toggleExpanded = () => {
+    const nextState = !isExpanded;
+    setIsExpanded(nextState);
+    localStorage.setItem('seller_quick_notes_expanded', String(nextState));
+  };
+
+  const clearNotes = () => {
+    setNotes('');
+    localStorage.removeItem('seller_admin_quick_notes');
+  };
+
+  return (
+    <div className="mx-3 mb-3 rounded-xl bg-slate-800/60 border border-slate-700/50 p-3 text-left">
+      <div className="flex items-center justify-between mb-2 text-left">
+        <button
+          type="button"
+          onClick={toggleExpanded}
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition cursor-pointer"
+        >
+          <StickyNote className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <span>Quick Notes</span>
+          {isSaved && (
+            <span className="text-[10px] text-emerald-400 font-normal flex items-center gap-0.5 ml-1">
+              <Check className="w-3 h-3" /> Saved
+            </span>
+          )}
+        </button>
+        <div className="flex items-center gap-1">
+          {notes && isExpanded && (
+            <button
+              type="button"
+              onClick={clearNotes}
+              className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition cursor-pointer"
+              title="Clear notes"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={toggleExpanded}
+            className="text-slate-500 hover:text-slate-300 p-0.5 rounded transition cursor-pointer"
+          >
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div>
+          <textarea
+            value={notes}
+            onChange={handleChange}
+            placeholder="Jot down quick reminders or tasks..."
+            rows={3}
+            className="w-full bg-slate-900/80 border border-slate-700/70 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 resize-none font-sans leading-relaxed transition"
+          />
+          <div className="flex items-center justify-between mt-1 text-[10px] text-slate-500">
+            <span>Saved to storage</span>
+            <span>{notes.length} chars</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   activeTab, 
@@ -46,6 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'products', label: 'Products & Inventory', icon: Package },
     { id: 'orders', label: 'Orders & Shipments', icon: ShoppingBag },
     { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'wishlist', label: 'Customer Wishlist', icon: Heart, badge: 'Favorites' },
     { id: 'analytics', label: 'Sales & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Store Settings', icon: Settings },
     { id: 'branches', label: 'Store Branches', icon: Store, badge: 'Map' },
@@ -55,6 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'plugins', label: 'Plugins & Add-ons', icon: Blocks, badge: plugins.filter(p => p.isActive).length ? `${plugins.filter(p => p.isActive).length} Active` : 'Hub' },
     { id: 'templates', label: 'Storefront Themes', icon: Palette, badge: 'Themes' },
     { id: 'builder', label: 'Visual Page Builder', icon: Sparkles, badge: 'Craft.js' },
+    { id: 'telegram_mini_app', label: 'Telegram Mini App', icon: Send, badge: 'WebApp' },
     { id: 'webhooks', label: 'Webhook Engine', icon: Webhook, badge: 'API' },
   ];
 
@@ -161,6 +255,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
       </nav>
+
+      {/* Quick Notes Widget */}
+      <QuickNotesSection />
 
       {/* Store Quick Status Widget */}
       <div className="p-4 mx-3 mb-4 rounded-xl bg-slate-800/60 border border-slate-700/50 text-left">

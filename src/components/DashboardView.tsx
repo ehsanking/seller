@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ApiHealthWidget } from './ApiHealthWidget';
 import { 
   DollarSign, 
@@ -13,15 +13,28 @@ import {
   Clock, 
   Truck,
   Eye,
-  ShieldAlert
+  ShieldAlert,
+  Heart,
+  Sparkles,
+  X,
+  Trash2
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { AnalyticsSummary, Order, Product, NavigationTab } from '../types';
+
+interface ToastNotification {
+  id: string;
+  message: string;
+  type: 'add' | 'remove' | 'info';
+  productTitle?: string;
+}
 
 interface DashboardViewProps {
   analytics: AnalyticsSummary;
   products: Product[];
   orders: Order[];
+  wishlist?: string[];
+  onToggleWishlist?: (productId: string) => void;
   setActiveTab: (tab: NavigationTab) => void;
   onOpenAddProductModal: () => void;
   onOpenAddOrderModal: () => void;
@@ -31,13 +44,55 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   analytics,
   products,
   orders,
+  wishlist = [],
+  onToggleWishlist,
   setActiveTab,
   onOpenAddProductModal,
   onOpenAddOrderModal,
 }) => {
+  const [toast, setToast] = useState<ToastNotification | null>(null);
+
+  const triggerToast = (message: string, type: 'add' | 'remove' | 'info', productTitle?: string) => {
+    const newToast: ToastNotification = {
+      id: `toast-${Date.now()}`,
+      message,
+      type,
+      productTitle
+    };
+    setToast(newToast);
+
+    // Auto dismiss after 3500ms
+    setTimeout(() => {
+      setToast(prev => (prev?.id === newToast.id ? null : prev));
+    }, 3500);
+  };
+
+  const handleToggleProductWishlist = (product: Product) => {
+    if (!onToggleWishlist) return;
+
+    const isCurrentlyWishlisted = wishlist.includes(product.id);
+    onToggleWishlist(product.id);
+
+    if (isCurrentlyWishlisted) {
+      triggerToast(
+        `Successfully removed "${product.title}" from wishlist`,
+        'remove',
+        product.title
+      );
+    } else {
+      triggerToast(
+        `Successfully added "${product.title}" to wishlist!`,
+        'add',
+        product.title
+      );
+    }
+  };
+
   // Threshold-based low stock alert calculation per product
   const lowStockProducts = products.filter(p => p.stockQuantity <= (p.lowStockThreshold ?? 10));
   const recentOrders = orders.slice(0, 5);
+  const featuredProducts = products.slice(0, 4);
+  const wishlistedProducts = products.filter(p => wishlist.includes(p.id));
 
   const getOrderStatusBadge = (status: Order['status']) => {
     switch (status) {
@@ -55,7 +110,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 relative">
+      
+      {/* Toast Notification Service Floating Banner */}
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl bg-slate-900 text-white border border-slate-700 text-xs font-bold animate-in slide-in-from-top-4 transition-all duration-300 max-w-md">
+          {toast.type === 'add' ? (
+            <div className="p-1.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
+              <Heart className="w-4 h-4 fill-current text-rose-400" />
+            </div>
+          ) : (
+            <div className="p-1.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+              <Trash2 className="w-4 h-4 text-amber-400" />
+            </div>
+          )}
+
+          <div className="flex-1">
+            <span className="block text-slate-200 font-semibold">{toast.message}</span>
+            <span className="text-[10px] text-slate-400 block font-mono">Wishlist Service Notification</span>
+          </div>
+
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* KPI Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
@@ -99,20 +182,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Metric 3 */}
         <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-md transition">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Avg Order Value</span>
-            <div className="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center font-bold">
-              <TrendingUp className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">Saved Wishlist Items</span>
+            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+              <Heart className="w-4 h-4 fill-current" />
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-display text-slate-900">
-              ${analytics.avgOrderValue.toFixed(2)}
+            <span className="text-2xl font-bold font-display text-slate-900 font-mono">
+              {wishlist.length} Items
             </span>
-            <span className="text-xs font-semibold text-slate-500">
-              Per order
-            </span>
+            <button 
+              onClick={() => setActiveTab('wishlist')}
+              className="text-xs font-semibold text-rose-600 hover:underline"
+            >
+              View Hub →
+            </button>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Calculated across store orders</p>
+          <p className="text-[11px] text-slate-400 mt-1">Synced across storefronts</p>
         </div>
 
         {/* Metric 4 */}
@@ -136,6 +222,54 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             )}
           </div>
           <p className="text-[11px] text-slate-400 mt-1">Threshold alert active</p>
+        </div>
+      </div>
+
+      {/* Featured Catalog & Quick Wishlist Manager */}
+      <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+              <h3 className="font-display font-bold text-base text-slate-900">Quick Wishlist Catalog Actions</h3>
+            </div>
+            <p className="text-xs text-slate-500">Toggle customer wishlist status directly with instant toast notification feedback</p>
+          </div>
+          <button
+            onClick={() => setActiveTab('wishlist')}
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
+          >
+            Manage All Wishlisted Items ({wishlistedProducts.length})
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {featuredProducts.map((p) => {
+            const isWishlisted = wishlist.includes(p.id);
+            return (
+              <div key={p.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">{p.title}</p>
+                    <p className="text-[10px] text-slate-500 font-mono">${p.price.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleToggleProductWishlist(p)}
+                  className={`p-2 rounded-xl transition cursor-pointer shrink-0 border ${
+                    isWishlisted 
+                      ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' 
+                      : 'bg-white text-slate-400 border-slate-200 hover:text-rose-500 hover:border-rose-200'
+                  }`}
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -271,3 +405,4 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     </div>
   );
 };
+

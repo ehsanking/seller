@@ -15,10 +15,16 @@ import {
   Sparkles, 
   HelpCircle,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Layers,
+  Grid,
+  Sliders,
+  Palette,
+  Ruler,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Product, ProductStatus } from '../types';
+import { Product, ProductStatus, ProductType, ProductVariation } from '../types';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -70,9 +76,38 @@ const SUGGESTED_TAGS = [
   'SmartHome'
 ];
 
+// Automated SKU Generator based on Category & Product Title
+const generateSKU = (catName: string, prodTitle: string): string => {
+  const categoryPrefixes: Record<string, string> = {
+    Electronics: 'ELE',
+    Audio: 'AUD',
+    Accessories: 'ACC',
+    'Home Office': 'HOF',
+    Gadgets: 'GAD'
+  };
+
+  const catCode = categoryPrefixes[catName] || catName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase() || 'PRD';
+
+  const words = prodTitle.trim().split(/\s+/).filter(Boolean);
+  let titleCode = '';
+  if (words.length >= 2) {
+    titleCode = words.map(w => w.replace(/[^a-zA-Z0-9]/g, '')[0] || '').join('').toUpperCase().slice(0, 4);
+  } else if (words.length === 1 && words[0].length >= 3) {
+    titleCode = words[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
+  }
+
+  if (!titleCode || titleCode.length < 2) {
+    titleCode = 'ITEM';
+  }
+
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  return `${catCode}-${titleCode}-${randomNum}`;
+};
+
 export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onAddProduct }) => {
   const [title, setTitle] = useState('');
   const [sku, setSku] = useState('');
+  const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
   const [category, setCategory] = useState('Electronics');
   const [price, setPrice] = useState('');
   const [costPrice, setCostPrice] = useState('');
@@ -80,6 +115,15 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
   const [lowStockThreshold, setLowStockThreshold] = useState('10');
   const [status, setStatus] = useState<ProductStatus>('active');
   const [description, setDescription] = useState('');
+
+  const [productType, setProductType] = useState<ProductType>('simple');
+  const [variations, setVariations] = useState<ProductVariation[]>([]);
+
+  // Variation Generator Attributes state
+  const [attrName1, setAttrName1] = useState('Color');
+  const [attrVal1, setAttrVal1] = useState('Black, Silver, White');
+  const [attrName2, setAttrName2] = useState('Size');
+  const [attrVal2, setAttrVal2] = useState('Small, Medium, Large');
 
   // Image & Gallery states
   const [image, setImage] = useState('https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80');
@@ -94,11 +138,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
   const mainFileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Generate unique SKU upon modal open
+  // Generate unique SKU upon modal open or category/title change
   useEffect(() => {
     if (isOpen) {
-      setSku(`SLR-${Math.floor(1000 + Math.random() * 9000)}`);
-      // Reset defaults
+      setIsSkuManuallyEdited(false);
       setTitle('');
       setPrice('');
       setCostPrice('');
@@ -108,9 +151,25 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
       setDescription('');
       setGallery([]);
       setTags([]);
-      setImage(CATEGORY_PRESETS[category]?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80');
+      setProductType('simple');
+      setVariations([]);
+      setAttrName1('Color');
+      setAttrVal1('Black, Silver, White');
+      setAttrName2('Size');
+      setAttrVal2('Small, Medium, Large');
+      const initialCat = 'Electronics';
+      setCategory(initialCat);
+      setSku(generateSKU(initialCat, ''));
+      setImage(CATEGORY_PRESETS[initialCat]?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80');
     }
   }, [isOpen]);
+
+  // Update suggested SKU when title or category changes, unless manually overridden
+  useEffect(() => {
+    if (isOpen && !isSkuManuallyEdited) {
+      setSku(generateSKU(category, title));
+    }
+  }, [category, title, isSkuManuallyEdited, isOpen]);
 
   // Sync main image preset when category changes
   const handleCategoryChange = (newCat: string) => {
@@ -181,27 +240,109 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
     setGallery(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
+  // Variation Management Logic
+  const handleGenerateMatrix = () => {
+    const list1 = attrVal1.split(',').map(s => s.trim()).filter(Boolean);
+    const list2 = attrVal2.split(',').map(s => s.trim()).filter(Boolean);
+
+    const generated: ProductVariation[] = [];
+    const baseSku = sku || 'SLR-VAR';
+    const basePrice = parsedPrice || 0;
+
+    if (list1.length > 0 && list2.length > 0) {
+      list1.forEach((v1) => {
+        list2.forEach((v2) => {
+          const code1 = v1.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase();
+          const code2 = v2.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase();
+          generated.push({
+            id: `var_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            sku: `${baseSku}-${code1}-${code2}`,
+            name: `${v1} / ${v2}`,
+            price: basePrice,
+            stockQuantity: 15,
+            attributes: {
+              [attrName1 || 'Attribute 1']: v1,
+              [attrName2 || 'Attribute 2']: v2
+            }
+          });
+        });
+      });
+    } else if (list1.length > 0) {
+      list1.forEach((v1) => {
+        const code1 = v1.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase();
+        generated.push({
+          id: `var_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          sku: `${baseSku}-${code1}`,
+          name: `${v1}`,
+          price: basePrice,
+          stockQuantity: 15,
+          attributes: {
+            [attrName1 || 'Attribute 1']: v1
+          }
+        });
+      });
+    }
+
+    if (generated.length > 0) {
+      setVariations(generated);
+    }
+  };
+
+  const handleAddSingleVariation = () => {
+    const nextIdx = variations.length + 1;
+    setVariations(prev => [
+      ...prev,
+      {
+        id: `var_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        sku: `${sku || 'SLR'}-VAR-${nextIdx}`,
+        name: `Variant #${nextIdx}`,
+        price: parsedPrice || 0,
+        stockQuantity: 10,
+        attributes: {}
+      }
+    ]);
+  };
+
+  const handleUpdateVariation = (id: string, field: keyof ProductVariation, val: any) => {
+    setVariations(prev => prev.map(v => v.id === id ? { ...v, [field]: val } : v));
+  };
+
+  const handleDeleteVariation = (id: string) => {
+    setVariations(prev => prev.filter(v => v.id !== id));
+  };
+
   // Pricing analysis
   const parsedPrice = parseFloat(price) || 0;
   const parsedCost = parseFloat(costPrice) || 0;
   const profit = parsedPrice - parsedCost;
   const marginPercentage = parsedPrice > 0 ? (profit / parsedPrice) * 100 : 0;
 
+  // Calculate total variations stock
+  const totalVariantStock = variations.reduce((sum, v) => sum + (Number(v.stockQuantity) || 0), 0);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Determine final stock quantity: if variable product, use sum of variations if defined
+    const finalStock = productType === 'variable' && variations.length > 0 
+      ? totalVariantStock 
+      : (parseInt(stockQuantity) || 0);
+
     onAddProduct({
       title,
       sku,
       category,
       price: parsedPrice,
       costPrice: parsedCost,
-      stockQuantity: parseInt(stockQuantity) || 0,
+      stockQuantity: finalStock,
       lowStockThreshold: parseInt(lowStockThreshold) || 10,
       status,
       image,
       gallery,
       tags,
-      description
+      description,
+      productType,
+      variations: productType === 'variable' ? variations : []
     });
     onClose();
   };
@@ -272,14 +413,48 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">SKU (Unique Code) <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    className="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 transition"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700">SKU (Unique Code) <span className="text-red-500">*</span></label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newSku = generateSKU(category, title);
+                        setSku(newSku);
+                        setIsSkuManuallyEdited(false);
+                      }}
+                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer transition"
+                      title="Auto-generate SKU based on category and title"
+                    >
+                      <Sparkles className="w-3 h-3 text-indigo-500" />
+                      <span>{isSkuManuallyEdited ? 'Auto-Generate' : 'Regenerate'}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={sku}
+                      onChange={(e) => {
+                        setSku(e.target.value);
+                        setIsSkuManuallyEdited(true);
+                      }}
+                      className="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 transition pr-16"
+                    />
+                    {isSkuManuallyEdited ? (
+                      <span className="absolute right-2.5 top-2.5 text-[9px] font-black text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                        Custom
+                      </span>
+                    ) : (
+                      <span className="absolute right-2.5 top-2.5 text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                        Auto
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {isSkuManuallyEdited 
+                      ? 'Manual SKU override active. Click Auto-Generate to reset.' 
+                      : 'Auto-suggested based on category and product title.'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">Category <span className="text-red-500">*</span></label>
@@ -303,6 +478,212 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
           </div>
 
           <hr className="border-slate-100" />
+
+          {/* Section: Product Type & Variations (Size, Color, etc.) */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5 text-indigo-500" />
+              Product Variations & Attributes
+            </h4>
+
+            <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200/60 space-y-4">
+              <div>
+                <label className="block text-[11px] font-black text-slate-800 mb-1.5">Product Configuration Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setProductType('simple')}
+                    className={`px-3 py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 border transition cursor-pointer ${
+                      productType === 'simple'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>Simple Product</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setProductType('variable')}
+                    className={`px-3 py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 border transition cursor-pointer ${
+                      productType === 'variable'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Sliders className="w-4 h-4" />
+                    <span>Variable Product (Size, Color...)</span>
+                  </button>
+                </div>
+              </div>
+
+              {productType === 'variable' && (
+                <div className="space-y-4 pt-2 border-t border-slate-200/60">
+                  {/* Automated Variant Matrix Generator */}
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
+                        <Grid className="w-3.5 h-3.5 text-indigo-600" />
+                        Automated Variation Matrix Generator
+                      </span>
+                      <span className="text-[9px] font-semibold text-slate-400">Comma-separated options</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                          Attribute 1 Name & Options
+                        </label>
+                        <div className="space-y-1.5">
+                          <input
+                            type="text"
+                            placeholder="e.g. Color"
+                            value={attrName1}
+                            onChange={(e) => setAttrName1(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-semibold"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Black, Silver, White"
+                            value={attrVal1}
+                            onChange={(e) => setAttrVal1(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                          Attribute 2 Name & Options
+                        </label>
+                        <div className="space-y-1.5">
+                          <input
+                            type="text"
+                            placeholder="e.g. Size"
+                            value={attrName2}
+                            onChange={(e) => setAttrName2(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-semibold"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Small, Medium, Large"
+                            value={attrVal2}
+                            onChange={(e) => setAttrVal2(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-medium"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="text-[10px] text-slate-400">Generates unique combinations with suggested SKUs and prices.</p>
+                      <button
+                        type="button"
+                        onClick={handleGenerateMatrix}
+                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Generate Matrix</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Variation List & Individual Inventory Table */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-black text-slate-800">Defined Variations ({variations.length})</span>
+                        <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">
+                          Total Stock: {totalVariantStock} units
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddSingleVariation}
+                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Custom Variant</span>
+                      </button>
+                    </div>
+
+                    {variations.length === 0 ? (
+                      <div className="p-4 rounded-xl border border-dashed border-slate-300 bg-white text-center text-xs text-slate-400">
+                        No variations created yet. Click <strong className="text-slate-700">Generate Matrix</strong> above or <strong className="text-slate-700">Add Custom Variant</strong>.
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        {variations.map((v) => (
+                          <div key={v.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                              {/* Variant Name */}
+                              <div className="sm:col-span-4">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase">Variant Option Name</label>
+                                <input
+                                  type="text"
+                                  value={v.name}
+                                  onChange={(e) => handleUpdateVariation(v.id, 'name', e.target.value)}
+                                  placeholder="e.g. Red / Large"
+                                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-lg font-bold text-slate-800"
+                                />
+                              </div>
+
+                              {/* SKU */}
+                              <div className="sm:col-span-3">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase">Variant SKU</label>
+                                <input
+                                  type="text"
+                                  value={v.sku}
+                                  onChange={(e) => handleUpdateVariation(v.id, 'sku', e.target.value)}
+                                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-lg font-mono font-medium text-slate-700"
+                                />
+                              </div>
+
+                              {/* Price */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase">Price ($)</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={v.price}
+                                  onChange={(e) => handleUpdateVariation(v.id, 'price', parseFloat(e.target.value) || 0)}
+                                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-lg font-bold text-slate-900"
+                                />
+                              </div>
+
+                              {/* Stock Quantity */}
+                              <div className="sm:col-span-2">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase">Stock (Units)</label>
+                                <input
+                                  type="number"
+                                  value={v.stockQuantity}
+                                  onChange={(e) => handleUpdateVariation(v.id, 'stockQuantity', parseInt(e.target.value) || 0)}
+                                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-lg font-bold text-slate-900"
+                                />
+                              </div>
+
+                              {/* Remove */}
+                              <div className="sm:col-span-1 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteVariation(v.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                  title="Remove variation"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Section 2: Media Management */}
           <div className="space-y-4">

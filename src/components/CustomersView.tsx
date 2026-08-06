@@ -3,17 +3,18 @@ import {
   Users, Mail, Phone, ShoppingBag, DollarSign, Calendar, Search, History, 
   MessageSquareText, Kanban, CheckSquare, LifeBuoy, Plus, Tag, Building2, 
   Award, Clock, AlertCircle, CheckCircle2, ArrowRight, Filter, MoreVertical, Send, Check,
-  X
+  X, RefreshCw, UserPlus, ChevronDown, ChevronUp, ExternalLink, PackageCheck
 } from 'lucide-react';
-import { Customer, CrmDeal, CrmTask, CrmTicket, DealStage } from '../types';
+import { Customer, CrmDeal, CrmTask, CrmTicket, DealStage, CustomerActivity, Order } from '../types';
 import { CustomerActivityLog } from './CustomerActivityLog';
 
 interface CustomersViewProps {
   customers: Customer[];
+  orders?: Order[];
   searchQuery: string;
 }
 
-export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initialCustomers, searchQuery }) => {
+export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initialCustomers, orders: propOrders, searchQuery }) => {
   const [activeCrmTab, setActiveCrmTab] = useState<'roster' | 'pipeline' | 'tasks' | 'helpdesk'>('roster');
   
   // Customers state
@@ -21,6 +22,31 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
   const [selectedSegment, setSelectedSegment] = useState<string>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
+
+  // Expandable Purchase History state
+  const [expandedCustomerIds, setExpandedCustomerIds] = useState<string[]>([]);
+  const [fetchedOrders, setFetchedOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    if (!propOrders || propOrders.length === 0) {
+      fetch('/api/orders')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setFetchedOrders(data);
+        })
+        .catch(err => console.error('Failed to fetch orders:', err));
+    }
+  }, [propOrders]);
+
+  const allOrders = (propOrders && propOrders.length > 0) ? propOrders : fetchedOrders;
+
+  const toggleExpandCustomer = (customerId: string) => {
+    setExpandedCustomerIds(prev => 
+      prev.includes(customerId) 
+        ? prev.filter(id => id !== customerId) 
+        : [...prev, customerId]
+    );
+  };
 
   // Tag Manager State
   const [selectedCustomerForTags, setSelectedCustomerForTags] = useState<Customer | null>(null);
@@ -57,6 +83,64 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
   const [newTicketSubject, setNewTicketSubject] = useState('');
   const [newTicketCustomerId, setNewTicketCustomerId] = useState(initialCustomers[0]?.id || '');
   const [newTicketPriority, setNewTicketPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+
+  // Recent Customer Activities state
+  const [recentActivities, setRecentActivities] = useState<CustomerActivity[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+
+  const fetchRecentActivities = () => {
+    setIsLoadingActivities(true);
+    fetch('/api/customers/recent-activities?limit=5')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRecentActivities(data);
+        }
+      })
+      .catch((err) => console.error('Failed to load recent customer activities:', err))
+      .finally(() => setIsLoadingActivities(false));
+  };
+
+  useEffect(() => {
+    fetchRecentActivities();
+  }, []);
+
+  const formatRelativeTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'order':
+        return { icon: ShoppingBag, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+      case 'account_created':
+        return { icon: UserPlus, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
+      case 'support_note':
+        return { icon: MessageSquareText, color: 'text-blue-600 bg-blue-50 border-blue-200' };
+      case 'status_change':
+        return { icon: Tag, color: 'text-purple-600 bg-purple-50 border-purple-200' };
+      case 'refund':
+        return { icon: DollarSign, color: 'text-rose-600 bg-rose-50 border-rose-200' };
+      case 'email_sent':
+        return { icon: Mail, color: 'text-amber-600 bg-amber-50 border-amber-200' };
+      case 'review':
+        return { icon: Award, color: 'text-sky-600 bg-sky-50 border-sky-200' };
+      default:
+        return { icon: History, color: 'text-slate-600 bg-slate-50 border-slate-200' };
+    }
+  };
 
   // Fetch CRM data on mount
   useEffect(() => {
@@ -374,172 +458,387 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
 
       {/* TAB 1: CUSTOMER DIRECTORY & 360 PROFILES */}
       {activeCrmTab === 'roster' && (
-        <div className="space-y-4">
-          {/* Segment Filter Chips */}
-          <div className="flex items-center justify-between flex-wrap gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50 shadow-2xs">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Filter Segment:</span>
-                {[
-                  { key: 'all', label: 'All Customers' },
-                  { key: 'vip', label: 'VIP Buyers ⭐' },
-                  { key: 'active', label: 'Active 🟢' },
-                  { key: 'lead', label: 'Leads 🎯' },
-                  { key: 'at_risk', label: 'At Risk ⚠️' }
-                ].map(seg => (
-                  <button
-                    key={seg.key}
-                    onClick={() => setSelectedSegment(seg.key)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                      selectedSegment === seg.key
-                        ? 'bg-indigo-600 text-white shadow-2xs'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    {seg.label}
-                  </button>
-                ))}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Roster Column */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Segment Filter Chips */}
+            <div className="flex items-center justify-between flex-wrap gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50 shadow-2xs">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500">Filter Segment:</span>
+                  {[
+                    { key: 'all', label: 'All Customers' },
+                    { key: 'vip', label: 'VIP Buyers ⭐' },
+                    { key: 'active', label: 'Active 🟢' },
+                    { key: 'lead', label: 'Leads 🎯' },
+                    { key: 'at_risk', label: 'At Risk ⚠️' }
+                  ].map(seg => (
+                    <button
+                      key={seg.key}
+                      onClick={() => setSelectedSegment(seg.key)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                        selectedSegment === seg.key
+                          ? 'bg-indigo-600 text-white shadow-2xs'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {seg.label}
+                    </button>
+                  ))}
+                </div>
+
+                {allUniqueTags.length > 0 && (
+                  <div className="flex items-center gap-2 border-r border-slate-200/80 pr-4 pl-2">
+                    <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                      <Tag className="w-3.5 h-3.5 text-slate-400" />
+                      Tag Filter:
+                    </span>
+                    <select
+                      value={selectedTag || ''}
+                      onChange={(e) => setSelectedTag(e.target.value || null)}
+                      className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                      <option value="">All Custom Tags ({allUniqueTags.length})</option>
+                      {allUniqueTags.map(tag => (
+                        <option key={tag} value={tag}>#{tag}</option>
+                      ))}
+                    </select>
+                    {selectedTag && (
+                      <button
+                        onClick={() => setSelectedTag(null)}
+                        className="text-[10px] text-rose-500 hover:underline font-extrabold cursor-pointer"
+                      >
+                        Clear Filter
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {allUniqueTags.length > 0 && (
-                <div className="flex items-center gap-2 border-r border-slate-200/80 pr-4 pl-2">
-                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-slate-400" />
-                    Tag Filter:
-                  </span>
-                  <select
-                    value={selectedTag || ''}
-                    onChange={(e) => setSelectedTag(e.target.value || null)}
-                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
-                  >
-                    <option value="">All Custom Tags ({allUniqueTags.length})</option>
-                    {allUniqueTags.map(tag => (
-                      <option key={tag} value={tag}>#{tag}</option>
-                    ))}
-                  </select>
-                  {selectedTag && (
-                    <button
-                      onClick={() => setSelectedTag(null)}
-                      className="text-[10px] text-rose-500 hover:underline font-extrabold cursor-pointer"
-                    >
-                      Clear Filter
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="text-xs text-slate-500 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200/60 font-medium">
+                Showing <span className="font-bold text-slate-800">{filteredCustomers.length}</span> customers
+              </div>
             </div>
 
-            <div className="text-xs text-slate-500 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200/60 font-medium">
-              Showing <span className="font-bold text-slate-800">{filteredCustomers.length}</span> customers
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredCustomers.map((c) => (
+                <div key={c.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                        {c.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-slate-900 text-sm">{c.name}</h4>
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider ${
+                            c.segment === 'vip' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                            c.segment === 'lead' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                            'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          }`}>
+                            {c.segment || 'Active'}
+                          </span>
+                        </div>
+                        {c.company && (
+                          <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                            <Building2 className="w-3 h-3" />
+                            {c.company}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedCustomer(c);
+                        setIsActivityOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 transition shadow-2xs cursor-pointer"
+                    >
+                      <History className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Customer 360</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-slate-600 border-t border-b border-slate-100 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{c.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{c.phone}</span>
+                      </div>
+                    </div>
+                    {c.notes && (
+                      <p className="text-slate-500 italic text-[11px] bg-slate-50 p-2 rounded-lg mt-1">
+                        "{c.notes}"
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Tags & Lead Score */}
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100/60">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {c.tags && c.tags.length > 0 ? (
+                        c.tags.map((tag, idx) => (
+                          <span key={idx} className="px-2 py-0.5 bg-slate-50 text-indigo-600 rounded-md text-[10px] font-bold border border-indigo-100/80">
+                            #{tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">No tags</span>
+                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedCustomerForTags(c);
+                          setEditingTags(c.tags || []);
+                          setTagInput('');
+                          setTagError(null);
+                        }}
+                        className="p-1 rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer flex items-center gap-0.5"
+                        title="Manage Tags"
+                      >
+                        <Tag className="w-3.5 h-3.5" />
+                        <span className="text-[9px] font-bold">Tags</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1 text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg shrink-0">
+                      <Award className="w-3.5 h-3.5" />
+                      <span>Lead Score: {c.leadScore || 75}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-100">
+                    <div className="bg-slate-50 p-2 rounded-lg">
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase">Orders</span>
+                      <span className="text-sm font-bold text-slate-900">{c.totalOrders}</span>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg">
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase">Spend</span>
+                      <span className="text-sm font-bold text-emerald-600">${c.totalSpent.toFixed(2)}</span>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg">
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase">Agent</span>
+                      <span className="text-xs font-semibold text-slate-700 truncate">{c.assignedAgent || 'Ehsan'}</span>
+                    </div>
+                  </div>
+
+                  {/* Expandable Purchase History Section */}
+                  {(() => {
+                    const isExpanded = expandedCustomerIds.includes(c.id);
+                    const customerOrders = allOrders.filter(o => 
+                      (o.customerEmail && c.email && o.customerEmail.toLowerCase() === c.email.toLowerCase()) ||
+                      (o.customerName && c.name && o.customerName.toLowerCase() === c.name.toLowerCase())
+                    );
+
+                    return (
+                      <div className="pt-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandCustomer(c.id)}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <ShoppingBag className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            <span className="truncate">Purchase History & Spend</span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-700 shrink-0">
+                              ${c.totalSpent.toFixed(2)}
+                            </span>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                          )}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-3 pt-3 border-t border-slate-200/80 bg-slate-50/80 -mx-5 -mb-5 p-4 rounded-b-2xl space-y-3">
+                            {/* Financial Breakdown Header */}
+                            <div className="grid grid-cols-3 gap-2 bg-white p-3 rounded-xl border border-slate-200/80 text-center shadow-2xs">
+                              <div>
+                                <span className="block text-[10px] uppercase font-bold text-slate-400">Total Spend</span>
+                                <span className="text-sm font-extrabold text-emerald-600">${c.totalSpent.toFixed(2)}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[10px] uppercase font-bold text-slate-400">Total Orders</span>
+                                <span className="text-sm font-extrabold text-slate-900">{c.totalOrders}</span>
+                              </div>
+                              <div>
+                                <span className="block text-[10px] uppercase font-bold text-slate-400">Avg Order</span>
+                                <span className="text-sm font-extrabold text-indigo-600">
+                                  ${c.totalOrders > 0 ? (c.totalSpent / c.totalOrders).toFixed(2) : '0.00'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Specific Orders Breakdown */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                  <PackageCheck className="w-3.5 h-3.5 text-indigo-600" />
+                                  <span>Order History ({customerOrders.length})</span>
+                                </h5>
+                                {customerOrders.length > 0 && (
+                                  <span className="text-[10px] font-medium text-slate-400">Recent first</span>
+                                )}
+                              </div>
+
+                              {customerOrders.length === 0 ? (
+                                <div className="text-center py-4 px-3 bg-white rounded-xl border border-dashed border-slate-200/80 text-xs text-slate-500 space-y-1">
+                                  <p className="font-bold text-slate-700">No specific order records match this email.</p>
+                                  <p className="text-[10px] text-slate-400">
+                                    Account metrics show {c.totalOrders} total order(s) worth ${c.totalSpent.toFixed(2)}.
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                                  {customerOrders.map(ord => (
+                                    <div key={ord.id} className="bg-white p-3 rounded-xl border border-slate-200/80 text-xs space-y-2 shadow-2xs">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-bold text-slate-900 font-mono">#{ord.orderNumber}</span>
+                                          <span className="text-[10px] text-slate-400">
+                                            {new Date(ord.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                            ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                            ord.status === 'shipped' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                            ord.status === 'processing' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                            'bg-slate-100 text-slate-700 border border-slate-200'
+                                          }`}>
+                                            {ord.status}
+                                          </span>
+                                          <span className="font-extrabold text-slate-900 font-mono">${ord.totalAmount.toFixed(2)}</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Order Items */}
+                                      {ord.items && ord.items.length > 0 && (
+                                        <div className="bg-slate-50/90 rounded-lg p-2 border border-slate-100 space-y-1">
+                                          <span className="text-[9px] font-bold text-slate-400 uppercase block">Items:</span>
+                                          {ord.items.map((item, i) => (
+                                            <div key={i} className="flex items-center justify-between text-[11px]">
+                                              <span className="text-slate-700 font-medium truncate max-w-[190px]">
+                                                {item.quantity}x {item.productTitle}
+                                              </span>
+                                              <span className="font-bold text-slate-800 font-mono">
+                                                ${(item.quantity * item.price).toFixed(2)}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+
+                                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                                        <span>Payment: <strong className="text-slate-600">{ord.paymentMethod}</strong></span>
+                                        <span>Ship To: <strong className="text-slate-600 truncate max-w-[130px]">{ord.shippingAddress}</strong></span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredCustomers.map((c) => (
-              <div key={c.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                      {c.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-slate-900 text-sm">{c.name}</h4>
-                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider ${
-                          c.segment === 'vip' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                          c.segment === 'lead' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                          'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        }`}>
-                          {c.segment || 'Active'}
-                        </span>
-                      </div>
-                      {c.company && (
-                        <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                          <Building2 className="w-3 h-3" />
-                          {c.company}
-                        </span>
-                      )}
-                    </div>
+          {/* Sidebar Column: Recent Customer Activity Widget */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs sticky top-20">
+              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100/80 shadow-2xs">
+                    <Clock className="w-4 h-4" />
                   </div>
-
-                  <button
-                    onClick={() => {
-                      setSelectedCustomer(c);
-                      setIsActivityOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/60 transition shadow-2xs cursor-pointer"
-                  >
-                    <History className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Customer 360</span>
-                  </button>
-                </div>
-
-                <div className="space-y-1.5 text-xs text-slate-600 border-t border-b border-slate-100 py-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{c.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{c.phone}</span>
-                    </div>
-                  </div>
-                  {c.notes && (
-                    <p className="text-slate-500 italic text-[11px] bg-slate-50 p-2 rounded-lg mt-1">
-                      "{c.notes}"
-                    </p>
-                  )}
-                </div>
-
-                {/* Tags & Lead Score */}
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100/60">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {c.tags && c.tags.length > 0 ? (
-                      c.tags.map((tag, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-slate-50 text-indigo-600 rounded-md text-[10px] font-bold border border-indigo-100/80">
-                          #{tag}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-[10px] text-slate-400 italic">No tags</span>
-                    )}
-                    <button
-                      onClick={() => {
-                        setSelectedCustomerForTags(c);
-                        setEditingTags(c.tags || []);
-                        setTagInput('');
-                        setTagError(null);
-                      }}
-                      className="p-1 rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer flex items-center gap-0.5"
-                      title="Manage Tags"
-                    >
-                      <Tag className="w-3.5 h-3.5" />
-                      <span className="text-[9px] font-bold">Tags</span>
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-1 text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg shrink-0">
-                    <Award className="w-3.5 h-3.5" />
-                    <span>Lead Score: {c.leadScore || 75}</span>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Recent Activity</h4>
+                    <p className="text-[10px] text-slate-500 font-medium">Last 5 customer actions</p>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-100">
-                  <div className="bg-slate-50 p-2 rounded-lg">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">Orders</span>
-                    <span className="text-sm font-bold text-slate-900">{c.totalOrders}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2 rounded-lg">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">Spend</span>
-                    <span className="text-sm font-bold text-emerald-600">${c.totalSpent.toFixed(2)}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2 rounded-lg">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">Agent</span>
-                    <span className="text-xs font-semibold text-slate-700 truncate">{c.assignedAgent || 'Ehsan'}</span>
-                  </div>
-                </div>
+                <button
+                  onClick={fetchRecentActivities}
+                  disabled={isLoadingActivities}
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  title="Refresh activity feed"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingActivities ? 'animate-spin' : ''}`} />
+                </button>
               </div>
-            ))}
+
+              {recentActivities.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  No recent customer activity found.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivities.slice(0, 5).map((act) => {
+                    const iconConfig = getActivityIcon(act.type);
+                    const IconComp = iconConfig.icon;
+                    const customer = customers.find(c => c.id === act.customerId);
+                    const displayName = act.customerName || customer?.name || 'Customer';
+
+                    return (
+                      <div
+                        key={act.id}
+                        onClick={() => {
+                          if (customer) {
+                            setSelectedCustomer(customer);
+                            setIsActivityOpen(true);
+                          }
+                        }}
+                        className={`group p-3 rounded-xl border border-slate-100 hover:border-indigo-200 bg-slate-50/50 hover:bg-indigo-50/30 transition flex items-start gap-3 ${
+                          customer ? 'cursor-pointer' : ''
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg border shrink-0 mt-0.5 ${iconConfig.color}`}>
+                          <IconComp className="w-3.5 h-3.5" />
+                        </div>
+
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-bold text-xs text-slate-900 truncate group-hover:text-indigo-600 transition">
+                              {displayName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                              {formatRelativeTime(act.createdAt)}
+                            </span>
+                          </div>
+
+                          <p className="text-[11px] font-semibold text-slate-700 leading-snug">
+                            {act.title}
+                          </p>
+
+                          {act.description && (
+                            <p className="text-[10px] text-slate-500 line-clamp-2 leading-tight">
+                              {act.description}
+                            </p>
+                          )}
+
+                          {act.amount !== undefined && (
+                            <div className="pt-0.5">
+                              <span className="inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">
+                                ${act.amount.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

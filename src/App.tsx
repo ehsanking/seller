@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
 import { ProductsView } from './components/ProductsView';
 import { OrdersView } from './components/OrdersView';
 import { CustomersView } from './components/CustomersView';
+import { WishlistView } from './components/WishlistView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsView } from './components/SettingsView';
 import { PluginsView } from './components/PluginsView';
@@ -15,10 +17,12 @@ import { RolesManagementView } from './components/RolesManagementView';
 import { SeoWebmasterView } from './components/SeoWebmasterView';
 import { BranchesView } from './components/BranchesView';
 import { PageBuilderView } from './components/PageBuilderView';
+import { TelegramMiniAppView } from './components/TelegramMiniAppView';
 import { AdminProfileModal } from './components/AdminProfileModal';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { CommandPalette } from './components/CommandPalette';
 import { 
   NavigationTab, 
   Product, 
@@ -45,6 +49,7 @@ export function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [plugins, setPlugins] = useState<Plugin[]>([]);
@@ -58,14 +63,23 @@ export function App() {
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isAdminProfileOpen, setIsAdminProfileOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dashboardFont, setDashboardFont] = useState(() => {
     return localStorage.getItem('dashboardFont') || 'Inter';
+  });
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('dashboardTheme') as 'light' | 'dark') || 'light';
   });
 
   const handleFontChange = (font: string) => {
     setDashboardFont(font);
     localStorage.setItem('dashboardFont', font);
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    localStorage.setItem('dashboardTheme', newTheme);
   };
 
   // Helper for resilient fetching during dev server restarts
@@ -90,11 +104,12 @@ export function App() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [prodRes, ordRes, custRes, coupRes, anaRes, setRes, plgRes, tmplRes, whRes, admRes, rlsRes, seoRes] = await Promise.all([
+      const [prodRes, ordRes, custRes, coupRes, wishRes, anaRes, setRes, plgRes, tmplRes, whRes, admRes, rlsRes, seoRes] = await Promise.all([
         fetchWithRetry('/api/products').then(r => r.json()),
         fetchWithRetry('/api/orders').then(r => r.json()),
         fetchWithRetry('/api/customers').then(r => r.json()),
         fetchWithRetry('/api/coupons').then(r => r.json()).catch(() => []),
+        fetchWithRetry('/api/wishlist').then(r => r.json()).catch(() => []),
         fetchWithRetry('/api/analytics').then(r => r.json()),
         fetchWithRetry('/api/settings').then(r => r.json()),
         fetchWithRetry('/api/plugins').then(r => r.json()),
@@ -109,8 +124,12 @@ export function App() {
       setOrders(ordRes || []);
       setCustomers(custRes || []);
       setCoupons(coupRes || []);
+      setWishlist(Array.isArray(wishRes) ? wishRes : []);
       setAnalytics(anaRes || null);
-      setSettings(setRes || null);
+      if (setRes) {
+        setSettings(setRes);
+        if (setRes.theme) setTheme(setRes.theme);
+      }
       setPlugins(plgRes || []);
       setTemplates(tmplRes || []);
       setWebhooks(whRes || []);
@@ -124,8 +143,37 @@ export function App() {
     }
   };
 
+  // Wishlist Toggle Handler
+  const handleToggleWishlist = async (productId: string) => {
+    try {
+      const res = await fetch('/api/wishlist/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.wishlist)) {
+        setWishlist(data.wishlist);
+      }
+    } catch (err) {
+      console.error('Failed to toggle wishlist item:', err);
+    }
+  };
+
   useEffect(() => {
     fetchAllData();
+  }, []);
+
+  // Global Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
   // Bulk Product Operations
@@ -157,6 +205,21 @@ export function App() {
       }
     } catch (err) {
       console.error('Bulk update products failed:', err);
+    }
+  };
+
+  const handleSeedProducts = async () => {
+    try {
+      const res = await fetch('/api/products/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.products) {
+        setProducts(data.products);
+      }
+    } catch (err) {
+      console.error('Seed products failed:', err);
     }
   };
 
@@ -478,7 +541,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900" style={{ fontFamily: `"${dashboardFont}", sans-serif` }}>
+    <div className={`flex min-h-screen ${theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`} style={{ fontFamily: `"${dashboardFont}", sans-serif` }}>
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -498,173 +561,211 @@ export function App() {
           onOpenAddOrderModal={() => setIsAddOrderOpen(true)}
           onOpenShortcutsModal={() => setIsShortcutsOpen(true)}
           onOpenAdminProfileModal={() => setIsAdminProfileOpen(true)}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           adminProfile={adminProfile}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           dashboardFont={dashboardFont}
           onChangeFont={handleFontChange}
+          products={products}
         />
 
         <main className="p-6 flex-1 overflow-y-auto">
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              analytics={analytics}
-              products={products}
-              orders={orders}
-              setActiveTab={setActiveTab}
-              onOpenAddProductModal={() => setIsAddProductOpen(true)}
-              onOpenAddOrderModal={() => setIsAddOrderOpen(true)}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  analytics={analytics}
+                  products={products}
+                  orders={orders}
+                  wishlist={wishlist}
+                  onToggleWishlist={handleToggleWishlist}
+                  setActiveTab={setActiveTab}
+                  onOpenAddProductModal={() => setIsAddProductOpen(true)}
+                  onOpenAddOrderModal={() => setIsAddOrderOpen(true)}
+                />
+              )}
 
-          {activeTab === 'products' && (
-            <ProductsView
-              products={products}
-              onAddProduct={handleAddProduct}
-              onUpdateProduct={handleUpdateProduct}
-              onDeleteProduct={handleDeleteProduct}
-              onBulkDeleteProducts={handleBulkDeleteProducts}
-              onBulkUpdateProducts={handleBulkUpdateProducts}
-              searchQuery={searchQuery}
-            />
-          )}
+              {activeTab === 'products' && (
+                <ProductsView
+                  products={products}
+                  onAddProduct={handleAddProduct}
+                  onUpdateProduct={handleUpdateProduct}
+                  onDeleteProduct={handleDeleteProduct}
+                  onBulkDeleteProducts={handleBulkDeleteProducts}
+                  onBulkUpdateProducts={handleBulkUpdateProducts}
+                  onSeedProducts={handleSeedProducts}
+                  searchQuery={searchQuery}
+                />
+              )}
 
-          {activeTab === 'orders' && (
-            <OrdersView
-              orders={orders}
-              onUpdateOrderStatus={handleUpdateOrderStatus}
-              onBulkDeleteOrders={handleBulkDeleteOrders}
-              onBulkUpdateOrderStatus={handleBulkUpdateOrderStatus}
-              searchQuery={searchQuery}
-            />
-          )}
+              {activeTab === 'orders' && (
+                <OrdersView
+                  orders={orders}
+                  onUpdateOrderStatus={handleUpdateOrderStatus}
+                  onBulkDeleteOrders={handleBulkDeleteOrders}
+                  onBulkUpdateOrderStatus={handleBulkUpdateOrderStatus}
+                  searchQuery={searchQuery}
+                  initialFactorSettings={settings?.factorSettings}
+                  onSaveFactorSettings={(f) => settings && handleSaveSettings({ ...settings, factorSettings: f })}
+                />
+              )}
 
-          {activeTab === 'customers' && (
-            <CustomersView
-              customers={customers}
-              searchQuery={searchQuery}
-            />
-          )}
+              {activeTab === 'customers' && (
+                <CustomersView
+                  customers={customers}
+                  orders={orders}
+                  searchQuery={searchQuery}
+                />
+              )}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsView
-              analytics={analytics}
-              products={products}
-            />
-          )}
+              {activeTab === 'wishlist' && (
+                <WishlistView
+                  products={products}
+                  wishlist={wishlist}
+                  onToggleWishlist={handleToggleWishlist}
+                />
+              )}
 
-          {activeTab === 'settings' && (
-            <SettingsView
-              settings={settings}
-              onSaveSettings={handleSaveSettings}
-            />
-          )}
+              {activeTab === 'analytics' && (
+                <AnalyticsView
+                  analytics={analytics}
+                  products={products}
+                />
+              )}
 
-          {activeTab === 'branches' && (
-            <BranchesView
-              settings={settings}
-              onSaveSettings={handleSaveSettings}
-            />
-          )}
+              {activeTab === 'settings' && (
+                <SettingsView
+                  settings={settings}
+                  onSaveSettings={handleSaveSettings}
+                  currentTheme={theme}
+                  onThemeChange={handleThemeChange}
+                  products={products}
+                  customers={customers}
+                />
+              )}
 
-          {activeTab === 'roles' && (
-            <RolesManagementView
-              roles={roles}
-              onSaveRole={async (roleData) => {
-                const method = roleData.id ? 'PUT' : 'POST';
-                const url = roleData.id ? `/api/admin/roles/${roleData.id}` : '/api/admin/roles';
-                const res = await fetch(url, {
-                  method,
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(roleData)
-                });
-                if (res.ok) {
-                  const updatedRoles = await fetch('/api/admin/roles').then(r => r.json());
-                  setRoles(updatedRoles);
-                }
-              }}
-              onDeleteRole={async (roleId) => {
-                const res = await fetch(`/api/admin/roles/${roleId}`, { method: 'DELETE' });
-                if (res.ok) {
-                  setRoles(prev => prev.filter(r => r.id !== roleId));
-                }
-              }}
-            />
-          )}
+              {activeTab === 'branches' && (
+                <BranchesView
+                  settings={settings}
+                  onSaveSettings={handleSaveSettings}
+                />
+              )}
 
-          {activeTab === 'seo' && (
-            <SeoWebmasterView
-              seoSettings={seoSettings}
-              onSaveSeoSettings={async (updated) => {
-                const res = await fetch('/api/seo/settings', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(updated)
-                });
-                if (res.ok) {
-                  const saved = await res.json();
-                  setSeoSettings(saved);
-                }
-              }}
-            />
-          )}
+              {activeTab === 'roles' && (
+                <RolesManagementView
+                  roles={roles}
+                  onSaveRole={async (roleData) => {
+                    const method = roleData.id ? 'PUT' : 'POST';
+                    const url = roleData.id ? `/api/admin/roles/${roleData.id}` : '/api/admin/roles';
+                    const res = await fetch(url, {
+                      method,
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(roleData)
+                    });
+                    if (res.ok) {
+                      const updatedRoles = await fetch('/api/admin/roles').then(r => r.json());
+                      setRoles(updatedRoles);
+                    }
+                  }}
+                  onDeleteRole={async (roleId) => {
+                    const res = await fetch(`/api/admin/roles/${roleId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                      setRoles(prev => prev.filter(r => r.id !== roleId));
+                    }
+                  }}
+                />
+              )}
 
-          {(activeTab === 'plugins' || activeTab.startsWith('plugin_')) && (
-            <PluginsView
-              plugins={plugins}
-              onTogglePlugin={handleTogglePlugin}
-              onUpdateConfig={handleUpdatePluginConfig}
-              onUploadPlugin={handleUploadPlugin}
-              onDeletePlugin={handleDeletePlugin}
-              selectedPluginTab={activeTab.startsWith('plugin_') ? activeTab.replace('plugin_', '') : null}
-              onSelectPluginTab={(slug) => {
-                if (slug) {
-                  setActiveTab(`plugin_${slug}` as NavigationTab);
-                } else {
-                  setActiveTab('plugins');
-                }
-              }}
-            />
-          )}
+              {activeTab === 'seo' && (
+                <SeoWebmasterView
+                  seoSettings={seoSettings}
+                  onSaveSeoSettings={async (updated) => {
+                    const res = await fetch('/api/seo/settings', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(updated)
+                    });
+                    if (res.ok) {
+                      const saved = await res.json();
+                      setSeoSettings(saved);
+                    }
+                  }}
+                />
+              )}
 
-          {activeTab === 'templates' && (
-            <TemplatesView
-              templates={templates}
-              products={products}
-              settings={settings}
-              coupons={coupons}
-              onActivateTemplate={handleActivateTemplate}
-              onUploadTemplate={handleUploadTemplate}
-              onDeleteTemplate={handleDeleteTemplate}
-              onGoToBuilder={() => setActiveTab('builder')}
-            />
-          )}
+              {(activeTab === 'plugins' || activeTab.startsWith('plugin_')) && (
+                <PluginsView
+                  plugins={plugins}
+                  onTogglePlugin={handleTogglePlugin}
+                  onUpdateConfig={handleUpdatePluginConfig}
+                  onUploadPlugin={handleUploadPlugin}
+                  onDeletePlugin={handleDeletePlugin}
+                  selectedPluginTab={activeTab.startsWith('plugin_') ? activeTab.replace('plugin_', '') : null}
+                  onSelectPluginTab={(slug) => {
+                    if (slug) {
+                      setActiveTab(`plugin_${slug}` as NavigationTab);
+                    } else {
+                      setActiveTab('plugins');
+                    }
+                  }}
+                />
+              )}
 
-          {activeTab === 'builder' && (
-            <PageBuilderView
-              products={products}
-              settings={settings}
-            />
-          )}
+              {activeTab === 'templates' && (
+                <TemplatesView
+                  templates={templates}
+                  products={products}
+                  settings={settings}
+                  coupons={coupons}
+                  onActivateTemplate={handleActivateTemplate}
+                  onUploadTemplate={handleUploadTemplate}
+                  onDeleteTemplate={handleDeleteTemplate}
+                  onGoToBuilder={() => setActiveTab('builder')}
+                />
+              )}
 
-          {activeTab === 'coupons' && (
-            <CouponsView
-              coupons={coupons}
-              onAddCoupon={handleAddCoupon}
-              onUpdateCoupon={handleUpdateCoupon}
-              onDeleteCoupon={handleDeleteCoupon}
-            />
-          )}
+              {activeTab === 'builder' && (
+                <PageBuilderView
+                  products={products}
+                  settings={settings}
+                />
+              )}
 
-          {activeTab === 'webhooks' && (
-            <WebhooksView
-              webhooks={webhooks}
-              onAddWebhook={handleAddWebhook}
-              onToggleWebhook={handleToggleWebhook}
-              onTestWebhook={handleTestWebhook}
-              onDeleteWebhook={handleDeleteWebhook}
-            />
-          )}
+              {activeTab === 'coupons' && (
+                <CouponsView
+                  coupons={coupons}
+                  onAddCoupon={handleAddCoupon}
+                  onUpdateCoupon={handleUpdateCoupon}
+                  onDeleteCoupon={handleDeleteCoupon}
+                />
+              )}
+
+              {activeTab === 'telegram_mini_app' && (
+                <TelegramMiniAppView
+                  products={products}
+                  storeName={settings.storeName}
+                  onOrderCreated={fetchAllData}
+                />
+              )}
+
+              {activeTab === 'webhooks' && (
+                <WebhooksView
+                  webhooks={webhooks}
+                  onAddWebhook={handleAddWebhook}
+                  onToggleWebhook={handleToggleWebhook}
+                  onTestWebhook={handleTestWebhook}
+                  onDeleteWebhook={handleDeleteWebhook}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
@@ -707,6 +808,24 @@ export function App() {
         onClose={() => setIsAddOrderOpen(false)}
         products={products}
         onAddOrder={handleAddOrder}
+      />
+
+      {/* Global Command Palette (Ctrl+K / Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        products={products}
+        customers={customers}
+        orders={orders}
+        onNavigate={(tab, search) => {
+          setActiveTab(tab);
+          if (search) {
+            setSearchQuery(search);
+          }
+        }}
+        onOpenAddProduct={() => setIsAddProductOpen(true)}
+        onOpenAddOrder={() => setIsAddOrderOpen(true)}
+        onRefreshData={fetchAllData}
       />
     </div>
   );
