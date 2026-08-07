@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ApiHealthWidget } from './ApiHealthWidget';
+import { AiDemandForecastWidget } from './AiDemandForecastWidget';
 import { 
   DollarSign, 
   ShoppingBag, 
@@ -399,6 +400,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* AI Demand Forecast & Inventory Planning */}
+      <AiDemandForecastWidget products={products} orders={orders} />
 
       {/* API Health & Developer Gateway Telemetry */}
       <ApiHealthWidget />

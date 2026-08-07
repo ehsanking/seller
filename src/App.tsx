@@ -6,6 +6,8 @@ import { DashboardView } from './components/DashboardView';
 import { ProductsView } from './components/ProductsView';
 import { OrdersView } from './components/OrdersView';
 import { CustomersView } from './components/CustomersView';
+import { CustomerInsightChatView } from './components/CustomerInsightChatView';
+import { OnboardingTour } from './components/OnboardingTour';
 import { WishlistView } from './components/WishlistView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsView } from './components/SettingsView';
@@ -45,7 +47,8 @@ import {
   AdminProfile, 
   AdminRole, 
   SeoWebmasterSettings,
-  Coupon
+  Coupon,
+  CustomerNotification
 } from './types';
 
 export function App() {
@@ -73,6 +76,10 @@ export function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isWooCommerceModalOpen, setIsWooCommerceModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showOnboardingTour, setShowOnboardingTour] = useState(() => {
+    return localStorage.getItem('sellerOnboardingCompleted') !== 'true';
+  });
+  const [customerNotifications, setCustomerNotifications] = useState<CustomerNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [dashboardFont, setDashboardFont] = useState(() => {
     return localStorage.getItem('dashboardFont') || 'Inter';
@@ -576,6 +583,7 @@ export function App() {
       <div className="flex-1 flex flex-col min-w-0">
         <Header
           activeTab={activeTab}
+          setActiveTab={setActiveTab}
           storeName={settings.storeName}
           onRefreshData={fetchAllData}
           onOpenAddProductModal={() => setIsAddProductOpen(true)}
@@ -646,6 +654,14 @@ export function App() {
                 />
               )}
 
+              {activeTab === 'customer_insight' && (
+                <CustomerInsightChatView
+                  customers={customers}
+                  orders={orders}
+                  products={products}
+                />
+              )}
+
               {activeTab === 'wishlist' && (
                 <WishlistView
                   products={products}
@@ -669,8 +685,12 @@ export function App() {
                   onThemeChange={handleThemeChange}
                   products={products}
                   customers={customers}
+                  orders={orders}
                   dashboardFont={dashboardFont}
                   onChangeFont={handleFontChange}
+                  onDispatchNotification={(notif) => {
+                    setCustomerNotifications(prev => [notif, ...prev]);
+                  }}
                 />
               )}
 
@@ -708,6 +728,7 @@ export function App() {
 
               {activeTab === 'seo' && (
                 <SeoWebmasterView
+                  products={products}
                   seoSettings={seoSettings}
                   onSaveSeoSettings={async (updated) => {
                     const res = await fetch('/api/seo/settings', {
@@ -893,6 +914,17 @@ export function App() {
         theme={theme}
         onToggle={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
       />
+
+      {/* Interactive Onboarding Tour */}
+      {showOnboardingTour && (
+        <OnboardingTour
+          onCompleteTour={() => {
+            setShowOnboardingTour(false);
+            localStorage.setItem('sellerOnboardingCompleted', 'true');
+          }}
+          onNavigateTab={(tab) => setActiveTab(tab as NavigationTab)}
+        />
+      )}
     </div>
   );
 }

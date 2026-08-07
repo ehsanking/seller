@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { StoreSettings, FactorSettings, Product, Customer } from '../types';
+import { StoreSettings, FactorSettings, Product, Customer, Order, AnomalyAlert, CustomerNotification } from '../types';
 import { FactorCustomizerModal, DEFAULT_FACTOR_SETTINGS } from './FactorCustomizerModal';
+import { SmartAlertsSettings } from './SmartAlertsSettings';
+import { AbTestingSettings } from './AbTestingSettings';
+import { DataBackupScheduler } from './DataBackupScheduler';
+import { AiSocialAutoposter } from './AiSocialAutoposter';
+import { BulkNotificationComposer } from './BulkNotificationComposer';
 import { 
   Settings, 
   Globe, 
@@ -33,8 +38,11 @@ interface SettingsViewProps {
   onThemeChange?: (theme: 'light' | 'dark') => void;
   products?: Product[];
   customers?: Customer[];
+  orders?: Order[];
   dashboardFont?: string;
   onChangeFont?: (font: string) => void;
+  onDispatchToAdminProfile?: (alert: AnomalyAlert) => void;
+  onDispatchNotification?: (notif: CustomerNotification) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ 
@@ -44,8 +52,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onThemeChange,
   products = [],
   customers = [],
+  orders = [],
   dashboardFont = 'Inter',
-  onChangeFont
+  onChangeFont,
+  onDispatchToAdminProfile,
+  onDispatchNotification
 }) => {
   const [isFactorCustomizerOpen, setIsFactorCustomizerOpen] = useState(false);
   const [formData, setFormData] = useState<StoreSettings>({
@@ -752,6 +763,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Advanced AI & Enterprise Features */}
+      <div className="space-y-6 pt-6 border-t border-slate-200">
+        <h3 className="font-display font-bold text-base text-slate-900">Advanced AI & Automation Suite</h3>
+
+        {/* Smart Anomaly Alerts */}
+        <SmartAlertsSettings 
+          orders={orders} 
+          onDispatchToAdminProfile={onDispatchToAdminProfile} 
+        />
+
+        {/* A/B Testing Store Templates */}
+        <AbTestingSettings />
+
+        {/* Data Export & Backup Scheduler */}
+        <DataBackupScheduler 
+          orders={orders} 
+          customers={customers} 
+          products={products} 
+        />
+
+        {/* AI Social Autoposter */}
+        <AiSocialAutoposter products={products} />
+
+        {/* Bulk Customer Notification Composer */}
+        {onDispatchNotification && (
+          <BulkNotificationComposer 
+            customers={customers} 
+            onDispatchNotification={onDispatchNotification} 
+          />
+        )}
+      </div>
 
       {/* Invoice / Factor Customizer Modal */}
       <FactorCustomizerModal

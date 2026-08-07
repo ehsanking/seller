@@ -383,6 +383,7 @@ export type NavigationTab =
   | 'products' 
   | 'orders' 
   | 'customers' 
+  | 'customer_insight'
   | 'wishlist'
   | 'analytics' 
   | 'shipping'
@@ -552,6 +553,77 @@ export interface ProductReview {
   isVerifiedOwner: boolean;
   adminReply?: string;
   createdAt: string;
+}
+
+export interface SmartAlertRule {
+  id: string;
+  title: string;
+  metric: 'sales_volume' | 'order_count' | 'conversion_rate' | 'refund_rate' | 'stock_anomaly';
+  condition: 'above' | 'below' | 'anomaly_spike';
+  thresholdValue: number;
+  enabled: boolean;
+  severity: 'info' | 'warning' | 'critical';
+  lastTriggeredAt?: string;
+}
+
+export interface AnomalyAlert {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'info' | 'warning' | 'critical';
+  metricName: string;
+  detectedAt: string;
+  aiRecommendation: string;
+  resolved: boolean;
+}
+
+export interface AbTestExperiment {
+  id: string;
+  name: string;
+  variantA: string;
+  variantB: string;
+  status: 'draft' | 'running' | 'completed';
+  trafficSplitA: number;
+  trafficSplitB: number;
+  impressionsA: number;
+  conversionsA: number;
+  revenueA: number;
+  impressionsB: number;
+  conversionsB: number;
+  revenueB: number;
+  startDate: string;
+  winner?: 'variantA' | 'variantB' | 'inconclusive';
+  aiAnalysis?: {
+    pValue: number;
+    confidenceLevel: string;
+    summary: string;
+    recommendation: string;
+    projectedRevenueGain: string;
+  };
+}
+
+export interface AiDemandForecastItem {
+  productId: string;
+  productTitle: string;
+  currentStock: number;
+  monthlySalesRunRate: number;
+  daysUntilStockout: number;
+  suggestedReorderQuantity: number;
+  reorderPriority: 'critical' | 'urgent' | 'optimal';
+  seasonalTrendNote: string;
+  confidenceScore: number;
+}
+
+export interface CustomerNotification {
+  id: string;
+  customerId?: string;
+  title: string;
+  message: string;
+  type: 'order_status' | 'back_in_stock' | 'coupon' | 'ticket' | 'promo';
+  isRead: boolean;
+  createdAt: string;
+  actionUrl?: string;
+  badgeText?: string;
 }
 
 

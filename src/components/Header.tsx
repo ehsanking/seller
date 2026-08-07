@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { VoiceControlBar } from './VoiceControlBar';
 import { 
   Search, 
   Bell, 
@@ -22,6 +23,7 @@ import { NavigationTab, AdminProfile, StoreNotification, Product } from '../type
 
 interface HeaderProps {
   activeTab: NavigationTab;
+  setActiveTab: (tab: NavigationTab) => void;
   storeName: string;
   onRefreshData: () => void;
   onOpenAddProductModal: () => void;
@@ -38,6 +40,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
+  setActiveTab,
   storeName,
   onRefreshData,
   onOpenAddProductModal,
@@ -392,6 +395,9 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
         </div>
+
+        {/* Voice Control Bar */}
+        <VoiceControlBar onNavigate={setActiveTab} />
 
         {/* Admin Profile Button */}
         <button

@@ -384,7 +384,8 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
         body: JSON.stringify({
           prompt: aiPrompt,
           type: aiType,
-          provider: plugin.config.provider || 'gemini'
+          provider: plugin.config.provider || 'gemini',
+          apiKey: plugin.config.apiKey || ''
         })
       });
       const data = await res.json();
@@ -1814,7 +1815,7 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
                       onChange={(e) => onUpdateConfig(selectedPluginForSubView.id, { ...selectedPluginForSubView.config, provider: e.target.value })}
                       className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg"
                     >
-                      <option value="gemini">Google Gemini 2.5 Flash (Recommended)</option>
+                      <option value="gemini">Google Gemini 3.6 Flash (Recommended)</option>
                       <option value="openai">OpenAI GPT-4o Commerce</option>
                       <option value="claude">Anthropic Claude 3.5 Sonnet</option>
                     </select>

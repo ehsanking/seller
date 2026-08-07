@@ -146,6 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'products', label: 'Products & Inventory', icon: Package },
     { id: 'orders', label: 'Orders & Shipments', icon: ShoppingBag },
     { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'customer_insight', label: 'Customer Insight Chat', icon: Sparkles, badge: 'AI Persona' },
     { id: 'wishlist', label: 'Customer Wishlist', icon: Heart, badge: 'Favorites' },
     { id: 'reviews', label: 'Product Reviews', icon: Star, badge: 'Moderation' },
     { id: 'shipping', label: 'Shipping & Freight', icon: Truck, badge: 'Zones' },

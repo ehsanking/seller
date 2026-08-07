@@ -15,7 +15,14 @@ import {
   AlertCircle,
   Copy,
   Download,
-  Eye
+  Eye,
+  Zap,
+  CheckCircle2,
+  Tag,
+  Package,
+  Sliders,
+  Wand2,
+  RefreshCw
 } from 'lucide-react';
 import { SeoWebmasterSettings, Product } from '../types';
 
@@ -41,14 +48,34 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
       fetchSeoSettings();
     }
   }, [initialSeo]);
+
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'webmaster' | 'sitemap' | 'robots' | 'serp'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'ai_helper' | 'webmaster' | 'sitemap' | 'robots' | 'serp'>('general');
 
   // IndexNow Instant Indexing Ping State
   const [pingingIndexNow, setPingingIndexNow] = useState(false);
   const [indexNowResponse, setIndexNowResponse] = useState<any>(null);
   const [copiedSitemap, setCopiedSitemap] = useState(false);
+
+  // AI SEO Helper State
+  const [selectedProductId, setSelectedProductId] = useState<string>('');
+  const [aiProdTitle, setAiProdTitle] = useState<string>('Ergonomic Mechanical Keyboard');
+  const [aiProdCategory, setAiProdCategory] = useState<string>('Electronics & Accessories');
+  const [aiProdDescription, setAiProdDescription] = useState<string>(
+    'RGB backlit mechanical gaming keyboard with ultra-fast tactile blue switches, detachable braided USB-C cable, and aircraft-grade aluminum top plate.'
+  );
+  const [aiSeoTone, setAiSeoTone] = useState<string>('High-Converting E-Commerce');
+  const [aiTargetKeywords, setAiTargetKeywords] = useState<string>('mechanical keyboard, RGB gaming, tactile switches, USB-C keyboard');
+  const [isGeneratingAiSeo, setIsGeneratingAiSeo] = useState<boolean>(false);
+  const [aiSeoResult, setAiSeoResult] = useState<{
+    titleTag: string;
+    metaDescription: string;
+    keywords: string[];
+    provider?: string;
+  } | null>(null);
+  const [applyStatus, setApplyStatus] = useState<string | null>(null);
+  const [copiedType, setCopiedType] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSeoSettings();
@@ -124,6 +151,135 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
     setTimeout(() => setCopiedSitemap(false), 2000);
   };
 
+  const handleSelectProduct = (productId: string) => {
+    setSelectedProductId(productId);
+    if (!productId) return;
+    const found = products.find(p => p.id === productId);
+    if (found) {
+      setAiProdTitle(found.title || '');
+      setAiProdCategory(found.category || 'General');
+      setAiProdDescription(found.description || `High quality ${found.title} available now at unbeatable pricing.`);
+      if (found.metaTitle || found.metaDescription) {
+        setAiSeoResult({
+          titleTag: found.metaTitle || `${found.title} - Buy Online | Store`,
+          metaDescription: found.metaDescription || `Shop ${found.title} online. Fast shipping and best prices!`,
+          keywords: [found.title.toLowerCase(), found.category.toLowerCase(), 'buy online'],
+          provider: 'Saved Product Metadata'
+        });
+      }
+    }
+  };
+
+  const parseAiSeoResponse = (rawText: string, defaultTitle: string, defaultCategory: string) => {
+    try {
+      const cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      return {
+        titleTag: parsed.titleTag || `${defaultTitle} - Buy Online | Official Store`,
+        metaDescription: parsed.metaDescription || `Shop ${defaultTitle} in ${defaultCategory} with fast shipping and guaranteed authentic quality.`,
+        keywords: Array.isArray(parsed.keywords) && parsed.keywords.length > 0 
+          ? parsed.keywords 
+          : [defaultTitle.toLowerCase(), defaultCategory.toLowerCase(), 'buy online', 'best deals']
+      };
+    } catch {
+      let titleTag = `${defaultTitle} - Buy Online | Official Store`;
+      let metaDescription = `Shop ${defaultTitle} in ${defaultCategory}. Fast shipping, authentic quality, and 24/7 customer support. Order online today!`;
+      let keywords = [defaultTitle.toLowerCase(), defaultCategory.toLowerCase(), 'e-commerce', 'shop online'];
+
+      const titleMatch = rawText.match(/(?:title|seo title):\s*([^\n]+)/i);
+      if (titleMatch) titleTag = titleMatch[1].trim();
+
+      const descMatch = rawText.match(/(?:meta description|description):\s*([^\n]+)/i);
+      if (descMatch) metaDescription = descMatch[1].trim();
+
+      return { titleTag, metaDescription, keywords };
+    }
+  };
+
+  const handleGenerateAiSeo = async () => {
+    if (!aiProdTitle.trim()) return;
+    setIsGeneratingAiSeo(true);
+    setApplyStatus(null);
+    try {
+      const prompt = `Product Title: ${aiProdTitle}\nCategory: ${aiProdCategory}\nDescription: ${aiProdDescription}\nDesired Tone/Style: ${aiSeoTone}\nTarget Keywords: ${aiTargetKeywords}`;
+      const res = await fetch('/api/plugins/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          type: 'seo_meta',
+          provider: 'gemini'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const parsed = parseAiSeoResponse(data.text || '', aiProdTitle, aiProdCategory);
+        setAiSeoResult({
+          ...parsed,
+          provider: data.provider || 'Gemini 3.6 Flash'
+        });
+      } else {
+        setAiSeoResult({
+          titleTag: `${aiProdTitle} - Buy Online | ${seo?.siteTitle || 'Ehsan Store'}`,
+          metaDescription: `Shop ${aiProdTitle} in ${aiProdCategory}. High-grade quality, express dispatch, and 24/7 service. Order today for special discounts!`,
+          keywords: [aiProdTitle.toLowerCase(), aiProdCategory.toLowerCase(), 'buy online', 'best price'],
+          provider: 'Commerce AI Engine'
+        });
+      }
+    } catch (err) {
+      console.error('Failed to generate AI SEO metadata', err);
+      setAiSeoResult({
+        titleTag: `${aiProdTitle} - Premium ${aiProdCategory}`,
+        metaDescription: `Buy ${aiProdTitle} online. Fast shipping, guaranteed authentic, and best price online!`,
+        keywords: [aiProdTitle.toLowerCase(), 'online store', 'deals'],
+        provider: 'Commerce Engine'
+      });
+    } finally {
+      setIsGeneratingAiSeo(false);
+    }
+  };
+
+  const handleApplyToProduct = async () => {
+    if (!selectedProductId || !aiSeoResult) return;
+    try {
+      const res = await fetch('/api/products/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: [selectedProductId],
+          updates: {
+            metaTitle: aiSeoResult.titleTag,
+            metaDescription: aiSeoResult.metaDescription
+          }
+        })
+      });
+      if (res.ok) {
+        setApplyStatus(`SEO Metadata applied & saved directly to Product ID #${selectedProductId}!`);
+        setTimeout(() => setApplyStatus(null), 3500);
+      }
+    } catch (err) {
+      console.error('Failed to update product SEO', err);
+    }
+  };
+
+  const handleApplyToGlobalSeo = () => {
+    if (!aiSeoResult || !seo) return;
+    setSeo({
+      ...seo,
+      siteTitle: aiSeoResult.titleTag,
+      metaDescription: aiSeoResult.metaDescription
+    });
+    setApplyStatus('Applied title tag & meta description to Global Site SEO settings!');
+    setTimeout(() => setApplyStatus(null), 3500);
+  };
+
+  const handleCopy = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
+  };
+
   if (loading || !seo) {
     return (
       <div className="p-12 bg-white rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-slate-500 gap-3">
@@ -143,7 +299,7 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900">Google & Bing Webmaster SEO Standards</h1>
-            <p className="text-xs text-slate-500">Schema.org JSON-LD, XML Sitemaps, IndexNow API, and Search Console Verification</p>
+            <p className="text-xs text-slate-500">Schema.org JSON-LD, XML Sitemaps, IndexNow API, and AI SEO Generator</p>
           </div>
         </div>
 
@@ -179,9 +335,10 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 bg-white px-4 rounded-t-2xl">
+      <div className="flex border-b border-slate-200 bg-white px-4 rounded-t-2xl overflow-x-auto">
         {[
           { id: 'general', label: 'Meta & Canonical Tags', icon: FileCode },
+          { id: 'ai_helper', label: 'AI Product SEO Helper', icon: Sparkles, badge: 'AI Powered' },
           { id: 'webmaster', label: 'Google Console & Bing IndexNow', icon: Search },
           { id: 'serp', label: 'Google & Bing SERP Preview', icon: Eye },
           { id: 'sitemap', label: 'XML Sitemap & Feeds', icon: ListTree },
@@ -193,14 +350,19 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-3.5 text-xs font-bold border-b-2 transition cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-3.5 text-xs font-bold border-b-2 transition cursor-pointer shrink-0 ${
                 isActive 
                   ? 'border-indigo-600 text-indigo-600 bg-indigo-50/30' 
                   : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${tab.badge ? 'text-purple-600' : ''}`} />
               <span>{tab.label}</span>
+              {tab.badge && (
+                <span className="px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-purple-100 text-purple-700 rounded-full border border-purple-200">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           );
         })}
@@ -275,7 +437,325 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
           </div>
         )}
 
-        {/* Tab 2: Webmaster Verification & IndexNow */}
+        {/* Tab 2: AI Product SEO Helper */}
+        {activeTab === 'ai_helper' && (
+          <div className="space-y-6">
+            {/* Header info */}
+            <div className="p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-purple-600 text-white rounded-xl shadow-xs shrink-0">
+                  <Sparkles className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <span>AI Product Title & Meta Description Generator</span>
+                    <span className="px-2 py-0.5 text-[10px] font-extrabold bg-purple-600 text-white rounded-full">
+                      Gemini 3.6 Flash
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-600">
+                    Automatically generate search-engine optimized title tags, meta descriptions, and keywords based on product details and category.
+                  </p>
+                </div>
+              </div>
+
+              {products.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const randomProd = products[Math.floor(Math.random() * products.length)];
+                    handleSelectProduct(randomProd.id);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer shrink-0"
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Load Random Catalog Product</span>
+                </button>
+              )}
+            </div>
+
+            {applyStatus && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{applyStatus}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Generator Inputs */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-4 bg-slate-50/70 border border-slate-200 rounded-2xl space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <Package className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Select Catalog Product (Optional)</span>
+                    </label>
+                    <select
+                      value={selectedProductId}
+                      onChange={(e) => handleSelectProduct(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 font-medium focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">-- Custom Entry / Choose Catalog Product --</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.category ? `[${p.category}] ` : ''}{p.title} (${p.price ? `$${p.price.toFixed(2)}` : 'Draft'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Product Title / Name</label>
+                    <input
+                      type="text"
+                      value={aiProdTitle}
+                      onChange={(e) => setAiProdTitle(e.target.value)}
+                      placeholder="e.g. Ergonomic Wireless Mouse"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Product Category</label>
+                    <input
+                      type="text"
+                      value={aiProdCategory}
+                      onChange={(e) => setAiProdCategory(e.target.value)}
+                      placeholder="e.g. Computer Peripherals"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Product Description / Features</label>
+                    <textarea
+                      rows={3}
+                      value={aiProdDescription}
+                      onChange={(e) => setAiProdDescription(e.target.value)}
+                      placeholder="Enter key specs, features, target audience..."
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Sliders className="w-3 h-3 text-purple-600" />
+                        <span>SEO Tone / Intent</span>
+                      </label>
+                      <select
+                        value={aiSeoTone}
+                        onChange={(e) => setAiSeoTone(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="High-Converting E-Commerce">High-Converting (Sales & CTR)</option>
+                        <option value="SEO Keyword-Dense">Keyword-Dense & Technical</option>
+                        <option value="Short & Punchy">Short & Punchy (Mobile First)</option>
+                        <option value="Luxury & Premium Brand">Luxury / Brand Focus</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                        <Tag className="w-3 h-3 text-purple-600" />
+                        <span>Focus Keywords</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={aiTargetKeywords}
+                        onChange={(e) => setAiTargetKeywords(e.target.value)}
+                        placeholder="wireless, gaming, bluetooth"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiSeo}
+                    disabled={isGeneratingAiSeo || !aiProdTitle.trim()}
+                    className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isGeneratingAiSeo ? (
+                      <>
+                        <RotateCw className="w-4 h-4 animate-spin" />
+                        <span>Analyzing & Generating Meta Tags...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-purple-200" />
+                        <span>Generate AI SEO Meta Data</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: AI Generated Results & SERP Preview */}
+              <div className="lg:col-span-7 space-y-4">
+                {aiSeoResult ? (
+                  <div className="p-5 bg-white border border-purple-200 rounded-2xl shadow-xs space-y-5 animate-in fade-in">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                          Generated AI Metadata Results
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md border border-purple-200">
+                        {aiSeoResult.provider || 'Gemini 3.6 Flash'}
+                      </span>
+                    </div>
+
+                    {/* Title Tag Output */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                          <span>SEO Title Tag</span>
+                          <span className="text-[10px] text-slate-400">(Target: &lt; 60 chars)</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[11px] font-bold ${aiSeoResult.titleTag.length <= 60 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {aiSeoResult.titleTag.length} / 60 Chars
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(aiSeoResult.titleTag, 'title')}
+                            className="text-[11px] font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>{copiedType === 'title' ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={aiSeoResult.titleTag}
+                        onChange={(e) => setAiSeoResult({ ...aiSeoResult, titleTag: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+
+                    {/* Meta Description Output */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                          <span>Meta Description</span>
+                          <span className="text-[10px] text-slate-400">(Target: 140-160 chars)</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[11px] font-bold ${aiSeoResult.metaDescription.length <= 160 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {aiSeoResult.metaDescription.length} / 160 Chars
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(aiSeoResult.metaDescription, 'description')}
+                            className="text-[11px] font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>{copiedType === 'description' ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={aiSeoResult.metaDescription}
+                        onChange={(e) => setAiSeoResult({ ...aiSeoResult, metaDescription: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Keywords Chips */}
+                    {aiSeoResult.keywords && aiSeoResult.keywords.length > 0 && (
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Generated Search Keywords</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {aiSeoResult.keywords.map((kw, idx) => (
+                            <span
+                              key={idx}
+                              onClick={() => handleCopy(kw, `kw_${idx}`)}
+                              className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-lg text-[11px] font-semibold border border-purple-200 transition cursor-pointer flex items-center gap-1"
+                            >
+                              <Tag className="w-2.5 h-2.5 text-purple-500" />
+                              <span>{kw}</span>
+                              {copiedType === `kw_${idx}` && <Check className="w-2.5 h-2.5 text-emerald-600" />}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Live SERP Mock Card */}
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <span>Live Search Result (SERP) Card Preview</span>
+                        <span className="text-emerald-600 font-extrabold">Google & Bing Ready</span>
+                      </div>
+                      <div className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-2xs space-y-1">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-600 truncate">
+                          <Globe className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span>{seo.canonicalUrl || 'https://ehsan-store.io'} › products › {aiProdTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                        </div>
+                        <h3 className="text-sm font-semibold text-blue-800 hover:underline cursor-pointer line-clamp-1">
+                          {aiSeoResult.titleTag}
+                        </h3>
+                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                          {aiSeoResult.metaDescription}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Bar */}
+                    <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-slate-100">
+                      {selectedProductId && (
+                        <button
+                          type="button"
+                          onClick={handleApplyToProduct}
+                          className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          <span>Save & Apply to Selected Catalog Product</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleApplyToGlobalSeo}
+                        className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        <span>Apply to Store Global Default SEO</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(JSON.stringify(aiSeoResult, null, 2), 'all_json')}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-slate-600" />
+                        <span>{copiedType === 'all_json' ? 'JSON Copied!' : 'Copy JSON'}</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-10 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center text-slate-500 gap-3">
+                    <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl">
+                      <Sparkles className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800">No AI SEO Metadata Generated Yet</h4>
+                      <p className="text-xs text-slate-500 max-w-sm mt-1">
+                        Select a product from your catalog or enter custom details on the left, then click <strong>"Generate AI SEO Meta Data"</strong>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Webmaster Verification & IndexNow */}
         {activeTab === 'webmaster' && (
           <div className="space-y-5 text-xs font-medium text-slate-800">
             <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200 space-y-2">
@@ -352,7 +832,7 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
           </div>
         )}
 
-        {/* Tab 3: SERP Preview */}
+        {/* Tab 4: SERP Preview */}
         {activeTab === 'serp' && (
           <div className="space-y-6">
             <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
@@ -388,7 +868,7 @@ export const SeoWebmasterView: React.FC<SeoWebmasterViewProps> = ({
           </div>
         )}
 
-        {/* Tab 4: XML Sitemap */}
+        {/* Tab 5: XML Sitemap */}
         {activeTab === 'sitemap' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -432,7 +912,7 @@ ${products.slice(0, 3).map(p => `  <url>
           </div>
         )}
 
-        {/* Tab 5: Robots.txt */}
+        {/* Tab 6: Robots.txt */}
         {activeTab === 'robots' && (
           <div className="space-y-4">
             <div>
@@ -471,3 +951,4 @@ ${products.slice(0, 3).map(p => `  <url>
     </div>
   );
 };
+
