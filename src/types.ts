@@ -39,7 +39,7 @@ export interface Product {
   downloadUrl?: string;
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refund_requested' | 'refunded';
 
 export interface OrderItem {
   productId: string;
@@ -335,6 +335,49 @@ export interface SeoWebmasterSettings {
   twitterHandle: string;
 }
 
+export interface EmailTemplate {
+  id: string;
+  key: 'order_confirmation' | 'shipping_update' | 'refund_confirmation' | 'customer_welcome' | 'admin_low_stock';
+  name: string;
+  category: 'transactional' | 'shipping' | 'billing' | 'admin';
+  subject: string;
+  senderName: string;
+  senderEmail: string;
+  isEnabled: boolean;
+  bodyHtml: string;
+  bodyText: string;
+  lastUpdated: string;
+}
+
+export interface EmailDraft {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  templateKey: string;
+  templateName: string;
+  recipientEmail: string;
+  recipientName: string;
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  refundAmount?: number;
+  refundReason?: string;
+  createdAt: string;
+  status: 'draft' | 'sent';
+  sentAt?: string;
+}
+
+export interface SmtpSettings {
+  host: string;
+  port: number;
+  encryption: 'none' | 'tls' | 'ssl';
+  username: string;
+  fromName: string;
+  fromEmail: string;
+  replyToEmail: string;
+  isConfigured: boolean;
+}
+
 export type NavigationTab = 
   | 'dashboard' 
   | 'products' 
@@ -342,16 +385,21 @@ export type NavigationTab =
   | 'customers' 
   | 'wishlist'
   | 'analytics' 
+  | 'shipping'
+  | 'taxes'
+  | 'reviews'
   | 'settings' 
   | 'branches'
   | 'plugins'
   | 'templates'
+  | 'email_templates'
   | 'webhooks'
   | 'roles'
   | 'seo'
   | 'coupons'
   | 'builder'
   | 'telegram_mini_app'
+  | 'daisyui'
   | `plugin_${string}`;
 
 export interface StoreSection {
@@ -447,6 +495,63 @@ export interface WishlistItem {
   productId: string;
   addedAt: string;
   product?: Product;
+}
+
+export type ShippingMethodType = 'flat_rate' | 'free_shipping' | 'local_pickup' | 'weight_based';
+
+export interface ShippingMethod {
+  id: string;
+  title: string;
+  type: ShippingMethodType;
+  cost: number;
+  enabled: boolean;
+  minOrderAmount?: number; // For free shipping trigger
+  costPerKg?: number; // For weight based shipping
+  estimatedDays?: string;
+  description?: string;
+}
+
+export interface ShippingZone {
+  id: string;
+  name: string;
+  regions: string[]; // e.g. ["Domestic", "US", "CA", "EU", "Wildcard *"]
+  postcodes?: string[];
+  methods: ShippingMethod[];
+}
+
+export interface TaxRule {
+  id: string;
+  country: string; // "US", "CA", "EU", "*", etc.
+  state?: string;
+  postcode?: string;
+  ratePercent: number;
+  name: string; // e.g. "VAT 19%", "Sales Tax 7.5%"
+  isCompound: boolean;
+  priority: number;
+}
+
+export interface TaxClass {
+  id: string;
+  name: string; // "Standard", "Reduced Rate", "Zero Rate"
+  slug: string; // "standard", "reduced-rate", "zero-rate"
+  rules: TaxRule[];
+}
+
+export type ReviewStatus = 'approved' | 'pending' | 'spam' | 'trash';
+
+export interface ProductReview {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage?: string;
+  authorName: string;
+  authorEmail: string;
+  rating: number; // 1 to 5
+  reviewText: string;
+  status: ReviewStatus;
+  isVerifiedOwner: boolean;
+  adminReply?: string;
+  createdAt: string;
 }
 
 

@@ -23,6 +23,7 @@ import {
   Building2,
   ShieldCheck,
   Percent,
+  Mail,
   Compass
 } from 'lucide-react';
 import { Product, Customer, Order, NavigationTab } from '../types';
@@ -174,6 +175,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => { onNavigate('coupons'); onClose(); }
     },
     {
+      id: 'nav-daisyui',
+      type: 'navigation',
+      title: 'DaisyUI Component Kit',
+      subtitle: 'DaisyUI v5 UI components, buttons, badges, stats & preview',
+      badge: 'UI Kit',
+      badgeColor: 'bg-purple-100 text-purple-800',
+      icon: <Sparkles className="w-4 h-4 text-purple-600" />,
+      action: () => { onNavigate('daisyui'); onClose(); }
+    },
+    {
       id: 'nav-plugins',
       type: 'navigation',
       title: 'Plugins & Extensions',
@@ -192,6 +203,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       badgeColor: 'bg-teal-50 text-teal-700',
       icon: <Globe className="w-4 h-4 text-teal-500" />,
       action: () => { onNavigate('seo'); onClose(); }
+    },
+    {
+      id: 'nav-email-templates',
+      type: 'navigation',
+      title: 'Email Templates',
+      subtitle: 'Order confirmations, shipping tracking & refund notification editor',
+      badge: 'Mailer',
+      badgeColor: 'bg-indigo-50 text-indigo-700',
+      icon: <Mail className="w-4 h-4 text-indigo-500" />,
+      action: () => { onNavigate('email_templates'); onClose(); }
     }
   ];
 

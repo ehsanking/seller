@@ -15,6 +15,7 @@
     "@google/genai": "^2.15.0",
     "@vis.gl/react-google-maps": "^1.9.0",
     "clsx": "^2.1.0",
+    "daisyui": "^5.7.16",
     "express": "^4.19.2",
     "hotkeys-js": "^4.0.4",
     "lucide-react": "^0.344.0",

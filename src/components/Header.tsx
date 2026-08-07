@@ -15,7 +15,8 @@ import {
   X, 
   BellRing, 
   Sparkles,
-  Type 
+  Zap,
+  Menu
 } from 'lucide-react';
 import { NavigationTab, AdminProfile, StoreNotification, Product } from '../types';
 
@@ -30,10 +31,9 @@ interface HeaderProps {
   adminProfile?: AdminProfile | null;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  dashboardFont?: string;
-  onChangeFont?: (font: string) => void;
   products?: Product[];
   onOpenCommandPalette?: () => void;
+  onToggleMobileSidebar?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,20 +47,13 @@ export const Header: React.FC<HeaderProps> = ({
   adminProfile,
   searchQuery,
   setSearchQuery,
-  dashboardFont = 'Inter',
-  onChangeFont,
   products = [],
   onOpenCommandPalette,
+  onToggleMobileSidebar,
 }) => {
   const [notifications, setNotifications] = useState<StoreNotification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isNotifAnimating, setIsNotifAnimating] = useState(false);
-  const [isFontMenuOpen, setIsFontMenuOpen] = useState(false);
-
-  const trendingFonts = [
-    'Inter', 'Roboto', 'Open Sans', 'Poppins', 'Montserrat', 
-    'Lato', 'Nunito', 'Vazirmatn', 'Playfair Display', 'Fira Code'
-  ];
 
   // Helper for resilient fetching during dev server restarts
   const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3, delay = 1000): Promise<Response> => {
@@ -196,53 +189,30 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-  const lowStockProducts = (products || []).filter(p => p.stockQuantity < 5);
 
   return (
-    <header className="bg-white border-b border-slate-200/80 px-6 py-4 sticky top-0 z-30 flex items-center justify-between shadow-xs">
-      {/* Title */}
-      <div>
-        <h2 className="text-xl font-bold font-display text-slate-900">{getTabTitle(activeTab)}</h2>
-        <p className="text-xs text-slate-500 font-medium">Managing {storeName} • Updated real-time</p>
+    <header className="bg-white border-b border-slate-200/80 px-4 sm:px-6 py-3.5 sticky top-0 z-30 flex items-center justify-between shadow-xs">
+      {/* Title & Mobile Hamburger */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        {onToggleMobileSidebar && (
+          <button
+            onClick={onToggleMobileSidebar}
+            className="lg:hidden p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition cursor-pointer shrink-0"
+            title="Toggle Sidebar Navigation"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <div className="min-w-0">
+          <h2 className="text-sm sm:text-xl font-bold font-display text-slate-900 truncate">{getTabTitle(activeTab)}</h2>
+          <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate">Managing {storeName} • Live Sync</p>
+        </div>
       </div>
 
       {/* Global Controls */}
-      <div className="flex items-center gap-3">
-        {/* Low Stock Alert Visual Badge (<5 items) */}
-        {lowStockProducts.length > 0 && (
-          <div className="relative group">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50 rounded-lg text-xs font-bold shadow-xs cursor-pointer hover:bg-amber-500/20 transition">
-              <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse shrink-0" />
-              <span>{lowStockProducts.length} Low Stock</span>
-            </div>
-
-            {/* Popover on hover showing items below 5 inventory */}
-            <div className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-3 text-xs z-50 hidden group-hover:block transition-all">
-              <div className="font-bold text-slate-900 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-display">
-                  <AlertTriangle className="w-4 h-4" /> Low Stock Safeguard
-                </span>
-                <span className="text-[10px] bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 font-mono px-1.5 py-0.5 rounded font-bold">&lt; 5 items</span>
-              </div>
-              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-                {lowStockProducts.map(p => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700/50">
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{p.title}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">SKU: {p.sku}</p>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 shrink-0 border border-amber-200 dark:border-amber-700">
-                      {p.stockQuantity} left
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Global Search & Command Palette Trigger */}
-        <div className="relative w-72 hidden sm:block">
+        <div className="relative w-44 sm:w-72 hidden md:block">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
@@ -268,51 +238,11 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenShortcutsModal}
           title="Keyboard Shortcuts Cheatsheet (Press ?)"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
         >
           <Keyboard className="w-4 h-4 text-indigo-600" />
           <kbd className="hidden md:inline px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white text-slate-700 rounded border border-slate-300">?</kbd>
         </button>
-
-        {/* Font Selector Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setIsFontMenuOpen(!isFontMenuOpen)}
-            title="Dashboard Font"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition cursor-pointer"
-          >
-            <Type className="w-4 h-4 text-indigo-600" />
-            <span className="hidden md:inline">{dashboardFont}</span>
-          </button>
-
-          {isFontMenuOpen && (
-            <div className="absolute right-0 mt-3 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-              <div className="p-3 bg-slate-50 border-b border-slate-100">
-                <h4 className="font-bold text-xs text-slate-800">Dashboard Font</h4>
-              </div>
-              <div className="max-h-64 overflow-y-auto p-2 space-y-1">
-                {trendingFonts.map(font => (
-                  <button
-                    key={font}
-                    onClick={() => {
-                      onChangeFont?.(font);
-                      setIsFontMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
-                      dashboardFont === font
-                        ? 'bg-indigo-50 text-indigo-700 font-bold'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                    style={{ fontFamily: `"${font}", sans-serif` }}
-                  >
-                    {font}
-                    {dashboardFont === font && <Check className="w-3.5 h-3.5" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Refresh button */}
         <button

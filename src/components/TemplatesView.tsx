@@ -34,6 +34,7 @@ interface TemplatesViewProps {
   onUploadTemplate: (templateData: Partial<StoreTemplate>) => Promise<void>;
   onDeleteTemplate: (id: string) => void;
   onGoToBuilder?: () => void;
+  onAddOrder?: (order: any) => void;
 }
 
 export function TemplatesView({
@@ -44,7 +45,8 @@ export function TemplatesView({
   onActivateTemplate,
   onUploadTemplate,
   onDeleteTemplate,
-  onGoToBuilder
+  onGoToBuilder,
+  onAddOrder
 }: TemplatesViewProps) {
   const [selectedFramework, setSelectedFramework] = useState<string>('all');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -575,6 +577,7 @@ export function TemplatesView({
                 onClose={() => setPreviewTemplate(null)}
                 settings={settings}
                 coupons={coupons}
+                onAddOrder={onAddOrder}
               />
             </div>
           </div>

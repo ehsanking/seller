@@ -21,7 +21,9 @@ import {
   Receipt,
   FileText,
   Database,
-  Download
+  Download,
+  Type,
+  Check
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -31,6 +33,8 @@ interface SettingsViewProps {
   onThemeChange?: (theme: 'light' | 'dark') => void;
   products?: Product[];
   customers?: Customer[];
+  dashboardFont?: string;
+  onChangeFont?: (font: string) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ 
@@ -39,7 +43,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   currentTheme = 'light',
   onThemeChange,
   products = [],
-  customers = []
+  customers = [],
+  dashboardFont = 'Inter',
+  onChangeFont
 }) => {
   const [isFactorCustomizerOpen, setIsFactorCustomizerOpen] = useState(false);
   const [formData, setFormData] = useState<StoreSettings>({
@@ -301,6 +307,58 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span className="w-2 h-2 rounded-full bg-indigo-400"></span>
                 )}
               </button>
+            </div>
+          </div>
+
+          {/* Typography & Dashboard Font Customizer */}
+          <div className="pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <Type className="w-4 h-4 text-indigo-600" />
+                <span>Dashboard Typography & Font Family</span>
+              </label>
+              <span className="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
+                Current: {dashboardFont}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mb-3">Select your preferred typeface for all admin dashboard menus, cards, and tables.</p>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+              {[
+                { name: 'Inter', desc: 'Clean UI' },
+                { name: 'Plus Jakarta Sans', desc: 'Sleek Geometric' },
+                { name: 'Vazirmatn', desc: 'Multilingual' },
+                { name: 'Roboto', desc: 'Modern Standard' },
+                { name: 'Poppins', desc: 'Bold Display' },
+                { name: 'Open Sans', desc: 'Friendly' },
+                { name: 'Montserrat', desc: 'Editorial' },
+                { name: 'Playfair Display', desc: 'Serif Elegance' },
+                { name: 'Outfit', desc: 'Futuristic' },
+                { name: 'Fira Code', desc: 'Monospace' }
+              ].map(item => {
+                const isSelected = dashboardFont === item.name;
+                return (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => onChangeFont?.(item.name)}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between h-20 ${
+                      isSelected
+                        ? 'bg-indigo-50/90 border-indigo-500 ring-2 ring-indigo-500/20 text-indigo-900 font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-bold truncate">{item.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-medium">{item.desc}</span>
+                    <span className="text-[11px] opacity-75 truncate" style={{ fontFamily: `"${item.name}", sans-serif` }}>
+                      Aa Bb 123
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

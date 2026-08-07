@@ -44,6 +44,7 @@ interface PluginsViewProps {
   onDeletePlugin: (id: string) => Promise<void>;
   selectedPluginTab?: string | null;
   onSelectPluginTab?: (slug: string | null) => void;
+  onOpenWooCommerceModal?: () => void;
 }
 
 export const PluginsView: React.FC<PluginsViewProps> = ({
@@ -53,7 +54,8 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
   onUploadPlugin,
   onDeletePlugin,
   selectedPluginTab,
-  onSelectPluginTab
+  onSelectPluginTab,
+  onOpenWooCommerceModal
 }) => {
   const [activeCategory, setActiveCategory] = useState<'all' | 'cdn' | 'payment' | 'shipping' | 'ai' | 'security' | 'api' | 'analytics' | 'custom'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -700,12 +702,23 @@ export const PluginsView: React.FC<PluginsViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {onOpenWooCommerceModal && (
+            <button
+              onClick={onOpenWooCommerceModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs transition shadow-lg shadow-indigo-600/30 cursor-pointer border border-indigo-400/30"
+              title="Launch Seller vs WooCommerce Comparison & Migration Bridge"
+            >
+              <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+              <span>VS WooCommerce Bridge</span>
+            </button>
+          )}
+
           <button
             onClick={() => setIsUploadModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition shadow-lg shadow-indigo-600/30 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition shadow-md cursor-pointer border border-slate-700"
           >
-            <Upload className="w-4 h-4" />
+            <Upload className="w-4 h-4 text-indigo-400" />
             <span>Upload Custom Plugin</span>
           </button>
         </div>

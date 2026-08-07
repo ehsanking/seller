@@ -32,7 +32,23 @@ import { Product, StoreBranch } from '../types';
 
 interface CraftNode {
   id: string;
-  type: 'announcement' | 'hero' | 'products' | 'german_spotlight' | 'promo' | 'testimonials' | 'footer' | 'blog' | 'custom_page';
+  type: 
+    | 'announcement' 
+    | 'hero' 
+    | 'products' 
+    | 'german_spotlight' 
+    | 'promo' 
+    | 'testimonials' 
+    | 'footer' 
+    | 'blog' 
+    | 'custom_page'
+    | 'daisy_stats'
+    | 'daisy_hero'
+    | 'daisy_card'
+    | 'daisy_steps'
+    | 'daisy_timeline'
+    | 'daisy_collapse'
+    | 'daisy_alert';
   displayName: string;
   props: Record<string, any>;
 }
@@ -188,6 +204,110 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
           email: 'support@ehsan-seller.com'
         }
       }
+    ],
+    daisyUi: [
+      {
+        id: 'node_daisy_alert',
+        type: 'daisy_alert' as const,
+        displayName: 'DaisyUI Alert Bar',
+        props: {
+          text: '⚡ DaisyUI Component Integration Active in Craft.js Page Builder!',
+          type: 'info',
+          buttonText: 'View Kit'
+        }
+      },
+      {
+        id: 'node_daisy_hero',
+        type: 'daisy_hero' as const,
+        displayName: 'DaisyUI Boxed Hero',
+        props: {
+          title: 'DaisyUI Powered Storefront',
+          subtitle: 'Build modern responsive layouts using DaisyUI v5 utility classes and Craft.js decoupled drag-and-drop state.',
+          buttonText: 'Explore Collection',
+          badge: 'DaisyUI v5 + Tailwind v4',
+          variant: 'primary'
+        }
+      },
+      {
+        id: 'node_daisy_stats',
+        type: 'daisy_stats' as const,
+        displayName: 'DaisyUI Stats Grid',
+        props: {
+          stat1Title: 'Total Store Revenue',
+          stat1Value: '€34,800',
+          stat1Desc: '↗︎ 28% from last month',
+          stat2Title: 'Active Customers',
+          stat2Value: '2,450',
+          stat2Desc: '↗︎ 320 new users',
+          stat3Title: 'Express Orders',
+          stat3Value: '1,890',
+          stat3Desc: '↘︎ 12 processing'
+        }
+      },
+      {
+        id: 'node_daisy_card',
+        type: 'daisy_card' as const,
+        displayName: 'DaisyUI Featured Card',
+        props: {
+          title: 'DaisyUI Ergonomic Keyboard',
+          description: 'Hot-swappable mechanical keys, RGB backlight, and aircraft-grade aluminum frame.',
+          badge: 'BESTSELLER',
+          price: '189 €',
+          buttonText: 'Add to Cart',
+          imageUrl: 'https://images.unsplash.com/photo-1618953793470-8785375507c3?auto=format&fit=crop&w=600&q=80'
+        }
+      },
+      {
+        id: 'node_daisy_steps',
+        type: 'daisy_steps' as const,
+        displayName: 'DaisyUI Order Steps',
+        props: {
+          title: 'Simple 4-Step Express Delivery',
+          step1: 'Product Selection',
+          step2: 'Address & EU Tax',
+          step3: 'Instant Payment',
+          step4: 'Same-day DHL Dispatch',
+          currentStep: 3
+        }
+      },
+      {
+        id: 'node_daisy_timeline',
+        type: 'daisy_timeline' as const,
+        displayName: 'DaisyUI Store Timeline',
+        props: {
+          title: 'Growth & Innovation Timeline',
+          item1Year: '2024',
+          item1Title: 'Berlin Central Hub Opened',
+          item2Year: '2025',
+          item2Title: 'Munich & Frankfurt Outlets',
+          item3Year: '2026',
+          item3Title: 'Seller Core AI Engine Launch'
+        }
+      },
+      {
+        id: 'node_daisy_collapse',
+        type: 'daisy_collapse' as const,
+        displayName: 'DaisyUI FAQ Accordion',
+        props: {
+          title: 'Frequently Asked Questions',
+          q1: 'What payment methods are supported in Germany & EU?',
+          a1: 'We accept PayPal, Credit Cards, Sofort, Klarna, SEPA, and Apple Pay.',
+          q2: 'How fast is express shipping across Germany?',
+          a2: 'Orders placed before 2 PM CET are dispatched the same day via DHL Express (1-2 business days).',
+          q3: 'Is DaisyUI fully integrated into Craft.js?',
+          a3: 'Yes! All DaisyUI classes like stats, hero, cards, steps, timeline, and collapse render natively inside the Craft.js canvas.'
+        }
+      },
+      {
+        id: 'node_footer',
+        type: 'footer' as const,
+        displayName: 'Store Footer',
+        props: {
+          copyrightText: '© 2026 Ehsan Seller DE. Powered by DaisyUI & Craft.js Engine.',
+          showSocials: true,
+          email: 'support@ehsan-seller.de'
+        }
+      }
     ]
   };
 
@@ -198,7 +318,7 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
-  const [activePreset, setActivePreset] = useState<'germany' | 'minimal'>('germany');
+  const [activePreset, setActivePreset] = useState<'germany' | 'minimal' | 'daisyui'>('germany');
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
 
   // Synchronize JSON view whenever nodes change
@@ -207,15 +327,19 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
   }, [nodes]);
 
   // Handle Preset Switching
-  const applyPreset = (key: 'germany' | 'minimal') => {
+  const applyPreset = (key: 'germany' | 'minimal' | 'daisyui') => {
     if (key === 'germany') {
       setNodes(templatesPreset.germanyLaunch);
       setSelectedNodeId('node_hero');
       setActivePreset('germany');
-    } else {
+    } else if (key === 'minimal') {
       setNodes(templatesPreset.minimalistic);
       setSelectedNodeId('node_hero');
       setActivePreset('minimal');
+    } else {
+      setNodes(templatesPreset.daisyUi);
+      setSelectedNodeId('node_daisy_hero');
+      setActivePreset('daisyui');
     }
   };
 
@@ -313,6 +437,84 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
         displayName = 'Custom HTML Block';
         defaultProps = {
           htmlContent: '<div class="p-4 text-center">Your custom page content goes here</div>'
+        };
+        break;
+      case 'daisy_stats':
+        displayName = 'DaisyUI Stats Grid';
+        defaultProps = {
+          stat1Title: 'Total Store Revenue',
+          stat1Value: '€28,400',
+          stat1Desc: '↗︎ 24% vs last month',
+          stat2Title: 'New Customers',
+          stat2Value: '1,820',
+          stat2Desc: '↗︎ 210 this week',
+          stat3Title: 'Fulfilled Orders',
+          stat3Value: '1,240',
+          stat3Desc: '98.5% satisfaction'
+        };
+        break;
+      case 'daisy_hero':
+        displayName = 'DaisyUI Boxed Hero';
+        defaultProps = {
+          title: 'Modern DaisyUI Hero Box',
+          subtitle: 'High performance web application layout crafted with DaisyUI v5 classes.',
+          buttonText: 'Get Started Now',
+          badge: 'DaisyUI Integration',
+          variant: 'primary'
+        };
+        break;
+      case 'daisy_card':
+        displayName = 'DaisyUI Featured Card';
+        defaultProps = {
+          title: 'DaisyUI Smart Headphones',
+          description: 'High fidelity audio with noise cancellation and ergonomic cushion.',
+          badge: 'NEW ARRIVAL',
+          price: '149 €',
+          buttonText: 'Order Today',
+          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80'
+        };
+        break;
+      case 'daisy_steps':
+        displayName = 'DaisyUI Order Steps';
+        defaultProps = {
+          title: 'Order Processing Steps',
+          step1: 'Cart Review',
+          step2: 'Shipping Info',
+          step3: 'Payment',
+          step4: 'Confirmation',
+          currentStep: 3
+        };
+        break;
+      case 'daisy_timeline':
+        displayName = 'DaisyUI Store Timeline';
+        defaultProps = {
+          title: 'Our Journey',
+          item1Year: '2024',
+          item1Title: 'Platform Launch',
+          item2Year: '2025',
+          item2Title: 'EU Store Outlets',
+          item3Year: '2026',
+          item3Title: 'DaisyUI & Craft.js Integration'
+        };
+        break;
+      case 'daisy_collapse':
+        displayName = 'DaisyUI FAQ Accordion';
+        defaultProps = {
+          title: 'Frequently Asked Questions',
+          q1: 'Is DaisyUI pre-configured with Tailwind?',
+          a1: 'Yes, DaisyUI v5 plugin is loaded directly into Tailwind CSS v4.',
+          q2: 'Can I edit props live in Craft.js inspector?',
+          a2: 'Yes, every DaisyUI component prop can be edited in real-time.',
+          q3: 'Can I export the node tree as JSON?',
+          a3: 'Yes, click Node Schema in the top bar to copy or import the layout.'
+        };
+        break;
+      case 'daisy_alert':
+        displayName = 'DaisyUI Alert Bar';
+        defaultProps = {
+          text: '⚡ Flash Sale! Free Express Delivery on orders over €50 for the next 24 hours.',
+          type: 'info',
+          buttonText: 'Claim Offer'
         };
         break;
     }
@@ -429,7 +631,7 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
 
         {/* Preset selections */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 mr-1">Deutsch Vorlagen:</span>
+          <span className="text-xs text-slate-400 mr-1">Templates / Vorlagen:</span>
           <button
             onClick={() => applyPreset('germany')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -448,7 +650,17 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
                 : 'bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700'
             }`}
           >
-            ✨ Minimalist Theme
+            ✨ Minimalist
+          </button>
+          <button
+            onClick={() => applyPreset('daisyui')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+              activePreset === 'daisyui' 
+                ? 'bg-purple-600/30 text-purple-200 border-purple-500 shadow-sm shadow-purple-500/20' 
+                : 'bg-slate-800 text-purple-300 border-purple-500/30 hover:bg-purple-900/30'
+            }`}
+          >
+            🌼 DaisyUI Kit
           </button>
         </div>
 
@@ -516,16 +728,63 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
       <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
         
         {/* Left Side: Component Toolbox Panel */}
-        <div className="w-64 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-4 overflow-y-auto shrink-0 shadow-lg">
+        <div className="w-72 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-4 overflow-y-auto shrink-0 shadow-lg">
           <div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-indigo-400" />
-              Craft.js Toolbox
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                Craft.js Toolbox
+              </span>
+              <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded font-mono font-bold">
+                DaisyUI v5
+              </span>
             </h3>
             <p className="text-[11px] text-slate-500">Click elements below to append into your live Canvas tree.</p>
           </div>
 
-          <div className="space-y-2 pt-2">
+          {/* DaisyUI Specific Components Group */}
+          <div className="space-y-2 pt-1 border-t border-slate-800/80">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-purple-400" /> DaisyUI Components
+            </p>
+
+            {[
+              { type: 'daisy_alert', label: 'DaisyUI Alert Bar', desc: 'Notification banner with type styles', icon: Sparkles, color: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' },
+              { type: 'daisy_hero', label: 'DaisyUI Boxed Hero', desc: 'Centered hero layout box with CTA', icon: Layout, color: 'bg-purple-500/10 border-purple-500/30 text-purple-400' },
+              { type: 'daisy_stats', label: 'DaisyUI Stats Grid', desc: 'Key performance metric cards', icon: Sliders, color: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' },
+              { type: 'daisy_card', label: 'DaisyUI Featured Card', desc: 'Product card with image & badge', icon: Tag, color: 'bg-amber-500/10 border-amber-500/30 text-amber-400' },
+              { type: 'daisy_steps', label: 'DaisyUI Order Steps', desc: 'Step-by-step progress bar', icon: Check, color: 'bg-blue-500/10 border-blue-500/30 text-blue-400' },
+              { type: 'daisy_timeline', label: 'DaisyUI Store Timeline', desc: 'Chronological roadmap display', icon: Info, color: 'bg-pink-500/10 border-pink-500/30 text-pink-400' },
+              { type: 'daisy_collapse', label: 'DaisyUI FAQ Accordion', desc: 'Collapsible accordion questions', icon: MessageSquare, color: 'bg-teal-500/10 border-teal-500/30 text-teal-400' },
+            ].map((tool) => {
+              const ToolIcon = tool.icon;
+              return (
+                <button
+                  key={tool.type}
+                  onClick={() => addComponent(tool.type as any)}
+                  className="w-full flex items-start gap-2.5 p-2.5 rounded-xl bg-purple-950/20 hover:bg-purple-900/30 border border-purple-500/20 hover:border-purple-500/50 transition-all text-left cursor-pointer group"
+                >
+                  <div className={`p-1.5 rounded-lg border ${tool.color} group-hover:scale-105 transition-transform shrink-0`}>
+                    <ToolIcon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-200 group-hover:text-purple-300 transition-colors flex items-center justify-between">
+                      <span className="truncate">{tool.label}</span>
+                      <span className="text-[9px] bg-purple-500/20 text-purple-300 font-mono px-1 rounded ml-1 shrink-0">Daisy</span>
+                    </p>
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">{tool.desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Core Craft Nodes Group */}
+          <div className="space-y-2 pt-2 border-t border-slate-800">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              <Layers className="w-3 h-3 text-indigo-400" /> Standard Craft Nodes
+            </p>
+
             {[
               { type: 'announcement', label: 'Announcement Bar', desc: 'Top banner bar with custom text', icon: Info, color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' },
               { type: 'hero', label: 'Hero Banner Slide', desc: 'Main presentation banner & CTA', icon: Layout, color: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' },
@@ -542,10 +801,10 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
                 <button
                   key={tool.type}
                   onClick={() => addComponent(tool.type as any)}
-                  className="w-full flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 transition-all text-left cursor-pointer group"
+                  className="w-full flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/40 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 transition-all text-left cursor-pointer group"
                 >
-                  <div className={`p-2 rounded-lg border ${tool.color} group-hover:scale-105 transition-transform`}>
-                    <ToolIcon className="w-4 h-4" />
+                  <div className={`p-1.5 rounded-lg border ${tool.color} group-hover:scale-105 transition-transform shrink-0`}>
+                    <ToolIcon className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">{tool.label}</p>
@@ -898,6 +1157,188 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
                           className="w-full bg-transparent text-slate-300 custom-html-block"
                           dangerouslySetInnerHTML={{ __html: node.props.htmlContent }}
                         />
+                      )}
+
+                      {/* 10. DaisyUI Alert Bar */}
+                      {node.type === 'daisy_alert' && (
+                        <div className={`w-full alert alert-${node.props.type || 'info'} shadow-lg my-1 flex items-center justify-between rounded-xl border border-indigo-500/30 p-4`}>
+                          <div className="flex items-center gap-3">
+                            <Sparkles className="w-5 h-5 shrink-0 text-indigo-400" />
+                            <span className="text-xs font-semibold text-white">{node.props.text}</span>
+                          </div>
+                          {node.props.buttonText && (
+                            <button className="btn btn-xs btn-outline font-bold shrink-0 text-indigo-300 border-indigo-400 hover:bg-indigo-600 hover:text-white">
+                              {node.props.buttonText}
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 11. DaisyUI Boxed Hero */}
+                      {node.type === 'daisy_hero' && (
+                        <div className="hero bg-gradient-to-br from-slate-900 via-indigo-950/80 to-slate-900 rounded-2xl border border-slate-800 p-8 my-2 shadow-xl">
+                          <div className="hero-content text-center flex-col max-w-lg mx-auto space-y-3">
+                            {node.props.badge && (
+                              <div className="badge badge-primary font-bold text-[10px] tracking-wide uppercase px-3 py-2">
+                                {node.props.badge}
+                              </div>
+                            )}
+                            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-display">
+                              {node.props.title}
+                            </h2>
+                            <p className="text-xs text-slate-300 leading-relaxed max-w-md">
+                              {node.props.subtitle}
+                            </p>
+                            <button className="btn btn-indigo hover:btn-primary text-xs font-bold px-6 py-2 rounded-xl shadow-lg shadow-indigo-600/30 text-white bg-indigo-600 hover:bg-indigo-500 border-0">
+                              {node.props.buttonText}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 12. DaisyUI Stats Grid */}
+                      {node.type === 'daisy_stats' && (
+                        <div className="w-full my-2">
+                          <div className="stats stats-vertical sm:stats-horizontal shadow-xl bg-slate-900 border border-slate-800 text-white w-full rounded-2xl overflow-hidden">
+                            <div className="stat p-4 border-slate-800">
+                              <div className="stat-title text-slate-400 text-[11px] font-semibold">{node.props.stat1Title}</div>
+                              <div className="stat-value text-indigo-400 text-xl font-extrabold">{node.props.stat1Value}</div>
+                              <div className="stat-desc text-slate-500 text-[10px]">{node.props.stat1Desc}</div>
+                            </div>
+                            <div className="stat p-4 border-slate-800">
+                              <div className="stat-title text-slate-400 text-[11px] font-semibold">{node.props.stat2Title}</div>
+                              <div className="stat-value text-emerald-400 text-xl font-extrabold">{node.props.stat2Value}</div>
+                              <div className="stat-desc text-slate-500 text-[10px]">{node.props.stat2Desc}</div>
+                            </div>
+                            <div className="stat p-4 border-slate-800">
+                              <div className="stat-title text-slate-400 text-[11px] font-semibold">{node.props.stat3Title}</div>
+                              <div className="stat-value text-amber-400 text-xl font-extrabold">{node.props.stat3Value}</div>
+                              <div className="stat-desc text-slate-500 text-[10px]">{node.props.stat3Desc}</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 13. DaisyUI Featured Card */}
+                      {node.type === 'daisy_card' && (
+                        <div className="w-full my-2">
+                          <div className="card card-compact sm:card-side bg-slate-900 border border-slate-800 shadow-xl rounded-2xl overflow-hidden">
+                            {node.props.imageUrl && (
+                              <figure className="sm:w-2/5 h-44 sm:h-auto shrink-0 bg-slate-950 relative">
+                                <img src={node.props.imageUrl} alt={node.props.title} className="w-full h-full object-cover" />
+                                {node.props.badge && (
+                                  <span className="badge badge-accent absolute top-3 left-3 text-[10px] font-bold">
+                                    {node.props.badge}
+                                  </span>
+                                )}
+                              </figure>
+                            )}
+                            <div className="card-body p-5 justify-between">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="card-title text-base font-bold text-white">{node.props.title}</h3>
+                                  {node.props.price && (
+                                    <span className="text-sm font-extrabold text-indigo-400 font-mono">{node.props.price}</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-400 leading-relaxed">{node.props.description}</p>
+                              </div>
+                              <div className="card-actions justify-end pt-3 border-t border-slate-800/60">
+                                <button className="btn btn-sm text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white border-0">
+                                  {node.props.buttonText}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 14. DaisyUI Order Steps */}
+                      {node.type === 'daisy_steps' && (
+                        <div className="w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl my-2 space-y-4">
+                          {node.props.title && (
+                            <h3 className="text-sm font-bold text-white text-center">{node.props.title}</h3>
+                          )}
+                          <ul className="steps steps-vertical sm:steps-horizontal w-full text-xs">
+                            <li className={`step ${node.props.currentStep >= 1 ? 'step-primary text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              {node.props.step1}
+                            </li>
+                            <li className={`step ${node.props.currentStep >= 2 ? 'step-primary text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              {node.props.step2}
+                            </li>
+                            <li className={`step ${node.props.currentStep >= 3 ? 'step-primary text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              {node.props.step3}
+                            </li>
+                            <li className={`step ${node.props.currentStep >= 4 ? 'step-primary text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              {node.props.step4}
+                            </li>
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* 15. DaisyUI Timeline */}
+                      {node.type === 'daisy_timeline' && (
+                        <div className="w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl my-2 space-y-4">
+                          {node.props.title && (
+                            <h3 className="text-sm font-bold text-white text-center">{node.props.title}</h3>
+                          )}
+                          <ul className="timeline timeline-vertical sm:timeline-horizontal w-full justify-center text-xs">
+                            <li>
+                              <div className="timeline-start font-mono font-bold text-indigo-400">{node.props.item1Year}</div>
+                              <div className="timeline-middle">
+                                <span className="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span>
+                              </div>
+                              <div className="timeline-end timeline-box bg-slate-950 border-slate-800 text-slate-200 text-[11px] font-semibold">
+                                {node.props.item1Title}
+                              </div>
+                              <hr className="bg-indigo-500" />
+                            </li>
+                            <li>
+                              <hr className="bg-indigo-500" />
+                              <div className="timeline-start font-mono font-bold text-indigo-400">{node.props.item2Year}</div>
+                              <div className="timeline-middle">
+                                <span className="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span>
+                              </div>
+                              <div className="timeline-end timeline-box bg-slate-950 border-slate-800 text-slate-200 text-[11px] font-semibold">
+                                {node.props.item2Title}
+                              </div>
+                              <hr className="bg-indigo-500" />
+                            </li>
+                            <li>
+                              <hr className="bg-indigo-500" />
+                              <div className="timeline-start font-mono font-bold text-indigo-400">{node.props.item3Year}</div>
+                              <div className="timeline-middle">
+                                <span className="w-3 h-3 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                              </div>
+                              <div className="timeline-end timeline-box bg-slate-950 border-slate-800 text-emerald-300 text-[11px] font-bold">
+                                {node.props.item3Title}
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* 16. DaisyUI Collapse Accordion */}
+                      {node.type === 'daisy_collapse' && (
+                        <div className="w-full bg-slate-900/80 border border-slate-800 p-6 rounded-2xl my-2 space-y-3">
+                          {node.props.title && (
+                            <h3 className="text-sm font-bold text-white mb-2">{node.props.title}</h3>
+                          )}
+                          {[
+                            { q: node.props.q1, a: node.props.a1 },
+                            { q: node.props.q2, a: node.props.a2 },
+                            { q: node.props.q3, a: node.props.a3 }
+                          ].map((item, idx) => (
+                            <details key={idx} className="collapse collapse-arrow bg-slate-950 border border-slate-800 rounded-xl">
+                              <summary className="collapse-title text-xs font-bold text-white cursor-pointer py-3">
+                                {item.q}
+                              </summary>
+                              <div className="collapse-content text-xs text-slate-400 pb-3">
+                                <p>{item.a}</p>
+                              </div>
+                            </details>
+                          ))}
+                        </div>
                       )}
                     </div>
                   );
@@ -1313,6 +1754,330 @@ export function PageBuilderView({ products, settings }: PageBuilderViewProps) {
                         className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-0 w-4 h-4"
                       />
                     </div>
+                  </>
+                )}
+
+                {/* 8. DaisyUI Alert Bar props */}
+                {selectedNode.type === 'daisy_alert' && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Alert Message</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.text}
+                        onChange={(e) => handlePropChange('text', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Alert Style Type</label>
+                      <select
+                        value={selectedNode.props.type || 'info'}
+                        onChange={(e) => handlePropChange('type', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      >
+                        <option value="info">Info (Blue/Indigo)</option>
+                        <option value="success">Success (Emerald)</option>
+                        <option value="warning">Warning (Amber)</option>
+                        <option value="error">Error (Red)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Button Label</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.buttonText || ''}
+                        onChange={(e) => handlePropChange('buttonText', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* 9. DaisyUI Boxed Hero props */}
+                {selectedNode.type === 'daisy_hero' && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Badge Text</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.badge || ''}
+                        onChange={(e) => handlePropChange('badge', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Hero Title</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.title || ''}
+                        onChange={(e) => handlePropChange('title', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Subtitle</label>
+                      <textarea
+                        rows={3}
+                        value={selectedNode.props.subtitle || ''}
+                        onChange={(e) => handlePropChange('subtitle', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">CTA Button Text</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.buttonText || ''}
+                        onChange={(e) => handlePropChange('buttonText', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* 10. DaisyUI Stats Grid props */}
+                {selectedNode.type === 'daisy_stats' && (
+                  <>
+                    <div className="space-y-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                      <p className="text-[10px] font-bold text-indigo-400 uppercase">Stat #1</p>
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={selectedNode.props.stat1Title || ''}
+                        onChange={(e) => handlePropChange('stat1Title', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value"
+                        value={selectedNode.props.stat1Value || ''}
+                        onChange={(e) => handlePropChange('stat1Value', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={selectedNode.props.stat1Desc || ''}
+                        onChange={(e) => handlePropChange('stat1Desc', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-400"
+                      />
+                    </div>
+                    <div className="space-y-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                      <p className="text-[10px] font-bold text-emerald-400 uppercase">Stat #2</p>
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={selectedNode.props.stat2Title || ''}
+                        onChange={(e) => handlePropChange('stat2Title', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value"
+                        value={selectedNode.props.stat2Value || ''}
+                        onChange={(e) => handlePropChange('stat2Value', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={selectedNode.props.stat2Desc || ''}
+                        onChange={(e) => handlePropChange('stat2Desc', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-400"
+                      />
+                    </div>
+                    <div className="space-y-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                      <p className="text-[10px] font-bold text-amber-400 uppercase">Stat #3</p>
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={selectedNode.props.stat3Title || ''}
+                        onChange={(e) => handlePropChange('stat3Title', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value"
+                        value={selectedNode.props.stat3Value || ''}
+                        onChange={(e) => handlePropChange('stat3Value', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={selectedNode.props.stat3Desc || ''}
+                        onChange={(e) => handlePropChange('stat3Desc', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-400"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* 11. DaisyUI Featured Card props */}
+                {selectedNode.type === 'daisy_card' && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Card Title</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.title || ''}
+                        onChange={(e) => handlePropChange('title', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Price Tag</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.price || ''}
+                        onChange={(e) => handlePropChange('price', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Badge Text</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.badge || ''}
+                        onChange={(e) => handlePropChange('badge', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Description</label>
+                      <textarea
+                        rows={3}
+                        value={selectedNode.props.description || ''}
+                        onChange={(e) => handlePropChange('description', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Image URL</label>
+                      <input
+                        type="url"
+                        value={selectedNode.props.imageUrl || ''}
+                        onChange={(e) => handlePropChange('imageUrl', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Button Label</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.buttonText || ''}
+                        onChange={(e) => handlePropChange('buttonText', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* 12. DaisyUI Order Steps props */}
+                {selectedNode.type === 'daisy_steps' && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Section Header</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.title || ''}
+                        onChange={(e) => handlePropChange('title', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Active Step Index (1 to 4)</label>
+                      <select
+                        value={selectedNode.props.currentStep || 1}
+                        onChange={(e) => handlePropChange('currentStep', parseInt(e.target.value))}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      >
+                        <option value="1">Step 1 Active</option>
+                        <option value="2">Step 2 Active</option>
+                        <option value="3">Step 3 Active</option>
+                        <option value="4">Step 4 Active</option>
+                      </select>
+                    </div>
+                    {['step1', 'step2', 'step3', 'step4'].map((sKey, i) => (
+                      <div key={sKey}>
+                        <label className="block text-[10px] font-semibold text-slate-400 mb-1">Step {i + 1} Label</label>
+                        <input
+                          type="text"
+                          value={selectedNode.props[sKey] || ''}
+                          onChange={(e) => handlePropChange(sKey, e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* 13. DaisyUI Timeline props */}
+                {selectedNode.type === 'daisy_timeline' && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Section Title</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.title || ''}
+                        onChange={(e) => handlePropChange('title', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    {[1, 2, 3].map((num) => (
+                      <div key={num} className="space-y-2 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase">Item #{num}</p>
+                        <input
+                          type="text"
+                          placeholder="Year/Date"
+                          value={selectedNode.props[`item${num}Year`] || ''}
+                          onChange={(e) => handlePropChange(`item${num}Year`, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Milestone Title"
+                          value={selectedNode.props[`item${num}Title`] || ''}
+                          onChange={(e) => handlePropChange(`item${num}Title`, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white"
+                        />
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* 14. DaisyUI FAQ Accordion props */}
+                {selectedNode.type === 'daisy_collapse' && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Accordion Section Title</label>
+                      <input
+                        type="text"
+                        value={selectedNode.props.title || ''}
+                        onChange={(e) => handlePropChange('title', e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    {[1, 2, 3].map((num) => (
+                      <div key={num} className="space-y-2 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                        <p className="text-[10px] font-bold text-teal-400 uppercase">FAQ #{num}</p>
+                        <input
+                          type="text"
+                          placeholder="Question"
+                          value={selectedNode.props[`q${num}`] || ''}
+                          onChange={(e) => handlePropChange(`q${num}`, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-semibold"
+                        />
+                        <textarea
+                          rows={2}
+                          placeholder="Answer text"
+                          value={selectedNode.props[`a${num}`] || ''}
+                          onChange={(e) => handlePropChange(`a${num}`, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300"
+                        />
+                      </div>
+                    ))}
                   </>
                 )}
 

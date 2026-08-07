@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ExportCsvModal } from './ExportCsvModal';
 import { FactorCustomizerModal, DEFAULT_FACTOR_SETTINGS } from './FactorCustomizerModal';
+import { RefundRequestModal } from './RefundRequestModal';
 import { openPdfReadyInvoicePrintWindow } from '../utils/pdfInvoice';
 import { openFedexLabelPrintWindow } from '../utils/fedexLabel';
 import { 
@@ -21,9 +22,12 @@ import {
   Trash2,
   CheckSquare,
   Receipt,
-  Settings2
+  Settings2,
+  RotateCcw,
+  Mail,
+  ArrowRight
 } from 'lucide-react';
-import { Order, OrderStatus, FactorSettings } from '../types';
+import { Order, OrderStatus, FactorSettings, EmailDraft } from '../types';
 
 interface OrdersViewProps {
   orders: Order[];
@@ -33,6 +37,7 @@ interface OrdersViewProps {
   searchQuery: string;
   initialFactorSettings?: FactorSettings;
   onSaveFactorSettings?: (f: FactorSettings) => void;
+  onNavigateToEmailTemplates?: () => void;
 }
 
 const getStatusBadgeConfig = (status: OrderStatus) => {
@@ -61,6 +66,18 @@ const getStatusBadgeConfig = (status: OrderStatus) => {
         dot: 'bg-amber-500',
         label: 'Pending',
       };
+    case 'refund_requested':
+      return {
+        badge: 'bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-500/20 font-bold',
+        dot: 'bg-amber-500 animate-pulse',
+        label: 'Refund Requested',
+      };
+    case 'refunded':
+      return {
+        badge: 'bg-purple-50 text-purple-700 border-purple-200/80 ring-1 ring-purple-500/20 font-bold',
+        dot: 'bg-purple-500',
+        label: 'Refunded',
+      };
     case 'cancelled':
       return {
         badge: 'bg-rose-50 text-rose-700 border-rose-200/80 ring-1 ring-rose-500/20 font-bold',
@@ -84,10 +101,13 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   searchQuery,
   initialFactorSettings,
   onSaveFactorSettings,
+  onNavigateToEmailTemplates
 }) => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery || '');
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  const [refundOrderTarget, setRefundOrderTarget] = useState<Order | null>(null);
+  const [refundToast, setRefundToast] = useState<{ message: string; draftId?: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<OrderStatus | ''>('');
   const [isExportCsvOpen, setIsExportCsvOpen] = useState(false);
@@ -106,6 +126,19 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   const handleSaveFactor = (newSettings: FactorSettings) => {
     setFactorSettings(newSettings);
     onSaveFactorSettings?.(newSettings);
+  };
+
+  const handleConfirmRefund = (orderId: string, targetStatus: OrderStatus, draft?: EmailDraft) => {
+    onUpdateOrderStatus(orderId, targetStatus);
+    const targetOrder = orders.find(o => o.id === orderId);
+    const orderNum = targetOrder ? targetOrder.orderNumber : orderId;
+
+    let msg = `Refund requested for Order #${orderNum}. Status updated to '${targetStatus === 'refund_requested' ? 'Refund Requested' : 'Refunded'}'.`;
+    if (draft) {
+      msg += ` Email draft prepared (${draft.status === 'sent' ? 'Dispatched via Email System' : 'Saved in Email Templates'}).`;
+    }
+    setRefundToast({ message: msg, draftId: draft?.id });
+    setTimeout(() => setRefundToast(null), 8000);
   };
 
   const [generatingLabelId, setGeneratingLabelId] = useState<string | null>(null);
@@ -145,7 +178,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     }
   };
 
-  const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+  const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'refund_requested', 'refunded', 'cancelled'];
 
   const effectiveSearch = localSearchQuery.trim().toLowerCase();
   const filteredOrders = orders.filter(o => {
@@ -238,7 +271,33 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 relative">
+      {/* Floating Refund Success Toast Banner */}
+      {refundToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center justify-between gap-4 px-5 py-3.5 rounded-2xl shadow-2xl bg-slate-900 text-white border border-amber-500/40 text-xs font-bold animate-in slide-in-from-top-4 max-w-lg">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+              <RotateCcw className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <span className="block text-slate-100 font-semibold">{refundToast.message}</span>
+              <span className="text-[10px] text-amber-400 block font-mono">Order Refund & Email System</span>
+            </div>
+          </div>
+
+          {onNavigateToEmailTemplates && (
+            <button
+              onClick={onNavigateToEmailTemplates}
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-[11px] font-extrabold transition flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>Email Templates</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Search & Filters Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -313,6 +372,10 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                       ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
                       : st === 'pending'
                       ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                      : st === 'refund_requested'
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                      : st === 'refunded'
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
                       : 'bg-rose-600 text-white border-rose-600 shadow-xs'
                     : 'bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100'
                 }`}
@@ -320,7 +383,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                 {config && (
                   <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : config.dot}`} />
                 )}
-                <span>{st}</span>
+                <span>{st === 'refund_requested' ? 'Refund Requested' : st}</span>
               </button>
             );
           })}
@@ -352,6 +415,8 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
               <option value="processing">Mark as Processing</option>
               <option value="shipped">Mark as Shipped</option>
               <option value="delivered">Mark as Delivered</option>
+              <option value="refund_requested">Request Refund</option>
+              <option value="refunded">Mark as Refunded</option>
               <option value="cancelled">Mark as Cancelled</option>
             </select>
 
@@ -448,6 +513,8 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                                 <option value="processing" className="bg-white text-slate-900 font-medium">Processing</option>
                                 <option value="shipped" className="bg-white text-slate-900 font-medium">Shipped</option>
                                 <option value="delivered" className="bg-white text-slate-900 font-medium">Delivered</option>
+                                <option value="refund_requested" className="bg-white text-slate-900 font-medium">Refund Requested</option>
+                                <option value="refunded" className="bg-white text-slate-900 font-medium">Refunded</option>
                                 <option value="cancelled" className="bg-white text-slate-900 font-medium">Cancelled</option>
                               </select>
                             </div>
@@ -456,6 +523,15 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setRefundOrderTarget(order)}
+                            title="Request Refund & Prepare Email Notification Draft"
+                            className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Refund</span>
+                          </button>
+
                           {order.status === 'pending' && (
                             <button
                               onClick={() => handleGenerateFedexLabelForOrder(order)}
@@ -572,12 +648,23 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
               <span className="text-lg font-bold font-display text-indigo-600">${viewingOrder.totalAmount.toFixed(2)}</span>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 flex-wrap">
               <button
                 onClick={() => setViewingOrder(null)}
                 className="px-3.5 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition cursor-pointer"
               >
                 Close
+              </button>
+              <button
+                onClick={() => {
+                  const target = viewingOrder;
+                  setViewingOrder(null);
+                  setRefundOrderTarget(target);
+                }}
+                className="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                <span>Request Refund</span>
               </button>
               {viewingOrder.status === 'pending' && (
                 <button
@@ -614,6 +701,15 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Refund Request & Email Template Draft Modal */}
+      <RefundRequestModal
+        order={refundOrderTarget}
+        isOpen={Boolean(refundOrderTarget)}
+        onClose={() => setRefundOrderTarget(null)}
+        onConfirmRefund={handleConfirmRefund}
+        onNavigateToEmailTemplates={onNavigateToEmailTemplates}
+      />
 
       {/* Date-Range Filter CSV Export Modal */}
       <ExportCsvModal

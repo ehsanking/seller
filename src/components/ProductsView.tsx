@@ -114,9 +114,10 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     setBulkStatus('');
   };
 
-  const handleExportCsv = () => {
-    const headers = ['SKU', 'Title', 'Category', 'Price', 'Cost Price', 'Stock Quantity', 'Low Stock Limit', 'Status', 'Sales Count', 'Created At'];
-    const rows = filteredProducts.map(p => [
+  const handleExportCsv = (targetProducts = filteredProducts, filenameSuffix = 'catalog') => {
+    const headers = ['ID', 'SKU', 'Title', 'Category', 'Price (€)', 'Cost Price (€)', 'Stock Quantity', 'Low Stock Limit', 'Status', 'Sales Count', 'Created At'];
+    const rows = targetProducts.map(p => [
+      p.id,
       p.sku,
       p.title,
       p.category,
@@ -137,7 +138,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
       return str;
     };
 
-    const csvContent = [
+    const csvContent = '\uFEFF' + [
       headers.map(escapeCsv).join(','),
       ...rows.map(row => row.map(escapeCsv).join(','))
     ].join('\n');
@@ -146,10 +147,18 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `products_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `products_${filenameSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportSelectedCsv = () => {
+    const selectedProducts = products.filter(p => selectedIds.includes(p.id));
+    if (selectedProducts.length > 0) {
+      handleExportCsv(selectedProducts, `selected_${selectedProducts.length}_items`);
+    }
   };
 
   const getStatusBadge = (status: ProductStatus, stock: number, threshold: number = 10) => {
@@ -277,6 +286,15 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
                 <span>Compare Side-by-Side</span>
               </button>
             )}
+
+            <button
+              onClick={handleExportSelectedCsv}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              title="Export selected products list directly to CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Selected CSV ({selectedIds.length})</span>
+            </button>
 
             <select
               value={bulkStatus}

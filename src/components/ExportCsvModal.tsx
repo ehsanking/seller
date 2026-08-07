@@ -99,15 +99,18 @@ export function ExportCsvModal<T>({
       csvRows.push(row.map(formatCell).join(','));
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvRows.join('\n'));
+    const csvContent = '\uFEFF' + csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const downloadAnchor = document.createElement('a');
     
     const rangeLabel = preset === 'all' ? 'all-time' : `${startDate || 'start'}_to_${endDate || 'end'}`;
-    downloadAnchor.setAttribute('href', csvContent);
+    downloadAnchor.setAttribute('href', url);
     downloadAnchor.setAttribute('download', `${filenamePrefix}_${rangeLabel}.csv`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
+    URL.revokeObjectURL(url);
 
     onClose();
   };

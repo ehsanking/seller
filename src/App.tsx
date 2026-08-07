@@ -11,6 +11,7 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsView } from './components/SettingsView';
 import { PluginsView } from './components/PluginsView';
 import { TemplatesView } from './components/TemplatesView';
+import { EmailTemplatesView } from './components/EmailTemplatesView';
 import { WebhooksView } from './components/WebhooksView';
 import { CouponsView } from './components/CouponsView';
 import { RolesManagementView } from './components/RolesManagementView';
@@ -18,6 +19,12 @@ import { SeoWebmasterView } from './components/SeoWebmasterView';
 import { BranchesView } from './components/BranchesView';
 import { PageBuilderView } from './components/PageBuilderView';
 import { TelegramMiniAppView } from './components/TelegramMiniAppView';
+import { ShippingView } from './components/ShippingView';
+import { TaxSettingsView } from './components/TaxSettingsView';
+import { ReviewsView } from './components/ReviewsView';
+import { DaisyUIShowcaseView } from './components/DaisyUIShowcaseView';
+import { WooCommerceComparisonModal } from './components/WooCommerceComparisonModal';
+import { ThemeFloatingToggle } from './components/ThemeFloatingToggle';
 import { AdminProfileModal } from './components/AdminProfileModal';
 import { AddProductModal } from './components/AddProductModal';
 import { AddOrderModal } from './components/AddOrderModal';
@@ -64,6 +71,8 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isAdminProfileOpen, setIsAdminProfileOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isWooCommerceModalOpen, setIsWooCommerceModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dashboardFont, setDashboardFont] = useState(() => {
     return localStorage.getItem('dashboardFont') || 'Inter';
@@ -81,6 +90,16 @@ export function App() {
     setTheme(newTheme);
     localStorage.setItem('dashboardTheme', newTheme);
   };
+
+  // Sync theme to HTML root element for DaisyUI data-theme & Tailwind dark class
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // Helper for resilient fetching during dev server restarts
   const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3, delay = 1000): Promise<Response> => {
@@ -549,6 +568,8 @@ export function App() {
         storeName={settings.storeName}
         plugins={plugins}
         onOpenAdminProfileModal={() => setIsAdminProfileOpen(true)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Content Area */}
@@ -565,9 +586,8 @@ export function App() {
           adminProfile={adminProfile}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          dashboardFont={dashboardFont}
-          onChangeFont={handleFontChange}
           products={products}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
         />
 
         <main className="p-6 flex-1 overflow-y-auto">
@@ -614,6 +634,7 @@ export function App() {
                   searchQuery={searchQuery}
                   initialFactorSettings={settings?.factorSettings}
                   onSaveFactorSettings={(f) => settings && handleSaveSettings({ ...settings, factorSettings: f })}
+                  onNavigateToEmailTemplates={() => setActiveTab('email_templates')}
                 />
               )}
 
@@ -648,6 +669,8 @@ export function App() {
                   onThemeChange={handleThemeChange}
                   products={products}
                   customers={customers}
+                  dashboardFont={dashboardFont}
+                  onChangeFont={handleFontChange}
                 />
               )}
 
@@ -715,6 +738,7 @@ export function App() {
                       setActiveTab('plugins');
                     }
                   }}
+                  onOpenWooCommerceModal={() => setIsWooCommerceModalOpen(true)}
                 />
               )}
 
@@ -728,7 +752,12 @@ export function App() {
                   onUploadTemplate={handleUploadTemplate}
                   onDeleteTemplate={handleDeleteTemplate}
                   onGoToBuilder={() => setActiveTab('builder')}
+                  onAddOrder={handleAddOrder}
                 />
+              )}
+
+              {activeTab === 'email_templates' && (
+                <EmailTemplatesView />
               )}
 
               {activeTab === 'builder' && (
@@ -753,6 +782,27 @@ export function App() {
                   storeName={settings.storeName}
                   onOrderCreated={fetchAllData}
                 />
+              )}
+
+              {activeTab === 'shipping' && (
+                <ShippingView />
+              )}
+
+              {activeTab === 'taxes' && (
+                <TaxSettingsView
+                  settings={settings}
+                  onSaveSettings={handleSaveSettings}
+                />
+              )}
+
+              {activeTab === 'reviews' && (
+                <ReviewsView
+                  products={products}
+                />
+              )}
+
+              {activeTab === 'daisyui' && (
+                <DaisyUIShowcaseView />
               )}
 
               {activeTab === 'webhooks' && (
@@ -826,6 +876,22 @@ export function App() {
         onOpenAddProduct={() => setIsAddProductOpen(true)}
         onOpenAddOrder={() => setIsAddOrderOpen(true)}
         onRefreshData={fetchAllData}
+      />
+
+      {/* WooCommerce Comparison & Migration Suite Modal */}
+      <WooCommerceComparisonModal
+        isOpen={isWooCommerceModalOpen}
+        onClose={() => setIsWooCommerceModalOpen(false)}
+        products={products}
+        onImportProducts={(imported) => {
+          setProducts(prev => [...imported, ...prev]);
+        }}
+      />
+
+      {/* Floating Theme Toggle (Light / Dark) */}
+      <ThemeFloatingToggle
+        theme={theme}
+        onToggle={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
       />
     </div>
   );
